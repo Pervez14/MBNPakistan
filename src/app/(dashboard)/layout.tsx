@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -47,9 +48,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    bureauAPI.getNotifications()
+    bureauAPI
+      .getNotifications()
       .then((res) => {
-        const unread = (res.data.data as Notification[]).filter((n: Notification) => !n.isRead).length;
+        const unread = (res.data.data as Notification[]).filter(
+          (n: Notification) => !n.isRead
+        ).length;
         setUnreadCount(unread);
       })
       .catch(() => {});
@@ -71,14 +75,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-200">
-          <div className="w-9 h-9 bg-green-700 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-heading font-bold text-sm">M</span>
-          </div>
-          <div>
-            <p className="font-heading font-semibold text-slate-900 text-sm leading-tight">MBN Pakistan</p>
-            <p className="text-xs text-slate-400">Bureau Network</p>
-          </div>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200">
+          <Link href="/dashboard" className="flex items-center">
+            <Image
+              src="/mbn-logo.png"
+              alt="MBN Pakistan"
+              width={180}
+              height={80}
+              className="h-12 w-auto object-contain"
+              priority
+            />
+          </Link>
+
           <button
             onClick={() => setSidebarOpen(false)}
             className="ml-auto lg:hidden text-slate-400 hover:text-slate-600"
@@ -92,6 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
+
             return (
               <Link
                 key={item.href}
@@ -103,7 +112,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${active ? 'text-green-700' : 'text-slate-400'}`} />
+                <Icon
+                  className={`w-4 h-4 ${
+                    active ? 'text-green-700' : 'text-slate-400'
+                  }`}
+                />
                 {item.label}
               </Link>
             );
@@ -130,7 +143,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user.businessName}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {user.businessName}
+              </p>
               <p className="text-xs text-slate-400 truncate">{user.email}</p>
             </div>
           </div>
@@ -158,7 +173,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="flex items-center gap-3 ml-auto">
             {/* Notifications */}
-            <Link href="/notifications" className="relative p-2 text-slate-500 hover:text-slate-700">
+            <Link
+              href="/notifications"
+              className="relative p-2 text-slate-500 hover:text-slate-700"
+            >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -178,7 +196,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {user.businessName?.charAt(0)?.toUpperCase() ?? 'B'}
                   </span>
                 </div>
-                <span className="hidden sm:block max-w-[120px] truncate">{user.businessName}</span>
+                <span className="hidden sm:block max-w-[120px] truncate">
+                  {user.businessName}
+                </span>
                 <ChevronDown className="w-3 h-3 hidden sm:block" />
               </button>
 
@@ -189,13 +209,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onClick={() => setProfileMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
                   >
-                    <Settings className="w-4 h-4" /> Account Settings
+                    <Settings className="w-4 h-4" />
+                    Account Settings
                   </Link>
+
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                   >
-                    <LogOut className="w-4 h-4" /> Logout
+                    <LogOut className="w-4 h-4" />
+                    Logout
                   </button>
                 </div>
               )}
@@ -204,9 +227,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );
