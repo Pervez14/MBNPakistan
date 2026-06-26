@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   FileCheck,
 } from 'lucide-react';
-import { authAPI } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 const registerSchema = z
   .object({
@@ -38,7 +38,11 @@ const registerSchema = z
 
     website: z.string().url('Enter a valid URL').optional().or(z.literal('')),
     socialLink: z.string().url('Enter a valid URL').optional().or(z.literal('')),
-    googleBusinessLink: z.string().url('Enter a valid URL').optional().or(z.literal('')),
+    googleBusinessLink: z
+      .string()
+      .url('Enter a valid URL')
+      .optional()
+      .or(z.literal('')),
 
     specializations: z.array(z.string()).optional(),
 
@@ -111,22 +115,51 @@ export default function RegisterPage() {
     try {
       setServerError('');
 
-      const payload = {
-        ...data,
-        verificationNotes: {
-          message:
-            'Additional bureau verification fields collected from membership application.',
-          requiredDocuments:
-            'CNIC front/back, business card, office photo, and registration documents can be collected in the next verification step.',
-        },
-      };
+      const { error } = await supabase.from('bureau_applications').insert({
+        full_name: data.fullName,
+        role_in_bureau: data.roleInBureau,
+        mobile_number: data.mobileNumber,
+        whatsapp_number: data.whatsappNumber,
+        email: data.email,
+        cnic: data.cnic || null,
 
-      await authAPI.register(payload);
+        business_name: data.businessName,
+        years_in_business: data.yearsInBusiness,
+        active_profiles: data.activeProfiles,
+        has_physical_office: data.hasPhysicalOffice,
+        office_phone: data.officePhone || null,
+
+        city: data.city,
+        province: data.province,
+        country: data.country || 'Pakistan',
+        office_address: data.officeAddress || null,
+        areas_served: data.areasServed || null,
+
+        website: data.website || null,
+        social_link: data.socialLink || null,
+        google_business_link: data.googleBusinessLink || null,
+
+        specializations: data.specializations || [],
+
+        reference_name_1: data.referenceName1 || null,
+        reference_phone_1: data.referencePhone1 || null,
+        reference_name_2: data.referenceName2 || null,
+        reference_phone_2: data.referencePhone2 || null,
+
+        status: 'pending',
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setSubmitted(true);
     } catch (err: unknown) {
       const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || 'Registration failed. Please try again.';
+        err instanceof Error
+          ? err.message
+          : 'Registration failed. Please try again.';
+
       setServerError(msg);
     }
   };
