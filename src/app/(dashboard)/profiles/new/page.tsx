@@ -13,6 +13,124 @@ import {
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
+const pakistaniCastes = [
+  'Arain',
+  'Awan',
+  'Baloch',
+  'Butt',
+  'Chaudhry',
+  'Durrani',
+  'Gujjar',
+  'Hashmi',
+  'Jat',
+  'Kashmiri',
+  'Khan',
+  'Khattak',
+  'Malik',
+  'Memon',
+  'Mughal',
+  'Pathan',
+  'Qureshi',
+  'Rajput',
+  'Rana',
+  'Rao',
+  'Sheikh',
+  'Siddiqui',
+  'Syed',
+  'Tareen',
+  'Yousafzai',
+  'Other',
+];
+
+const citiesByProvince: Record<string, string[]> = {
+  Punjab: [
+    'Lahore',
+    'Faisalabad',
+    'Rawalpindi',
+    'Multan',
+    'Gujranwala',
+    'Sialkot',
+    'Bahawalpur',
+    'Sargodha',
+    'Sheikhupura',
+    'Rahim Yar Khan',
+    'Jhang',
+    'Gujrat',
+    'Sahiwal',
+    'Okara',
+    'Kasur',
+    'Dera Ghazi Khan',
+    'Jhelum',
+    'Chakwal',
+    'Mianwali',
+    'Vehari',
+  ],
+  Sindh: [
+    'Karachi',
+    'Hyderabad',
+    'Sukkur',
+    'Larkana',
+    'Nawabshah',
+    'Mirpur Khas',
+    'Jacobabad',
+    'Shikarpur',
+    'Khairpur',
+    'Dadu',
+    'Thatta',
+    'Badin',
+  ],
+  KPK: [
+    'Peshawar',
+    'Mardan',
+    'Abbottabad',
+    'Mingora',
+    'Kohat',
+    'Bannu',
+    'Dera Ismail Khan',
+    'Swabi',
+    'Charsadda',
+    'Nowshera',
+    'Mansehra',
+  ],
+  Balochistan: [
+    'Quetta',
+    'Gwadar',
+    'Turbat',
+    'Khuzdar',
+    'Chaman',
+    'Sibi',
+    'Zhob',
+    'Loralai',
+    'Dera Murad Jamali',
+  ],
+  Islamabad: ['Islamabad'],
+  AJK: [
+    'Muzaffarabad',
+    'Mirpur',
+    'Kotli',
+    'Rawalakot',
+    'Bagh',
+    'Bhimber',
+  ],
+  'Gilgit-Baltistan': [
+    'Gilgit',
+    'Skardu',
+    'Hunza',
+    'Chilas',
+    'Ghizer',
+    'Astore',
+  ],
+  Overseas: [
+    'United Kingdom',
+    'United Arab Emirates',
+    'Saudi Arabia',
+    'United States',
+    'Canada',
+    'Australia',
+    'Other Overseas',
+  ],
+};
+
 export default function NewProfilePage() {
   const router = useRouter();
 
@@ -54,6 +172,7 @@ export default function NewProfilePage() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === 'province' ? { city: '' } : {}),
     }));
   };
 
@@ -89,7 +208,7 @@ export default function NewProfilePage() {
   const uploadPhoto = async (userId: string) => {
     if (!selectedPhoto) return null;
 
-    const fileExt = selectedPhoto.name.split('.').pop();
+    const fileExt = selectedPhoto.name.split('.').pop() || 'jpg';
     const safeFileName = selectedPhoto.name
       .replace(/\s+/g, '-')
       .replace(/[^a-zA-Z0-9.-]/g, '')
@@ -130,6 +249,10 @@ export default function NewProfilePage() {
 
       if (userError || !user || !user.email) {
         throw new Error('You must login again before creating a profile.');
+      }
+
+      if (!formData.gender) {
+        throw new Error('Please select gender.');
       }
 
       const photoUrl = await uploadPhoto(user.id);
@@ -187,6 +310,10 @@ export default function NewProfilePage() {
       setIsSubmitting(false);
     }
   };
+
+  const cityOptions = formData.province
+    ? citiesByProvince[formData.province] || []
+    : [];
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -414,13 +541,19 @@ export default function NewProfilePage() {
 
             <div>
               <label className="label">Caste / Community</label>
-              <input
+              <select
                 name="caste"
                 value={formData.caste}
                 onChange={updateField}
-                placeholder="Rajput, Arain, Sheikh, etc."
                 className="input-field"
-              />
+              >
+                <option value="">Select Caste</option>
+                {pakistaniCastes.map((caste) => (
+                  <option key={caste} value={caste}>
+                    {caste}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </section>
@@ -433,17 +566,6 @@ export default function NewProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">City</label>
-              <input
-                name="city"
-                value={formData.city}
-                onChange={updateField}
-                placeholder="Lahore"
-                className="input-field"
-              />
-            </div>
-
-            <div>
               <label className="label">Province / Region</label>
               <select
                 name="province"
@@ -452,14 +574,31 @@ export default function NewProfilePage() {
                 className="input-field"
               >
                 <option value="">Select Province</option>
-                <option value="Punjab">Punjab</option>
-                <option value="Sindh">Sindh</option>
-                <option value="KPK">KPK</option>
-                <option value="Balochistan">Balochistan</option>
-                <option value="Islamabad">Islamabad</option>
-                <option value="AJK">AJK</option>
-                <option value="Gilgit-Baltistan">Gilgit-Baltistan</option>
-                <option value="Overseas">Overseas</option>
+                {Object.keys(citiesByProvince).map((province) => (
+                  <option key={province} value={province}>
+                    {province}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="label">City</label>
+              <select
+                name="city"
+                value={formData.city}
+                onChange={updateField}
+                disabled={!formData.province}
+                className="input-field disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {formData.province ? 'Select City' : 'Select Province First'}
+                </option>
+                {cityOptions.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
               </select>
             </div>
 
