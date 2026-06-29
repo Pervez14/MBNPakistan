@@ -104,22 +104,8 @@ const citiesByProvince: Record<string, string[]> = {
     'Dera Murad Jamali',
   ],
   Islamabad: ['Islamabad'],
-  AJK: [
-    'Muzaffarabad',
-    'Mirpur',
-    'Kotli',
-    'Rawalakot',
-    'Bagh',
-    'Bhimber',
-  ],
-  'Gilgit-Baltistan': [
-    'Gilgit',
-    'Skardu',
-    'Hunza',
-    'Chilas',
-    'Ghizer',
-    'Astore',
-  ],
+  AJK: ['Muzaffarabad', 'Mirpur', 'Kotli', 'Rawalakot', 'Bagh', 'Bhimber'],
+  'Gilgit-Baltistan': ['Gilgit', 'Skardu', 'Hunza', 'Chilas', 'Ghizer', 'Astore'],
   Overseas: [
     'United Kingdom',
     'United Arab Emirates',
@@ -149,18 +135,37 @@ export default function NewProfilePage() {
     dateOfBirth: '',
     maritalStatus: '',
     height: '',
+
     religion: 'Islam',
     sect: '',
     caste: '',
+
     city: '',
     province: '',
     country: 'Pakistan',
     nationality: 'Pakistani',
+    residenceStatus: '',
+
     education: '',
     profession: '',
+    employmentStatus: '',
+    jobType: '',
     incomeRange: '',
+
+    complexion: '',
+    bodyType: '',
+    languages: '',
+
+    siblings: '',
+    fatherOccupation: '',
+    motherOccupation: '',
     familyDetails: '',
+
+    expectedPartnerAge: '',
+    expectedPartnerLocation: '',
+    expectedPartnerEducation: '',
     requirements: '',
+
     additionalNotes: '',
   });
 
@@ -269,6 +274,7 @@ export default function NewProfilePage() {
 
         marital_status: formData.maritalStatus || null,
         height: formData.height || null,
+
         religion: formData.religion || 'Islam',
         sect: formData.sect || null,
         caste: formData.caste || null,
@@ -277,15 +283,29 @@ export default function NewProfilePage() {
         province: formData.province || null,
         country: formData.country || 'Pakistan',
         nationality: formData.nationality || null,
+        residence_status: formData.residenceStatus || null,
 
         education: formData.education || null,
         profession: formData.profession || null,
+        employment_status: formData.employmentStatus || null,
+        job_type: formData.jobType || null,
         income_range: formData.incomeRange || null,
 
-        family_details: formData.familyDetails || null,
-        requirements: formData.requirements || null,
-        additional_notes: formData.additionalNotes || null,
+        complexion: formData.complexion || null,
+        body_type: formData.bodyType || null,
+        languages: formData.languages || null,
 
+        siblings: formData.siblings || null,
+        father_occupation: formData.fatherOccupation || null,
+        mother_occupation: formData.motherOccupation || null,
+        family_details: formData.familyDetails || null,
+
+        expected_partner_age: formData.expectedPartnerAge || null,
+        expected_partner_location: formData.expectedPartnerLocation || null,
+        expected_partner_education: formData.expectedPartnerEducation || null,
+        requirements: formData.requirements || null,
+
+        additional_notes: formData.additionalNotes || null,
         photo_url: photoUrl,
         status: 'active',
       });
@@ -331,7 +351,7 @@ export default function NewProfilePage() {
         </h1>
 
         <p className="text-slate-500 mt-1">
-          Create a new candidate profile for your bureau.
+          Create a detailed bride or groom profile for your bureau.
         </p>
       </div>
 
@@ -363,7 +383,7 @@ export default function NewProfilePage() {
                   <img
                     src={photoPreview}
                     alt="Profile preview"
-                    className="w-full h-64 object-cover rounded-2xl border border-slate-200 bg-slate-50"
+                    className="w-full h-72 object-cover object-top rounded-2xl border border-slate-200 bg-slate-50"
                   />
 
                   <button
@@ -375,7 +395,7 @@ export default function NewProfilePage() {
                   </button>
                 </div>
               ) : (
-                <div className="w-full h-64 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                <div className="w-full h-72 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
                   <ImageIcon className="w-10 h-10 mb-2" />
                   <p className="text-sm">No photo selected</p>
                 </div>
@@ -499,7 +519,52 @@ export default function NewProfilePage() {
                 name="height"
                 value={formData.height}
                 onChange={updateField}
-                placeholder="5'8&quot;"
+                placeholder="5 ft 8 in"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Complexion</label>
+              <select
+                name="complexion"
+                value={formData.complexion}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Fair">Fair</option>
+                <option value="Wheatish">Wheatish</option>
+                <option value="Medium">Medium</option>
+                <option value="Dark">Dark</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Body Type</label>
+              <select
+                name="bodyType"
+                value={formData.bodyType}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Slim">Slim</option>
+                <option value="Average">Average</option>
+                <option value="Athletic">Athletic</option>
+                <option value="Healthy">Healthy</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Languages</label>
+              <input
+                name="languages"
+                value={formData.languages}
+                onChange={updateField}
+                placeholder="Urdu, Punjabi, English"
                 className="input-field"
               />
             </div>
@@ -623,6 +688,23 @@ export default function NewProfilePage() {
                 className="input-field"
               />
             </div>
+
+            <div>
+              <label className="label">Residence Status</label>
+              <select
+                name="residenceStatus"
+                value={formData.residenceStatus}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Own House">Own House</option>
+                <option value="Rented House">Rented House</option>
+                <option value="Joint Family">Joint Family</option>
+                <option value="Nuclear Family">Nuclear Family</option>
+                <option value="Overseas Resident">Overseas Resident</option>
+              </select>
+            </div>
           </div>
         </section>
 
@@ -656,6 +738,36 @@ export default function NewProfilePage() {
             </div>
 
             <div>
+              <label className="label">Employment Status</label>
+              <select
+                name="employmentStatus"
+                value={formData.employmentStatus}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Employed">Employed</option>
+                <option value="Self-employed">Self-employed</option>
+                <option value="Business Owner">Business Owner</option>
+                <option value="Government Job">Government Job</option>
+                <option value="Private Job">Private Job</option>
+                <option value="Student">Student</option>
+                <option value="Unemployed">Unemployed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Job Type / Industry</label>
+              <input
+                name="jobType"
+                value={formData.jobType}
+                onChange={updateField}
+                placeholder="IT, Medical, Education, Business"
+                className="input-field"
+              />
+            </div>
+
+            <div>
               <label className="label">Income Range</label>
               <select
                 name="incomeRange"
@@ -681,49 +793,128 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Details */}
+        {/* Family */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
-            Family & Requirements
+            Family Details
           </h2>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Family Details</label>
+              <label className="label">Siblings</label>
+              <input
+                name="siblings"
+                value={formData.siblings}
+                onChange={updateField}
+                placeholder="2 brothers, 1 sister"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Father Occupation</label>
+              <input
+                name="fatherOccupation"
+                value={formData.fatherOccupation}
+                onChange={updateField}
+                placeholder="Businessman, retired, doctor, etc."
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Mother Occupation</label>
+              <input
+                name="motherOccupation"
+                value={formData.motherOccupation}
+                onChange={updateField}
+                placeholder="Housewife, teacher, doctor, etc."
+                className="input-field"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="label">Family Summary</label>
               <textarea
                 name="familyDetails"
                 value={formData.familyDetails}
                 onChange={updateField}
                 rows={3}
-                placeholder="Family background, siblings, parents, etc."
+                placeholder="Family background, values, siblings details, parents details..."
                 className="input-field resize-none"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Partner Requirements */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Partner Requirements
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Expected Partner Age</label>
+              <input
+                name="expectedPartnerAge"
+                value={formData.expectedPartnerAge}
+                onChange={updateField}
+                placeholder="24 - 30"
+                className="input-field"
               />
             </div>
 
             <div>
-              <label className="label">Match Requirements</label>
+              <label className="label">Expected Partner Location</label>
+              <input
+                name="expectedPartnerLocation"
+                value={formData.expectedPartnerLocation}
+                onChange={updateField}
+                placeholder="Lahore, Islamabad, Overseas"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Expected Partner Education</label>
+              <input
+                name="expectedPartnerEducation"
+                value={formData.expectedPartnerEducation}
+                onChange={updateField}
+                placeholder="Graduate, Masters, Doctor, Engineer"
+                className="input-field"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="label">Detailed Match Requirements</label>
               <textarea
                 name="requirements"
                 value={formData.requirements}
                 onChange={updateField}
                 rows={3}
-                placeholder="Preferred age, city, education, family background, etc."
-                className="input-field resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="label">Additional Notes</label>
-              <textarea
-                name="additionalNotes"
-                value={formData.additionalNotes}
-                onChange={updateField}
-                rows={3}
-                placeholder="Any additional private notes..."
+                placeholder="Preferred age, city, caste, education, family background, lifestyle, etc."
                 className="input-field resize-none"
               />
             </div>
           </div>
+        </section>
+
+        {/* Notes */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Additional Notes
+          </h2>
+
+          <textarea
+            name="additionalNotes"
+            value={formData.additionalNotes}
+            onChange={updateField}
+            rows={3}
+            placeholder="Any additional private notes..."
+            className="input-field resize-none"
+          />
         </section>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
