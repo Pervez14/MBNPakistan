@@ -1,267 +1,607 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { CheckCircle, AlertCircle } from 'lucide-react';
-import { profileAPI } from '@/lib/api';
-
-const schema = z.object({
-  gender: z.enum(['MALE', 'FEMALE']),
-  age: z.coerce.number().int().min(18, 'Min age 18').max(80, 'Max age 80'),
-  maritalStatus: z.enum(['NEVER_MARRIED', 'DIVORCED', 'WIDOWED', 'SEPARATED']),
-  religion: z.enum(['ISLAM', 'CHRISTIANITY', 'HINDUISM', 'OTHER']).optional(),
-  sect: z.string().optional(),
-  caste: z.string().optional(),
-  country: z.string().optional(),
-  province: z.string().optional(),
-  city: z.string().optional(),
-  qualification: z.string().optional(),
-  degree: z.string().optional(),
-  employmentType: z.enum(['JOB_HOLDER', 'BUSINESS_OWNER', 'STUDENT', 'NOT_EMPLOYED', 'OTHER']).optional(),
-  occupation: z.string().optional(),
-  monthlyIncomePkr: z.coerce.number().optional(),
-  heightCm: z.coerce.number().optional(),
-  weightKg: z.coerce.number().optional(),
-  sect2: z.string().optional(),
-  isOverseas: z.boolean().default(false),
-  photoPrivacy: z.enum(['PUBLIC', 'VERIFIED_ONLY', 'HIDDEN']).default('PUBLIC'),
-  additionalInfo: z.string().optional(),
-});
-
-type FormData = z.infer<typeof schema>;
-
-const PROVINCES = ['Punjab', 'Sindh', 'KPK', 'Balochistan', 'Gilgit-Baltistan', 'AJK', 'ICT'];
+import {
+  AlertCircle,
+  CheckCircle,
+  ArrowLeft,
+  Upload,
+  X,
+  Image as ImageIcon,
+} from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function NewProfilePage() {
   const router = useRouter();
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { gender: 'MALE', maritalStatus: 'NEVER_MARRIED', isOverseas: false, photoPrivacy: 'PUBLIC' },
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+
+  const [formData, setFormData] = useState({
+    profileCode: '',
+    candidateName: '',
+    gender: '',
+    age: '',
+    dateOfBirth: '',
+    maritalStatus: '',
+    height: '',
+    religion: 'Islam',
+    sect: '',
+    caste: '',
+    city: '',
+    province: '',
+    country: 'Pakistan',
+    nationality: 'Pakistani',
+    education: '',
+    profession: '',
+    incomeRange: '',
+    familyDetails: '',
+    requirements: '',
+    additionalNotes: '',
   });
 
-  const gender = watch('gender');
+  const updateField = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
 
-  const onSubmit = async (data: FormData) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      setErrorMessage('Please upload JPG, PNG, or WEBP image only.');
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setErrorMessage('Photo must be smaller than 5MB.');
+      return;
+    }
+
+    setErrorMessage('');
+    setSelectedPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const removePhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview('');
+  };
+
+  const uploadPhoto = async (userId: string) => {
+    if (!selectedPhoto) return null;
+
+    const fileExt = selectedPhoto.name.split('.').pop();
+    const safeFileName = selectedPhoto.name
+      .replace(/\s+/g, '-')
+      .replace(/[^a-zA-Z0-9.-]/g, '')
+      .toLowerCase();
+
+    const filePath = `${userId}/${Date.now()}-${safeFileName || `photo.${fileExt}`}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, selectedPhoto, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
     try {
-      setError('');
-      const res = await profileAPI.create(data);
-      setSuccess(`Profile created! ID: ${res.data.data.profileId}`);
-      setTimeout(() => router.push('/profiles'), 2000);
+      setIsSubmitting(true);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user || !user.email) {
+        throw new Error('You must login again before creating a profile.');
+      }
+
+      const photoUrl = await uploadPhoto(user.id);
+
+      const { error } = await supabase.from('marriage_profiles').insert({
+        created_by: user.id,
+        bureau_email: user.email,
+
+        profile_code: formData.profileCode || null,
+        candidate_name: formData.candidateName || null,
+        gender: formData.gender,
+        age: formData.age ? Number(formData.age) : null,
+        date_of_birth: formData.dateOfBirth || null,
+
+        marital_status: formData.maritalStatus || null,
+        height: formData.height || null,
+        religion: formData.religion || 'Islam',
+        sect: formData.sect || null,
+        caste: formData.caste || null,
+
+        city: formData.city || null,
+        province: formData.province || null,
+        country: formData.country || 'Pakistan',
+        nationality: formData.nationality || null,
+
+        education: formData.education || null,
+        profession: formData.profession || null,
+        income_range: formData.incomeRange || null,
+
+        family_details: formData.familyDetails || null,
+        requirements: formData.requirements || null,
+        additional_notes: formData.additionalNotes || null,
+
+        photo_url: photoUrl,
+        status: 'active',
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccessMessage('Marriage profile created successfully.');
+
+      setTimeout(() => {
+        router.push('/profiles');
+      }, 1200);
     } catch (err: unknown) {
-      setError(
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to create profile. Please try again.'
-      );
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Profile could not be created. Please try again.';
+
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="page-header">
-        <h1 className="page-title">Add New Marriage Profile</h1>
-        <p className="page-subtitle">Fill in the profile details. All fields marked * are required.</p>
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-6">
+        <Link
+          href="/profiles"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-green-700 mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Profiles
+        </Link>
+
+        <h1 className="font-heading text-3xl font-bold text-slate-900">
+          Add Marriage Profile
+        </h1>
+
+        <p className="text-slate-500 mt-1">
+          Create a new candidate profile for your bureau.
+        </p>
       </div>
 
-      {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg mb-6 text-sm text-red-700">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>{error}</span>
+      {errorMessage && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6 text-sm text-red-700">
+          <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
-      {success && (
-        <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg mb-6 text-sm text-green-700">
-          <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>{success}</span>
+      {successMessage && (
+        <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-xl mb-6 text-sm text-green-700">
+          <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <span>{successMessage}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Basic Information */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Basic Information</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <label className="label">Gender *</label>
-              <select {...register('gender')} className="input-field">
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Age *</label>
-              <input {...register('age')} type="number" min={18} max={80} placeholder="25" className="input-field" />
-              {errors.age && <p className="text-red-600 text-xs mt-1">{errors.age.message}</p>}
-            </div>
-            <div>
-              <label className="label">Marital Status *</label>
-              <select {...register('maritalStatus')} className="input-field">
-                <option value="NEVER_MARRIED">Never Married</option>
-                <option value="DIVORCED">Divorced</option>
-                <option value="WIDOWED">Widowed</option>
-                <option value="SEPARATED">Separated</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Height (cm)</label>
-              <input {...register('heightCm')} type="number" placeholder="170" className="input-field" />
-            </div>
-            <div>
-              <label className="label">Weight (kg)</label>
-              <input {...register('weightKg')} type="number" placeholder="70" className="input-field" />
-            </div>
-            <div>
-              <label className="label">Religion</label>
-              <select {...register('religion')} className="input-field">
-                <option value="">Select...</option>
-                <option value="ISLAM">Islam</option>
-                <option value="CHRISTIANITY">Christianity</option>
-                <option value="HINDUISM">Hinduism</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Sect / Maslak</label>
-              <input {...register('sect')} placeholder="e.g. Sunni, Shia, Deobandi..." className="input-field" />
-            </div>
-            <div>
-              <label className="label">Caste / Biradari</label>
-              <input {...register('caste')} placeholder="e.g. Rajput, Awan, Syed..." className="input-field" />
-            </div>
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="card p-8 space-y-8">
+        {/* Photo Upload */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Candidate Photo
+          </h2>
 
-        {/* Location */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Location</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <label className="label">Country</label>
-              <select {...register('country')} className="input-field">
-                <option value="">Select...</option>
-                <option value="Pakistan">Pakistan</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="UAE">UAE</option>
-                <option value="Saudi Arabia">Saudi Arabia</option>
-                <option value="USA">USA</option>
-                <option value="Canada">Canada</option>
-                <option value="Australia">Australia</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Province</label>
-              <select {...register('province')} className="input-field">
-                <option value="">Select...</option>
-                {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">City</label>
-              <input {...register('city')} placeholder="e.g. Lahore" className="input-field" />
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input {...register('isOverseas')} type="checkbox" id="overseas" className="w-4 h-4 accent-green-700" />
-              <label htmlFor="overseas" className="text-sm text-slate-700">Overseas Pakistani</label>
-            </div>
-          </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
+            <div className="w-full">
+              {photoPreview ? (
+                <div className="relative">
+                  <img
+                    src={photoPreview}
+                    alt="Profile preview"
+                    className="w-full h-64 object-cover rounded-2xl border border-slate-200 bg-slate-50"
+                  />
 
-        {/* Education */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Education</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Qualification</label>
-              <select {...register('qualification')} className="input-field">
-                <option value="">Select...</option>
-                <option value="Matric">Matric</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Bachelor">Bachelor</option>
-                <option value="Master">Master</option>
-                <option value="PhD">PhD</option>
-                <option value="Diploma">Diploma</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Degree / Field</label>
-              <input {...register('degree')} placeholder="e.g. MBBS, MBA, CS..." className="input-field" />
-            </div>
-          </div>
-        </div>
-
-        {/* Career */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Career</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <label className="label">Employment Type</label>
-              <select {...register('employmentType')} className="input-field">
-                <option value="">Select...</option>
-                <option value="JOB_HOLDER">Job Holder</option>
-                <option value="BUSINESS_OWNER">Business Owner</option>
-                <option value="STUDENT">Student</option>
-                <option value="NOT_EMPLOYED">Not Employed</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Occupation</label>
-              <input {...register('occupation')} placeholder="e.g. Engineer, Doctor..." className="input-field" />
-            </div>
-            <div>
-              <label className="label">Monthly Income (PKR)</label>
-              <input {...register('monthlyIncomePkr')} type="number" placeholder="50000" className="input-field" />
-            </div>
-          </div>
-        </div>
-
-        {/* Photo Privacy */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Privacy Settings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">Photo Privacy</label>
-              <select {...register('photoPrivacy')} className="input-field">
-                <option value="PUBLIC">Public (visible to all)</option>
-                <option value="VERIFIED_ONLY">Verified Bureaus Only</option>
-                <option value="HIDDEN">Hidden</option>
-              </select>
-              {gender === 'FEMALE' && (
-                <p className="text-xs text-slate-500 mt-1">
-                  Recommended: Verified Only or Hidden for female profiles
-                </p>
+                  <button
+                    type="button"
+                    onClick={removePhoto}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center text-slate-600 hover:text-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-64 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                  <ImageIcon className="w-10 h-10 mb-2" />
+                  <p className="text-sm">No photo selected</p>
+                </div>
               )}
             </div>
+
+            <div>
+              <label className="label">Upload Photo</label>
+
+              <label className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-green-700 text-white font-medium cursor-pointer hover:bg-green-800 transition">
+                <Upload className="w-4 h-4" />
+                Choose Photo
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+              </label>
+
+              <p className="text-sm text-slate-500 mt-3">
+                Accepted formats: JPG, PNG, WEBP. Maximum size: 5MB.
+              </p>
+
+              <p className="text-xs text-slate-400 mt-2">
+                For privacy, upload only photos you have permission to share.
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* Additional Info */}
-        <div className="card p-6">
-          <h3 className="font-heading font-semibold text-slate-800 mb-4">Additional Information</h3>
-          <textarea
-            {...register('additionalInfo')}
-            rows={4}
-            placeholder="Any additional information about the candidate, family background, preferences, etc."
-            className="input-field resize-none"
-          />
-        </div>
+        {/* Basic Info */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Basic Information
+          </h2>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button type="submit" disabled={isSubmitting} className="btn-primary disabled:opacity-50">
-            {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Profile Code</label>
+              <input
+                name="profileCode"
+                value={formData.profileCode}
+                onChange={updateField}
+                placeholder="e.g. MBN-1001"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Candidate Name</label>
+              <input
+                name="candidateName"
+                value={formData.candidateName}
+                onChange={updateField}
+                placeholder="Optional / private"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Gender *</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={updateField}
+                required
+                className="input-field"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male / Groom</option>
+                <option value="Female">Female / Bride</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Age</label>
+              <input
+                name="age"
+                type="number"
+                min="18"
+                max="80"
+                value={formData.age}
+                onChange={updateField}
+                placeholder="28"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Date of Birth</label>
+              <input
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={updateField}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Marital Status</label>
+              <select
+                name="maritalStatus"
+                value={formData.maritalStatus}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Never Married">Never Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widow">Widow</option>
+                <option value="Widower">Widower</option>
+                <option value="Separated">Separated</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Height</label>
+              <input
+                name="height"
+                value={formData.height}
+                onChange={updateField}
+                placeholder="5'8&quot;"
+                className="input-field"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Religious / Community */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Religious & Community Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Religion</label>
+              <input
+                name="religion"
+                value={formData.religion}
+                onChange={updateField}
+                placeholder="Islam"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Sect</label>
+              <select
+                name="sect"
+                value={formData.sect}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select</option>
+                <option value="Sunni">Sunni</option>
+                <option value="Shia">Shia</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Caste / Community</label>
+              <input
+                name="caste"
+                value={formData.caste}
+                onChange={updateField}
+                placeholder="Rajput, Arain, Sheikh, etc."
+                className="input-field"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Location */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Location Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">City</label>
+              <input
+                name="city"
+                value={formData.city}
+                onChange={updateField}
+                placeholder="Lahore"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Province / Region</label>
+              <select
+                name="province"
+                value={formData.province}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select Province</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Sindh">Sindh</option>
+                <option value="KPK">KPK</option>
+                <option value="Balochistan">Balochistan</option>
+                <option value="Islamabad">Islamabad</option>
+                <option value="AJK">AJK</option>
+                <option value="Gilgit-Baltistan">Gilgit-Baltistan</option>
+                <option value="Overseas">Overseas</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Country</label>
+              <input
+                name="country"
+                value={formData.country}
+                onChange={updateField}
+                placeholder="Pakistan"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Nationality</label>
+              <input
+                name="nationality"
+                value={formData.nationality}
+                onChange={updateField}
+                placeholder="Pakistani"
+                className="input-field"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Education / Career */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Education & Career
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Education</label>
+              <input
+                name="education"
+                value={formData.education}
+                onChange={updateField}
+                placeholder="MBA, MBBS, BS Computer Science"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Profession</label>
+              <input
+                name="profession"
+                value={formData.profession}
+                onChange={updateField}
+                placeholder="Doctor, Engineer, Business Owner"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="label">Income Range</label>
+              <select
+                name="incomeRange"
+                value={formData.incomeRange}
+                onChange={updateField}
+                className="input-field"
+              >
+                <option value="">Select Income Range</option>
+                <option value="Under 50,000 PKR">Under 50,000 PKR</option>
+                <option value="50,000 - 100,000 PKR">
+                  50,000 - 100,000 PKR
+                </option>
+                <option value="100,000 - 250,000 PKR">
+                  100,000 - 250,000 PKR
+                </option>
+                <option value="250,000 - 500,000 PKR">
+                  250,000 - 500,000 PKR
+                </option>
+                <option value="500,000+ PKR">500,000+ PKR</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        {/* Details */}
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Family & Requirements
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="label">Family Details</label>
+              <textarea
+                name="familyDetails"
+                value={formData.familyDetails}
+                onChange={updateField}
+                rows={3}
+                placeholder="Family background, siblings, parents, etc."
+                className="input-field resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="label">Match Requirements</label>
+              <textarea
+                name="requirements"
+                value={formData.requirements}
+                onChange={updateField}
+                rows={3}
+                placeholder="Preferred age, city, education, family background, etc."
+                className="input-field resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="label">Additional Notes</label>
+              <textarea
+                name="additionalNotes"
+                value={formData.additionalNotes}
+                onChange={updateField}
+                rows={3}
+                placeholder="Any additional private notes..."
+                className="input-field resize-none"
+              />
+            </div>
+          </div>
+        </section>
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn-primary flex-1 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Creating Profile...' : 'Create Marriage Profile'}
           </button>
-          <button type="button" onClick={() => router.back()} className="btn-secondary">
+
+          <Link
+            href="/profiles"
+            className="inline-flex justify-center items-center px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50"
+          >
             Cancel
-          </button>
+          </Link>
         </div>
       </form>
     </div>
