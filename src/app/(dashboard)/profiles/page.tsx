@@ -1,28 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Users,
+  MapPin,
+  GraduationCap,
+  Briefcase,
+  AlertCircle,
   UserPlus,
   Search,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  MapPin,
-  Briefcase,
-  GraduationCap,
-  ArrowRight,
+  Heart,
+  Home,
+  Languages,
+  UserRound,
+  Building2,
+  BadgeDollarSign,
+  Ruler,
+  Baby,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-
-type Application = {
-  business_name: string | null;
-  status: string | null;
-  city: string | null;
-  province: string | null;
-  created_at: string | null;
-};
 
 type MarriageProfile = {
   id: string;
@@ -30,151 +29,318 @@ type MarriageProfile = {
   candidate_name: string | null;
   gender: string | null;
   age: number | null;
+  date_of_birth: string | null;
+  marital_status: string | null;
+  height: string | null;
+
+  religion: string | null;
+  sect: string | null;
+  caste: string | null;
+
   city: string | null;
   province: string | null;
-  caste: string | null;
+  country: string | null;
+  nationality: string | null;
+  residence_status: string | null;
+
   education: string | null;
   profession: string | null;
+  employment_status: string | null;
+  job_type: string | null;
+  income_range: string | null;
+
+  complexion: string | null;
+  body_type: string | null;
+  languages: string | null;
+
+  siblings: string | null;
+  father_occupation: string | null;
+  mother_occupation: string | null;
+  family_details: string | null;
+
+  expected_partner_age: string | null;
+  expected_partner_location: string | null;
+  expected_partner_education: string | null;
+  requirements: string | null;
+
+  additional_notes: string | null;
   photo_url: string | null;
+  bureau_email: string | null;
+  status: string | null;
   created_at: string | null;
 };
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+type Filters = {
+  keyword: string;
+  gender: string;
+  status: string;
+};
 
-  const [application, setApplication] = useState<Application | null>(null);
-  const [myProfilesCount, setMyProfilesCount] = useState(0);
-  const [networkProfilesCount, setNetworkProfilesCount] = useState(0);
-  const [recentProfiles, setRecentProfiles] = useState<MarriageProfile[]>([]);
+const emptyFilters: Filters = {
+  keyword: '',
+  gender: '',
+  status: 'active',
+};
+
+function InfoItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | number | null | undefined;
+}) {
+  if (!value) return null;
+
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <div className="mt-0.5 text-slate-400 flex-shrink-0">{icon}</div>
+      <div>
+        <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">
+          {label}
+        </p>
+        <p className="text-slate-700 font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function DetailPill({
+  children,
+  color = 'slate',
+}: {
+  children: ReactNode;
+  color?: 'green' | 'amber' | 'blue' | 'slate' | 'red';
+}) {
+  const styles = {
+    green: 'bg-green-50 text-green-700',
+    amber: 'bg-amber-50 text-amber-700',
+    blue: 'bg-blue-50 text-blue-700',
+    slate: 'bg-slate-100 text-slate-600',
+    red: 'bg-red-50 text-red-700',
+  };
+
+  return (
+    <span
+      className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${styles[color]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+export default function MyProfilesPage() {
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [profiles, setProfiles] = useState<MarriageProfile[]>([]);
+  const [filters, setFilters] = useState<Filters>(emptyFilters);
+
+  const updateFilter = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const loadProfiles = async (activeFilters: Filters = filters) => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user || !user.email) {
+        throw new Error('Please login again to view your profiles.');
+      }
+
+      let query = supabase
+        .from('marriage_profiles')
+        .select(
+          `
+          id,
+          profile_code,
+          candidate_name,
+          gender,
+          age,
+          date_of_birth,
+          marital_status,
+          height,
+          religion,
+          sect,
+          caste,
+          city,
+          province,
+          country,
+          nationality,
+          residence_status,
+          education,
+          profession,
+          employment_status,
+          job_type,
+          income_range,
+          complexion,
+          body_type,
+          languages,
+          siblings,
+          father_occupation,
+          mother_occupation,
+          family_details,
+          expected_partner_age,
+          expected_partner_location,
+          expected_partner_education,
+          requirements,
+          additional_notes,
+          photo_url,
+          bureau_email,
+          status,
+          created_at
+        `
+        )
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false });
+
+      if (activeFilters.status) {
+        query = query.eq('status', activeFilters.status);
+      }
+
+      if (activeFilters.gender) {
+        query = query.eq('gender', activeFilters.gender);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      let result = (data || []) as MarriageProfile[];
+
+      if (activeFilters.keyword.trim()) {
+        const keyword = activeFilters.keyword.toLowerCase().trim();
+
+        result = result.filter((profile) => {
+          const searchableText = [
+            profile.profile_code,
+            profile.candidate_name,
+            profile.gender,
+            profile.age,
+            profile.marital_status,
+            profile.education,
+            profile.profession,
+            profile.employment_status,
+            profile.job_type,
+            profile.city,
+            profile.province,
+            profile.caste,
+            profile.sect,
+            profile.siblings,
+            profile.father_occupation,
+            profile.mother_occupation,
+            profile.family_details,
+            profile.requirements,
+            profile.expected_partner_location,
+            profile.expected_partner_education,
+            profile.languages,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+          return searchableText.includes(keyword);
+        });
+      }
+
+      setProfiles(result);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Profiles could not be loaded. Please try again.';
+
+      setErrorMessage(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markInactive = async (profileId: string) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to remove this profile from active listings?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(profileId);
+      setErrorMessage('');
+
+      const { error } = await supabase
+        .from('marriage_profiles')
+        .update({ status: 'inactive' })
+        .eq('id', profileId);
+
+      if (error) {
+        throw error;
+      }
+
+      await loadProfiles(filters);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Profile could not be updated. Please try again.';
+
+      setErrorMessage(message);
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const reactivateProfile = async (profileId: string) => {
+    try {
+      setActionLoading(profileId);
+      setErrorMessage('');
+
+      const { error } = await supabase
+        .from('marriage_profiles')
+        .update({ status: 'active' })
+        .eq('id', profileId);
+
+      if (error) {
+        throw error;
+      }
+
+      await loadProfiles(filters);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Profile could not be reactivated. Please try again.';
+
+      setErrorMessage(message);
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const resetFilters = () => {
+    setFilters(emptyFilters);
+    loadProfiles(emptyFilters);
+  };
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage('');
-
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError || !user || !user.email) {
-          throw new Error('Please login again to view your dashboard.');
-        }
-
-        const { data: applicationData } = await supabase
-          .from('bureau_applications')
-          .select('business_name, status, city, province, created_at')
-          .eq('email', user.email)
-          .maybeSingle();
-
-        setApplication(applicationData || null);
-
-        const { count: myCount, error: myCountError } = await supabase
-          .from('marriage_profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('created_by', user.id)
-          .eq('status', 'active');
-
-        if (myCountError) {
-          throw myCountError;
-        }
-
-        setMyProfilesCount(myCount || 0);
-
-        const { count: totalCount, error: totalCountError } = await supabase
-          .from('marriage_profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
-
-        if (totalCountError) {
-          throw totalCountError;
-        }
-
-        setNetworkProfilesCount(totalCount || 0);
-
-        const { data: recentData, error: recentError } = await supabase
-          .from('marriage_profiles')
-          .select(
-            'id, profile_code, candidate_name, gender, age, city, province, caste, education, profession, photo_url, created_at'
-          )
-          .eq('created_by', user.id)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (recentError) {
-          throw recentError;
-        }
-
-        setRecentProfiles((recentData || []) as MarriageProfile[]);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Dashboard could not be loaded. Please try again.';
-
-        setErrorMessage(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboard();
+    loadProfiles(emptyFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const status = application?.status || 'pending';
-
-  const statusBadge =
-    status === 'approved'
-      ? 'bg-green-100 text-green-700'
-      : status === 'rejected'
-        ? 'bg-red-100 text-red-700'
-        : 'bg-amber-100 text-amber-700';
-
-  const statusIcon =
-    status === 'approved' ? (
-      <CheckCircle className="w-5 h-5 text-green-600" />
-    ) : status === 'rejected' ? (
-      <AlertCircle className="w-5 h-5 text-red-600" />
-    ) : (
-      <Clock className="w-5 h-5 text-amber-600" />
-    );
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-10 w-64 bg-slate-200 rounded-lg animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
-          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
-          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <div className="max-w-2xl">
-        <div className="flex items-start gap-3 p-5 bg-red-50 border border-red-200 rounded-xl text-red-700">
-          <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-semibold">Dashboard Error</p>
-            <p className="text-sm mt-1">{errorMessage}</p>
-          </div>
-        </div>
-
-        <Link
-          href="/login"
-          className="inline-flex mt-5 px-5 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800"
-        >
-          Back to Login
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -182,10 +348,10 @@ export default function DashboardPage() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold text-slate-900">
-            Bureau Dashboard
+            My Profiles
           </h1>
           <p className="text-slate-500 mt-1">
-            Welcome back, {application?.business_name || 'Marriage Bureau'}.
+            View and manage marriage profiles uploaded by your bureau.
           </p>
         </div>
 
@@ -198,212 +364,370 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Status Notice */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-start gap-3">
-          {statusIcon}
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
+            <label className="label">Search My Profiles</label>
+            <input
+              name="keyword"
+              value={filters.keyword}
+              onChange={updateFilter}
+              placeholder="Search code, education, city, profession..."
+              className="input-field"
+            />
+          </div>
+
           <div>
-            <p className="font-semibold text-slate-900">Account Status</p>
-            <p className="text-sm text-slate-500 mt-1">
-              Your bureau application status is currently{' '}
-              <span className="font-semibold capitalize">{status}</span>.
-            </p>
-          </div>
-        </div>
-
-        <span
-          className={`inline-flex px-4 py-2 rounded-full text-sm font-semibold capitalize ${statusBadge}`}
-        >
-          {status}
-        </span>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
-            <Users className="w-6 h-6 text-green-700" />
+            <label className="label">Gender</label>
+            <select
+              name="gender"
+              value={filters.gender}
+              onChange={updateFilter}
+              className="input-field"
+            >
+              <option value="">All</option>
+              <option value="Male">Male / Groom</option>
+              <option value="Female">Female / Bride</option>
+            </select>
           </div>
 
-          <p className="text-sm text-slate-500">My Uploaded Profiles</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
-            {myProfilesCount}
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
-            <Search className="w-6 h-6 text-amber-600" />
-          </div>
-
-          <p className="text-sm text-slate-500">Network Active Profiles</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
-            {networkProfilesCount}
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
-            <CheckCircle className="w-6 h-6 text-blue-600" />
-          </div>
-
-          <p className="text-sm text-slate-500">Bureau Location</p>
-          <p className="text-lg font-bold text-slate-900 mt-2">
-            {application?.city || 'Not added'}
-            {application?.province ? `, ${application.province}` : ''}
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link
-          href="/profiles/new"
-          className="bg-green-700 rounded-2xl p-6 text-white hover:bg-green-800 transition"
-        >
-          <UserPlus className="w-8 h-8 mb-4" />
-          <p className="font-bold text-lg">Add New Profile</p>
-          <p className="text-green-50 text-sm mt-1">
-            Upload a new bride or groom profile.
-          </p>
-        </Link>
-
-        <Link
-          href="/profiles"
-          className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
-        >
-          <Users className="w-8 h-8 mb-4 text-green-700" />
-          <p className="font-bold text-lg text-slate-900">My Profiles</p>
-          <p className="text-slate-500 text-sm mt-1">
-            View profiles uploaded by your bureau.
-          </p>
-        </Link>
-
-        <Link
-          href="/search"
-          className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
-        >
-          <Search className="w-8 h-8 mb-4 text-amber-600" />
-          <p className="font-bold text-lg text-slate-900">Search Network</p>
-          <p className="text-slate-500 text-sm mt-1">
-            Search profiles from other approved bureaus.
-          </p>
-        </Link>
-      </div>
-
-      {/* Recent Profiles */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="font-heading text-xl font-bold text-slate-900">
-              Recent Uploaded Profiles
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Latest profiles added by your bureau.
-            </p>
+            <label className="label">Status</label>
+            <select
+              name="status"
+              value={filters.status}
+              onChange={updateFilter}
+              className="input-field"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="">All</option>
+            </select>
           </div>
+        </div>
+
+        <div className="mt-5 flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={() => loadProfiles(filters)}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800"
+          >
+            <Search className="w-4 h-4" />
+            Search
+          </button>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {errorMessage && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-500">
+          {loading ? 'Loading profiles...' : `${profiles.length} profile(s) found`}
+        </p>
+      </div>
+
+      {/* Loading */}
+      {loading ? (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {[1, 2].map((item) => (
+            <div
+              key={item}
+              className="h-[520px] bg-slate-200 rounded-2xl animate-pulse"
+            />
+          ))}
+        </div>
+      ) : profiles.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+          <div className="w-16 h-16 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-slate-400" />
+          </div>
+
+          <h3 className="font-semibold text-slate-900">No profiles found</h3>
+          <p className="text-slate-500 text-sm mt-1">
+            Add your first bride or groom profile to start building your bureau
+            database.
+          </p>
 
           <Link
-            href="/profiles"
-            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-green-700 hover:text-green-800"
+            href="/profiles/new"
+            className="inline-flex items-center gap-2 mt-5 px-5 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800"
           >
-            View All
-            <ArrowRight className="w-4 h-4" />
+            <UserPlus className="w-4 h-4" />
+            Add Profile
           </Link>
         </div>
-
-        {recentProfiles.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-4">
-              <Users className="w-8 h-8 text-slate-400" />
-            </div>
-
-            <h3 className="font-semibold text-slate-900">
-              No profiles uploaded yet
-            </h3>
-            <p className="text-slate-500 text-sm mt-1">
-              Start by adding your first marriage profile.
-            </p>
-
-            <Link
-              href="/profiles/new"
-              className="inline-flex items-center gap-2 mt-5 px-5 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800"
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {profiles.map((profile) => (
+            <div
+              key={profile.id}
+              className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
             >
-              <UserPlus className="w-4 h-4" />
-              Add Profile
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {recentProfiles.map((profile) => (
-              <div
-                key={profile.id}
-                className="p-5 flex flex-col md:flex-row md:items-center gap-4"
-              >
-                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                  {profile.photo_url ? (
-                    <img
-                      src={profile.photo_url}
-                      alt={profile.profile_code || 'Marriage profile'}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Users className="w-8 h-8 text-slate-400" />
-                    </div>
+              {/* Image */}
+              <div className="h-80 bg-slate-100 border-b border-slate-100">
+                {profile.photo_url ? (
+                  <img
+                    src={profile.photo_url}
+                    alt={profile.profile_code || 'Marriage profile'}
+                    className="w-full h-full object-contain object-top bg-slate-50"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Users className="w-16 h-16 text-slate-300" />
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  {profile.gender && (
+                    <DetailPill color="green">{profile.gender}</DetailPill>
+                  )}
+
+                  {profile.age && (
+                    <DetailPill color="blue">{profile.age} years</DetailPill>
+                  )}
+
+                  {profile.marital_status && (
+                    <DetailPill color="amber">
+                      {profile.marital_status}
+                    </DetailPill>
+                  )}
+
+                  {profile.profile_code && (
+                    <DetailPill>{profile.profile_code}</DetailPill>
+                  )}
+
+                  {profile.status === 'inactive' && (
+                    <DetailPill color="red">Inactive</DetailPill>
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-slate-900">
-                      {profile.profile_code ||
-                        profile.candidate_name ||
-                        'Marriage Profile'}
-                    </p>
+                <h3 className="font-heading text-2xl font-bold text-slate-900">
+                  {profile.profile_code ||
+                    profile.candidate_name ||
+                    'Marriage Profile'}
+                </h3>
 
-                    {profile.gender && (
-                      <span className="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
-                        {profile.gender}
-                      </span>
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InfoItem
+                    icon={<MapPin className="w-4 h-4" />}
+                    label="Location"
+                    value={
+                      profile.city || profile.province
+                        ? `${profile.city || ''}${
+                            profile.city && profile.province ? ', ' : ''
+                          }${profile.province || ''}`
+                        : null
+                    }
+                  />
+
+                  <InfoItem
+                    icon={<GraduationCap className="w-4 h-4" />}
+                    label="Education"
+                    value={profile.education}
+                  />
+
+                  <InfoItem
+                    icon={<Briefcase className="w-4 h-4" />}
+                    label="Profession"
+                    value={profile.profession}
+                  />
+
+                  <InfoItem
+                    icon={<Building2 className="w-4 h-4" />}
+                    label="Employment"
+                    value={profile.employment_status || profile.job_type}
+                  />
+
+                  <InfoItem
+                    icon={<BadgeDollarSign className="w-4 h-4" />}
+                    label="Income"
+                    value={profile.income_range}
+                  />
+
+                  <InfoItem
+                    icon={<Heart className="w-4 h-4" />}
+                    label="Caste / Sect"
+                    value={
+                      profile.caste || profile.sect
+                        ? `${profile.caste || ''}${
+                            profile.caste && profile.sect ? ' / ' : ''
+                          }${profile.sect || ''}`
+                        : null
+                    }
+                  />
+
+                  <InfoItem
+                    icon={<Ruler className="w-4 h-4" />}
+                    label="Height"
+                    value={profile.height}
+                  />
+
+                  <InfoItem
+                    icon={<UserRound className="w-4 h-4" />}
+                    label="Appearance"
+                    value={
+                      profile.complexion || profile.body_type
+                        ? `${profile.complexion || ''}${
+                            profile.complexion && profile.body_type ? ' / ' : ''
+                          }${profile.body_type || ''}`
+                        : null
+                    }
+                  />
+
+                  <InfoItem
+                    icon={<Languages className="w-4 h-4" />}
+                    label="Languages"
+                    value={profile.languages}
+                  />
+
+                  <InfoItem
+                    icon={<Home className="w-4 h-4" />}
+                    label="Residence"
+                    value={profile.residence_status}
+                  />
+
+                  <InfoItem
+                    icon={<Baby className="w-4 h-4" />}
+                    label="Siblings"
+                    value={profile.siblings}
+                  />
+
+                  <InfoItem
+                    icon={<Users className="w-4 h-4" />}
+                    label="Parents"
+                    value={
+                      profile.father_occupation || profile.mother_occupation
+                        ? `Father: ${
+                            profile.father_occupation || 'N/A'
+                          } | Mother: ${profile.mother_occupation || 'N/A'}`
+                        : null
+                    }
+                  />
+                </div>
+
+                {(profile.family_details ||
+                  profile.expected_partner_age ||
+                  profile.expected_partner_location ||
+                  profile.expected_partner_education ||
+                  profile.requirements) && (
+                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {profile.family_details && (
+                      <div className="p-4 rounded-xl bg-slate-50">
+                        <p className="font-semibold text-slate-800 mb-1">
+                          Family Details
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                          {profile.family_details}
+                        </p>
+                      </div>
                     )}
 
-                    {profile.age && (
-                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">
-                        {profile.age} years
-                      </span>
+                    {(profile.expected_partner_age ||
+                      profile.expected_partner_location ||
+                      profile.expected_partner_education ||
+                      profile.requirements) && (
+                      <div className="p-4 rounded-xl bg-green-50">
+                        <p className="font-semibold text-green-900 mb-2">
+                          Partner Requirements
+                        </p>
+
+                        <div className="space-y-1 text-sm text-green-800">
+                          {profile.expected_partner_age && (
+                            <p>
+                              <span className="font-semibold">Age:</span>{' '}
+                              {profile.expected_partner_age}
+                            </p>
+                          )}
+
+                          {profile.expected_partner_location && (
+                            <p>
+                              <span className="font-semibold">Location:</span>{' '}
+                              {profile.expected_partner_location}
+                            </p>
+                          )}
+
+                          {profile.expected_partner_education && (
+                            <p>
+                              <span className="font-semibold">Education:</span>{' '}
+                              {profile.expected_partner_education}
+                            </p>
+                          )}
+
+                          {profile.requirements && (
+                            <p className="pt-1 leading-relaxed">
+                              {profile.requirements}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {profile.additional_notes && (
+                  <div className="mt-4 p-4 rounded-xl bg-amber-50 text-sm text-amber-800">
+                    <p className="font-semibold mb-1">Additional Notes</p>
+                    <p>{profile.additional_notes}</p>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    {profile.created_at && (
+                      <p className="text-xs text-slate-400">
+                        Added:{' '}
+                        {new Date(profile.created_at).toLocaleDateString()}
+                      </p>
                     )}
                   </div>
 
-                  <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
-                    {(profile.city || profile.province) && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {profile.city}
-                        {profile.province ? `, ${profile.province}` : ''}
-                      </span>
-                    )}
-
-                    {profile.education && (
-                      <span className="inline-flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4" />
-                        {profile.education}
-                      </span>
-                    )}
-
-                    {profile.profession && (
-                      <span className="inline-flex items-center gap-1">
-                        <Briefcase className="w-4 h-4" />
-                        {profile.profession}
-                      </span>
+                  <div className="flex gap-2">
+                    {profile.status === 'inactive' ? (
+                      <button
+                        type="button"
+                        onClick={() => reactivateProfile(profile.id)}
+                        disabled={actionLoading === profile.id}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-semibold hover:bg-green-100 disabled:opacity-50"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Reactivate
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => markInactive(profile.id)}
+                        disabled={actionLoading === profile.id}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove
+                      </button>
                     )}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
