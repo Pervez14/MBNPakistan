@@ -9,6 +9,15 @@ import {
   Briefcase,
   AlertCircle,
   Filter,
+  Heart,
+  Home,
+  Languages,
+  UserRound,
+  Building2,
+  BadgeDollarSign,
+  Ruler,
+  Baby,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -18,20 +27,40 @@ type MarriageProfile = {
   candidate_name: string | null;
   gender: string | null;
   age: number | null;
+  date_of_birth: string | null;
   marital_status: string | null;
   height: string | null;
+
   religion: string | null;
   sect: string | null;
   caste: string | null;
+
   city: string | null;
   province: string | null;
   country: string | null;
   nationality: string | null;
+  residence_status: string | null;
+
   education: string | null;
   profession: string | null;
+  employment_status: string | null;
+  job_type: string | null;
   income_range: string | null;
+
+  complexion: string | null;
+  body_type: string | null;
+  languages: string | null;
+
+  siblings: string | null;
+  father_occupation: string | null;
+  mother_occupation: string | null;
   family_details: string | null;
+
+  expected_partner_age: string | null;
+  expected_partner_location: string | null;
+  expected_partner_education: string | null;
   requirements: string | null;
+
   additional_notes: string | null;
   photo_url: string | null;
   bureau_email: string | null;
@@ -142,20 +171,81 @@ const citiesByProvince: Record<string, string[]> = {
   ],
 };
 
+type Filters = {
+  keyword: string;
+  gender: string;
+  province: string;
+  city: string;
+  caste: string;
+  maritalStatus: string;
+  employmentStatus: string;
+  education: string;
+};
+
+const emptyFilters: Filters = {
+  keyword: '',
+  gender: '',
+  province: '',
+  city: '',
+  caste: '',
+  maritalStatus: '',
+  employmentStatus: '',
+  education: '',
+};
+
+function InfoItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number | null | undefined;
+}) {
+  if (!value) return null;
+
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <div className="mt-0.5 text-slate-400 flex-shrink-0">{icon}</div>
+      <div>
+        <p className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold">
+          {label}
+        </p>
+        <p className="text-slate-700 font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function DetailPill({
+  children,
+  color = 'slate',
+}: {
+  children: React.ReactNode;
+  color?: 'green' | 'amber' | 'blue' | 'slate';
+}) {
+  const styles = {
+    green: 'bg-green-50 text-green-700',
+    amber: 'bg-amber-50 text-amber-700',
+    blue: 'bg-blue-50 text-blue-700',
+    slate: 'bg-slate-100 text-slate-600',
+  };
+
+  return (
+    <span
+      className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${styles[color]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function SearchProfilesPage() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [profiles, setProfiles] = useState<MarriageProfile[]>([]);
-
-  const [filters, setFilters] = useState({
-    keyword: '',
-    gender: '',
-    province: '',
-    city: '',
-    caste: '',
-    maritalStatus: '',
-  });
+  const [filters, setFilters] = useState<Filters>(emptyFilters);
 
   const updateFilter = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -169,7 +259,7 @@ export default function SearchProfilesPage() {
     }));
   };
 
-  const loadProfiles = async () => {
+  const loadProfiles = async (activeFilters: Filters = filters) => {
     try {
       setSearching(true);
       setErrorMessage('');
@@ -190,35 +280,78 @@ export default function SearchProfilesPage() {
         .maybeSingle();
 
       if (!application || application.status !== 'approved') {
-        throw new Error('Your bureau account must be approved before searching profiles.');
+        throw new Error(
+          'Your bureau account must be approved before searching profiles.'
+        );
       }
 
       let query = supabase
         .from('marriage_profiles')
         .select(
-          'id, profile_code, candidate_name, gender, age, marital_status, height, religion, sect, caste, city, province, country, nationality, education, profession, income_range, family_details, requirements, additional_notes, photo_url, bureau_email, created_at'
+          `
+          id,
+          profile_code,
+          candidate_name,
+          gender,
+          age,
+          date_of_birth,
+          marital_status,
+          height,
+          religion,
+          sect,
+          caste,
+          city,
+          province,
+          country,
+          nationality,
+          residence_status,
+          education,
+          profession,
+          employment_status,
+          job_type,
+          income_range,
+          complexion,
+          body_type,
+          languages,
+          siblings,
+          father_occupation,
+          mother_occupation,
+          family_details,
+          expected_partner_age,
+          expected_partner_location,
+          expected_partner_education,
+          requirements,
+          additional_notes,
+          photo_url,
+          bureau_email,
+          created_at
+        `
         )
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (filters.gender) {
-        query = query.eq('gender', filters.gender);
+      if (activeFilters.gender) {
+        query = query.eq('gender', activeFilters.gender);
       }
 
-      if (filters.province) {
-        query = query.eq('province', filters.province);
+      if (activeFilters.province) {
+        query = query.eq('province', activeFilters.province);
       }
 
-      if (filters.city) {
-        query = query.eq('city', filters.city);
+      if (activeFilters.city) {
+        query = query.eq('city', activeFilters.city);
       }
 
-      if (filters.caste) {
-        query = query.eq('caste', filters.caste);
+      if (activeFilters.caste) {
+        query = query.eq('caste', activeFilters.caste);
       }
 
-      if (filters.maritalStatus) {
-        query = query.eq('marital_status', filters.maritalStatus);
+      if (activeFilters.maritalStatus) {
+        query = query.eq('marital_status', activeFilters.maritalStatus);
+      }
+
+      if (activeFilters.employmentStatus) {
+        query = query.eq('employment_status', activeFilters.employmentStatus);
       }
 
       const { data, error } = await query;
@@ -229,8 +362,16 @@ export default function SearchProfilesPage() {
 
       let result = (data || []) as MarriageProfile[];
 
-      if (filters.keyword.trim()) {
-        const keyword = filters.keyword.toLowerCase().trim();
+      if (activeFilters.education.trim()) {
+        const educationKeyword = activeFilters.education.toLowerCase().trim();
+
+        result = result.filter((profile) =>
+          (profile.education || '').toLowerCase().includes(educationKeyword)
+        );
+      }
+
+      if (activeFilters.keyword.trim()) {
+        const keyword = activeFilters.keyword.toLowerCase().trim();
 
         result = result.filter((profile) => {
           const searchableText = [
@@ -238,12 +379,20 @@ export default function SearchProfilesPage() {
             profile.candidate_name,
             profile.education,
             profile.profession,
+            profile.employment_status,
+            profile.job_type,
             profile.city,
             profile.province,
             profile.caste,
             profile.sect,
+            profile.siblings,
+            profile.father_occupation,
+            profile.mother_occupation,
             profile.family_details,
             profile.requirements,
+            profile.expected_partner_location,
+            profile.expected_partner_education,
+            profile.languages,
           ]
             .filter(Boolean)
             .join(' ')
@@ -268,13 +417,18 @@ export default function SearchProfilesPage() {
   };
 
   useEffect(() => {
-    loadProfiles();
+    loadProfiles(emptyFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cityOptions = filters.province
     ? citiesByProvince[filters.province] || []
     : [];
+
+  const resetFilters = () => {
+    setFilters(emptyFilters);
+    loadProfiles(emptyFilters);
+  };
 
   return (
     <div className="space-y-8">
@@ -287,20 +441,21 @@ export default function SearchProfilesPage() {
         </p>
       </div>
 
+      {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
           <Filter className="w-5 h-5 text-green-700" />
           <h2 className="font-semibold text-slate-900">Search Filters</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
             <label className="label">Keyword</label>
             <input
               name="keyword"
               value={filters.keyword}
               onChange={updateFilter}
-              placeholder="Education, profession, city..."
+              placeholder="Search education, profession, family, city..."
               className="input-field"
             />
           </div>
@@ -389,12 +544,42 @@ export default function SearchProfilesPage() {
               ))}
             </select>
           </div>
+
+          <div>
+            <label className="label">Employment</label>
+            <select
+              name="employmentStatus"
+              value={filters.employmentStatus}
+              onChange={updateFilter}
+              className="input-field"
+            >
+              <option value="">All</option>
+              <option value="Employed">Employed</option>
+              <option value="Self-employed">Self-employed</option>
+              <option value="Business Owner">Business Owner</option>
+              <option value="Government Job">Government Job</option>
+              <option value="Private Job">Private Job</option>
+              <option value="Student">Student</option>
+              <option value="Unemployed">Unemployed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="label">Education Contains</label>
+            <input
+              name="education"
+              value={filters.education}
+              onChange={updateFilter}
+              placeholder="BS, MBA, MBBS..."
+              className="input-field"
+            />
+          </div>
         </div>
 
         <div className="mt-5 flex flex-col sm:flex-row gap-3">
           <button
             type="button"
-            onClick={loadProfiles}
+            onClick={() => loadProfiles(filters)}
             disabled={searching}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800 disabled:opacity-50"
           >
@@ -404,19 +589,10 @@ export default function SearchProfilesPage() {
 
           <button
             type="button"
-            onClick={() => {
-              setFilters({
-                keyword: '',
-                gender: '',
-                province: '',
-                city: '',
-                caste: '',
-                maritalStatus: '',
-              });
-              setTimeout(loadProfiles, 100);
-            }}
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50"
+            onClick={resetFilters}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50"
           >
+            <RotateCcw className="w-4 h-4" />
             Reset
           </button>
         </div>
@@ -436,11 +612,11 @@ export default function SearchProfilesPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[1, 2, 3].map((item) => (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {[1, 2].map((item) => (
             <div
               key={item}
-              className="h-80 bg-slate-200 rounded-2xl animate-pulse"
+              className="h-[520px] bg-slate-200 rounded-2xl animate-pulse"
             />
           ))}
         </div>
@@ -456,109 +632,230 @@ export default function SearchProfilesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {profiles.map((profile) => (
             <div
               key={profile.id}
               className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
             >
-              <div className="h-56 bg-slate-100">
+              {/* Image */}
+              <div className="h-80 bg-slate-100 border-b border-slate-100">
                 {profile.photo_url ? (
                   <img
                     src={profile.photo_url}
                     alt={profile.profile_code || 'Marriage profile'}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain object-top bg-slate-50"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Users className="w-14 h-14 text-slate-300" />
+                    <Users className="w-16 h-16 text-slate-300" />
                   </div>
                 )}
               </div>
 
-              <div className="p-5">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
-                    {profile.gender || 'Profile'}
-                  </span>
+              {/* Content */}
+              <div className="p-6">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  {profile.gender && (
+                    <DetailPill color="green">{profile.gender}</DetailPill>
+                  )}
 
                   {profile.age && (
-                    <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">
-                      {profile.age} years
-                    </span>
+                    <DetailPill color="blue">{profile.age} years</DetailPill>
                   )}
 
                   {profile.marital_status && (
-                    <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs">
+                    <DetailPill color="amber">
                       {profile.marital_status}
-                    </span>
+                    </DetailPill>
+                  )}
+
+                  {profile.profile_code && (
+                    <DetailPill>{profile.profile_code}</DetailPill>
                   )}
                 </div>
 
-                <h3 className="font-heading text-lg font-bold text-slate-900">
+                <h3 className="font-heading text-2xl font-bold text-slate-900">
                   {profile.profile_code ||
                     profile.candidate_name ||
                     'Marriage Profile'}
                 </h3>
 
-                <div className="mt-3 space-y-2 text-sm text-slate-600">
-                  {(profile.city || profile.province) && (
-                    <p className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      {profile.city}
-                      {profile.province ? `, ${profile.province}` : ''}
-                    </p>
-                  )}
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InfoItem
+                    icon={<MapPin className="w-4 h-4" />}
+                    label="Location"
+                    value={
+                      profile.city || profile.province
+                        ? `${profile.city || ''}${
+                            profile.city && profile.province ? ', ' : ''
+                          }${profile.province || ''}`
+                        : null
+                    }
+                  />
 
-                  {profile.education && (
-                    <p className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-slate-400" />
-                      {profile.education}
-                    </p>
-                  )}
+                  <InfoItem
+                    icon={<GraduationCap className="w-4 h-4" />}
+                    label="Education"
+                    value={profile.education}
+                  />
 
-                  {profile.profession && (
-                    <p className="flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-slate-400" />
-                      {profile.profession}
-                    </p>
-                  )}
+                  <InfoItem
+                    icon={<Briefcase className="w-4 h-4" />}
+                    label="Profession"
+                    value={profile.profession}
+                  />
 
-                  {profile.caste && (
-                    <p>
-                      <span className="font-medium text-slate-700">Caste:</span>{' '}
-                      {profile.caste}
-                    </p>
-                  )}
+                  <InfoItem
+                    icon={<Building2 className="w-4 h-4" />}
+                    label="Employment"
+                    value={profile.employment_status || profile.job_type}
+                  />
 
-                  {profile.sect && (
-                    <p>
-                      <span className="font-medium text-slate-700">Sect:</span>{' '}
-                      {profile.sect}
-                    </p>
-                  )}
+                  <InfoItem
+                    icon={<BadgeDollarSign className="w-4 h-4" />}
+                    label="Income"
+                    value={profile.income_range}
+                  />
 
-                  {profile.income_range && (
-                    <p>
-                      <span className="font-medium text-slate-700">Income:</span>{' '}
-                      {profile.income_range}
-                    </p>
-                  )}
+                  <InfoItem
+                    icon={<Heart className="w-4 h-4" />}
+                    label="Caste / Sect"
+                    value={
+                      profile.caste || profile.sect
+                        ? `${profile.caste || ''}${
+                            profile.caste && profile.sect ? ' / ' : ''
+                          }${profile.sect || ''}`
+                        : null
+                    }
+                  />
+
+                  <InfoItem
+                    icon={<Ruler className="w-4 h-4" />}
+                    label="Height"
+                    value={profile.height}
+                  />
+
+                  <InfoItem
+                    icon={<UserRound className="w-4 h-4" />}
+                    label="Appearance"
+                    value={
+                      profile.complexion || profile.body_type
+                        ? `${profile.complexion || ''}${
+                            profile.complexion && profile.body_type ? ' / ' : ''
+                          }${profile.body_type || ''}`
+                        : null
+                    }
+                  />
+
+                  <InfoItem
+                    icon={<Languages className="w-4 h-4" />}
+                    label="Languages"
+                    value={profile.languages}
+                  />
+
+                  <InfoItem
+                    icon={<Home className="w-4 h-4" />}
+                    label="Residence"
+                    value={profile.residence_status}
+                  />
+
+                  <InfoItem
+                    icon={<Baby className="w-4 h-4" />}
+                    label="Siblings"
+                    value={profile.siblings}
+                  />
+
+                  <InfoItem
+                    icon={<Users className="w-4 h-4" />}
+                    label="Parents"
+                    value={
+                      profile.father_occupation || profile.mother_occupation
+                        ? `Father: ${
+                            profile.father_occupation || 'N/A'
+                          } | Mother: ${profile.mother_occupation || 'N/A'}`
+                        : null
+                    }
+                  />
                 </div>
 
-                {profile.requirements && (
-                  <div className="mt-4 p-3 rounded-xl bg-slate-50 text-sm text-slate-600">
-                    <p className="font-medium text-slate-700 mb-1">
-                      Requirements
-                    </p>
-                    <p className="line-clamp-3">{profile.requirements}</p>
+                {(profile.family_details ||
+                  profile.expected_partner_age ||
+                  profile.expected_partner_location ||
+                  profile.expected_partner_education ||
+                  profile.requirements) && (
+                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {profile.family_details && (
+                      <div className="p-4 rounded-xl bg-slate-50">
+                        <p className="font-semibold text-slate-800 mb-1">
+                          Family Details
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                          {profile.family_details}
+                        </p>
+                      </div>
+                    )}
+
+                    {(profile.expected_partner_age ||
+                      profile.expected_partner_location ||
+                      profile.expected_partner_education ||
+                      profile.requirements) && (
+                      <div className="p-4 rounded-xl bg-green-50">
+                        <p className="font-semibold text-green-900 mb-2">
+                          Partner Requirements
+                        </p>
+
+                        <div className="space-y-1 text-sm text-green-800">
+                          {profile.expected_partner_age && (
+                            <p>
+                              <span className="font-semibold">Age:</span>{' '}
+                              {profile.expected_partner_age}
+                            </p>
+                          )}
+
+                          {profile.expected_partner_location && (
+                            <p>
+                              <span className="font-semibold">Location:</span>{' '}
+                              {profile.expected_partner_location}
+                            </p>
+                          )}
+
+                          {profile.expected_partner_education && (
+                            <p>
+                              <span className="font-semibold">Education:</span>{' '}
+                              {profile.expected_partner_education}
+                            </p>
+                          )}
+
+                          {profile.requirements && (
+                            <p className="pt-1 leading-relaxed">
+                              {profile.requirements}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                <div className="mt-5 pt-4 border-t border-slate-100">
+                {profile.additional_notes && (
+                  <div className="mt-4 p-4 rounded-xl bg-amber-50 text-sm text-amber-800">
+                    <p className="font-semibold mb-1">Additional Notes</p>
+                    <p>{profile.additional_notes}</p>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="text-xs text-slate-400">
                     Bureau: {profile.bureau_email}
                   </p>
+
+                  {profile.created_at && (
+                    <p className="text-xs text-slate-400">
+                      Added:{' '}
+                      {new Date(profile.created_at).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
