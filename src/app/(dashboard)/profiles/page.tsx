@@ -2,189 +2,408 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { UserPlus, Edit, Trash2, Eye, User } from 'lucide-react';
-import { profileAPI } from '@/lib/api';
+import {
+  Users,
+  UserPlus,
+  Search,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  ArrowRight,
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-interface Profile {
-  id: string;
-  profileId: string;
-  gender: string;
-  age: number;
-  city?: string;
-  caste?: string;
-  maritalStatus: string;
-  occupation?: string;
-  status: string;
-  createdAt: string;
-  _count?: { contactReveals: number };
-}
-
-const MARITAL_LABELS: Record<string, string> = {
-  NEVER_MARRIED: 'Single',
-  DIVORCED: 'Divorced',
-  WIDOWED: 'Widowed',
-  SEPARATED: 'Separated',
+type Application = {
+  business_name: string | null;
+  status: string | null;
+  city: string | null;
+  province: string | null;
+  created_at: string | null;
 };
 
-export default function MyProfilesPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+type MarriageProfile = {
+  id: string;
+  profile_code: string | null;
+  candidate_name: string | null;
+  gender: string | null;
+  age: number | null;
+  city: string | null;
+  province: string | null;
+  caste: string | null;
+  education: string | null;
+  profession: string | null;
+  photo_url: string | null;
+  created_at: string | null;
+};
+
+export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 20;
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [application, setApplication] = useState<Application | null>(null);
+  const [myProfilesCount, setMyProfilesCount] = useState(0);
+  const [networkProfilesCount, setNetworkProfilesCount] = useState(0);
+  const [recentProfiles, setRecentProfiles] = useState<MarriageProfile[]>([]);
 
   useEffect(() => {
-    profileAPI.getMyProfiles(page, limit)
-      .then((res) => {
-        setProfiles(res.data.data.profiles);
-        setTotal(res.data.data.total);
-      })
-      .finally(() => setLoading(false));
-  }, [page]);
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        setErrorMessage('');
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this profile? This cannot be undone.')) return;
-    try {
-      await profileAPI.delete(id);
-      setProfiles((prev) => prev.filter((p) => p.id !== id));
-      setTotal((t) => t - 1);
-    } catch {
-      alert('Failed to delete profile. Please try again.');
-    }
-  };
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user || !user.email) {
+          throw new Error('Please login again to view your dashboard.');
+        }
+
+        const { data: applicationData } = await supabase
+          .from('bureau_applications')
+          .select('business_name, status, city, province, created_at')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        setApplication(applicationData || null);
+
+        const { count: myCount, error: myCountError } = await supabase
+          .from('marriage_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('created_by', user.id)
+          .eq('status', 'active');
+
+        if (myCountError) {
+          throw myCountError;
+        }
+
+        setMyProfilesCount(myCount || 0);
+
+        const { count: totalCount, error: totalCountError } = await supabase
+          .from('marriage_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active');
+
+        if (totalCountError) {
+          throw totalCountError;
+        }
+
+        setNetworkProfilesCount(totalCount || 0);
+
+        const { data: recentData, error: recentError } = await supabase
+          .from('marriage_profiles')
+          .select(
+            'id, profile_code, candidate_name, gender, age, city, province, caste, education, profession, photo_url, created_at'
+          )
+          .eq('created_by', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (recentError) {
+          throw recentError;
+        }
+
+        setRecentProfiles((recentData || []) as MarriageProfile[]);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Dashboard could not be loaded. Please try again.';
+
+        setErrorMessage(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const status = application?.status || 'pending';
+
+  const statusBadge =
+    status === 'approved'
+      ? 'bg-green-100 text-green-700'
+      : status === 'rejected'
+        ? 'bg-red-100 text-red-700'
+        : 'bg-amber-100 text-amber-700';
+
+  const statusIcon =
+    status === 'approved' ? (
+      <CheckCircle className="w-5 h-5 text-green-600" />
+    ) : status === 'rejected' ? (
+      <AlertCircle className="w-5 h-5 text-red-600" />
+    ) : (
+      <Clock className="w-5 h-5 text-amber-600" />
+    );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-64 bg-slate-200 rounded-lg animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
+          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
+          <div className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="max-w-2xl">
+        <div className="flex items-start gap-3 p-5 bg-red-50 border border-red-200 rounded-xl text-red-700">
+          <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold">Dashboard Error</p>
+            <p className="text-sm mt-1">{errorMessage}</p>
+          </div>
+        </div>
+
+        <Link
+          href="/login"
+          className="inline-flex mt-5 px-5 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800"
+        >
+          Back to Login
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="page-header mb-0">
-          <h1 className="page-title">My Profiles</h1>
-          <p className="page-subtitle">{total} profiles uploaded</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-slate-900">
+            Bureau Dashboard
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Welcome back, {application?.business_name || 'Marriage Bureau'}.
+          </p>
         </div>
-        <Link href="/profiles/new" className="btn-primary flex items-center gap-2">
+
+        <Link
+          href="/profiles/new"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800 transition"
+        >
           <UserPlus className="w-4 h-4" />
-          Add Profile
+          Add Marriage Profile
         </Link>
       </div>
 
-      {loading ? (
-        <div className="grid gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="card p-4 h-20 skeleton" />
-          ))}
+      {/* Status Notice */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-start gap-3">
+          {statusIcon}
+          <div>
+            <p className="font-semibold text-slate-900">Account Status</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Your bureau application status is currently{' '}
+              <span className="font-semibold capitalize">{status}</span>.
+            </p>
+          </div>
         </div>
-      ) : profiles.length === 0 ? (
-        <div className="card p-12 text-center">
-          <User className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="font-heading text-lg font-semibold text-slate-700 mb-2">No profiles yet</h3>
-          <p className="text-slate-500 mb-4">Start adding marriage profiles to the network</p>
-          <Link href="/profiles/new" className="btn-primary inline-flex items-center gap-2">
-            <UserPlus className="w-4 h-4" />
-            Add Your First Profile
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div className="card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left px-4 py-3 font-medium text-slate-600">Profile ID</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600">Gender</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600">Age</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">City</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Views</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {profiles.map((profile) => (
-                  <tr key={profile.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-green-700 font-semibold">
-                      {profile.profileId}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        profile.gender === 'MALE'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-pink-50 text-pink-700'
-                      }`}>
-                        {profile.gender === 'MALE' ? '♂ Male' : '♀ Female'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">{profile.age} yrs</td>
-                    <td className="px-4 py-3 text-slate-600 hidden md:table-cell">{profile.city || '—'}</td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        profile.status === 'ACTIVE'
-                          ? 'bg-green-50 text-green-700'
-                          : profile.status === 'INACTIVE'
-                          ? 'bg-slate-100 text-slate-600'
-                          : 'bg-red-50 text-red-700'
-                      }`}>
-                        {profile.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">
-                      {profile._count?.contactReveals ?? 0}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/profiles/${profile.id}`}
-                          className="p-1.5 text-slate-400 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        <Link
-                          href={`/profiles/${profile.id}/edit`}
-                          className="p-1.5 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(profile.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+        <span
+          className={`inline-flex px-4 py-2 rounded-full text-sm font-semibold capitalize ${statusBadge}`}
+        >
+          {status}
+        </span>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+            <Users className="w-6 h-6 text-green-700" />
           </div>
 
-          {/* Pagination */}
-          {total > limit && (
-            <div className="flex items-center justify-between mt-4 text-sm">
-              <p className="text-slate-500">
-                Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                  className="px-3 py-1.5 border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page * limit >= total}
-                  className="px-3 py-1.5 border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50"
-                >
-                  Next
-                </button>
-              </div>
+          <p className="text-sm text-slate-500">My Uploaded Profiles</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {myProfilesCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
+            <Search className="w-6 h-6 text-amber-600" />
+          </div>
+
+          <p className="text-sm text-slate-500">Network Active Profiles</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {networkProfilesCount}
+          </p>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+            <CheckCircle className="w-6 h-6 text-blue-600" />
+          </div>
+
+          <p className="text-sm text-slate-500">Bureau Location</p>
+          <p className="text-lg font-bold text-slate-900 mt-2">
+            {application?.city || 'Not added'}
+            {application?.province ? `, ${application.province}` : ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Link
+          href="/profiles/new"
+          className="bg-green-700 rounded-2xl p-6 text-white hover:bg-green-800 transition"
+        >
+          <UserPlus className="w-8 h-8 mb-4" />
+          <p className="font-bold text-lg">Add New Profile</p>
+          <p className="text-green-50 text-sm mt-1">
+            Upload a new bride or groom profile.
+          </p>
+        </Link>
+
+        <Link
+          href="/profiles"
+          className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
+        >
+          <Users className="w-8 h-8 mb-4 text-green-700" />
+          <p className="font-bold text-lg text-slate-900">My Profiles</p>
+          <p className="text-slate-500 text-sm mt-1">
+            View profiles uploaded by your bureau.
+          </p>
+        </Link>
+
+        <Link
+          href="/search"
+          className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
+        >
+          <Search className="w-8 h-8 mb-4 text-amber-600" />
+          <p className="font-bold text-lg text-slate-900">Search Network</p>
+          <p className="text-slate-500 text-sm mt-1">
+            Search profiles from other approved bureaus.
+          </p>
+        </Link>
+      </div>
+
+      {/* Recent Profiles */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="font-heading text-xl font-bold text-slate-900">
+              Recent Uploaded Profiles
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Latest profiles added by your bureau.
+            </p>
+          </div>
+
+          <Link
+            href="/profiles"
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-green-700 hover:text-green-800"
+          >
+            View All
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {recentProfiles.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-slate-400" />
             </div>
-          )}
-        </>
-      )}
+
+            <h3 className="font-semibold text-slate-900">
+              No profiles uploaded yet
+            </h3>
+            <p className="text-slate-500 text-sm mt-1">
+              Start by adding your first marriage profile.
+            </p>
+
+            <Link
+              href="/profiles/new"
+              className="inline-flex items-center gap-2 mt-5 px-5 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Profile
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {recentProfiles.map((profile) => (
+              <div
+                key={profile.id}
+                className="p-5 flex flex-col md:flex-row md:items-center gap-4"
+              >
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                  {profile.photo_url ? (
+                    <img
+                      src={profile.photo_url}
+                      alt={profile.profile_code || 'Marriage profile'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Users className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-slate-900">
+                      {profile.profile_code ||
+                        profile.candidate_name ||
+                        'Marriage Profile'}
+                    </p>
+
+                    {profile.gender && (
+                      <span className="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
+                        {profile.gender}
+                      </span>
+                    )}
+
+                    {profile.age && (
+                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">
+                        {profile.age} years
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
+                    {(profile.city || profile.province) && (
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {profile.city}
+                        {profile.province ? `, ${profile.province}` : ''}
+                      </span>
+                    )}
+
+                    {profile.education && (
+                      <span className="inline-flex items-center gap-1">
+                        <GraduationCap className="w-4 h-4" />
+                        {profile.education}
+                      </span>
+                    )}
+
+                    {profile.profession && (
+                      <span className="inline-flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        {profile.profession}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
