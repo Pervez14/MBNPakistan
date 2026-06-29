@@ -9,6 +9,7 @@ import {
   Upload,
   X,
   Image as ImageIcon,
+  ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -105,7 +106,14 @@ const citiesByProvince: Record<string, string[]> = {
   ],
   Islamabad: ['Islamabad'],
   AJK: ['Muzaffarabad', 'Mirpur', 'Kotli', 'Rawalakot', 'Bagh', 'Bhimber'],
-  'Gilgit-Baltistan': ['Gilgit', 'Skardu', 'Hunza', 'Chilas', 'Ghizer', 'Astore'],
+  'Gilgit-Baltistan': [
+    'Gilgit',
+    'Skardu',
+    'Hunza',
+    'Chilas',
+    'Ghizer',
+    'Astore',
+  ],
   Overseas: [
     'United Kingdom',
     'United Arab Emirates',
@@ -130,6 +138,8 @@ export default function NewProfilePage() {
   const [formData, setFormData] = useState({
     profileCode: '',
     candidateName: '',
+    photoVisibility: 'blurred',
+
     gender: '',
     age: '',
     dateOfBirth: '',
@@ -306,7 +316,10 @@ export default function NewProfilePage() {
         requirements: formData.requirements || null,
 
         additional_notes: formData.additionalNotes || null,
+
         photo_url: photoUrl,
+        photo_visibility: formData.photoVisibility || 'blurred',
+
         status: 'active',
       });
 
@@ -373,7 +386,7 @@ export default function NewProfilePage() {
         {/* Photo Upload */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
-            Candidate Photo
+            Candidate Photo & Privacy
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
@@ -383,8 +396,28 @@ export default function NewProfilePage() {
                   <img
                     src={photoPreview}
                     alt="Profile preview"
-                    className="w-full h-72 object-cover object-top rounded-2xl border border-slate-200 bg-slate-50"
+                    className={`w-full h-72 object-cover object-top rounded-2xl border border-slate-200 bg-slate-50 ${
+                      formData.photoVisibility === 'blurred'
+                        ? 'blur-md scale-105'
+                        : ''
+                    }`}
                   />
+
+                  {formData.photoVisibility === 'blurred' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="px-3 py-2 rounded-full bg-white/90 text-slate-700 text-xs font-semibold shadow">
+                        Blurred Preview
+                      </span>
+                    </div>
+                  )}
+
+                  {formData.photoVisibility === 'hidden' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                      <span className="px-3 py-2 rounded-full bg-white text-slate-700 text-xs font-semibold shadow">
+                        Hidden Photo
+                      </span>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -420,9 +453,31 @@ export default function NewProfilePage() {
                 Accepted formats: JPG, PNG, WEBP. Maximum size: 5MB.
               </p>
 
-              <p className="text-xs text-slate-400 mt-2">
-                For privacy, upload only photos you have permission to share.
-              </p>
+              <div className="mt-5">
+                <label className="label">Photo Visibility *</label>
+                <select
+                  name="photoVisibility"
+                  value={formData.photoVisibility}
+                  onChange={updateField}
+                  className="input-field"
+                >
+                  <option value="public">Public Photo - show clearly</option>
+                  <option value="blurred">
+                    Blurred Photo - hide photo preview
+                  </option>
+                  <option value="hidden">
+                    Hide Photo - do not show in search
+                  </option>
+                </select>
+
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
+                  <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <p>
+                    Recommended: keep photo blurred unless you have permission
+                    to show the candidate photo publicly.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
