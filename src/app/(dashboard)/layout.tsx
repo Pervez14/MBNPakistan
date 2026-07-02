@@ -56,8 +56,8 @@ const baseNavItems = [
 ];
 
 const adminNavItem = {
-  label: 'Contact Logs',
-  href: '/admin/contact-logs',
+  label: 'Super Admin',
+  href: '/admin',
   icon: ClipboardList,
 };
 
@@ -196,7 +196,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {isAdmin && (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
-              Admin
+              Super Admin
             </span>
           )}
         </div>
