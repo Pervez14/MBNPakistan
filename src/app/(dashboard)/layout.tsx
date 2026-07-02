@@ -57,7 +57,7 @@ const baseNavItems = [
 
 const adminNavItem = {
   label: 'Super Admin',
-  href: '/admin',
+  href: '/super-admin',
   icon: ClipboardList,
 };
 
@@ -154,7 +154,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const SidebarContent = (
     <div className="h-full flex flex-col">
-      {/* Logo */}
       <div className="p-6 border-b border-slate-200">
         <Link href="/dashboard" className="flex items-center gap-3">
           <img
@@ -172,7 +171,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Link>
       </div>
 
-      {/* Bureau Info */}
       <div className="px-6 py-5 border-b border-slate-200">
         <p className="text-xs uppercase tracking-wide text-slate-400 font-semibold mb-1">
           Logged in as
@@ -202,7 +200,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -226,7 +223,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         })}
       </nav>
 
-      {/* Logout */}
       <div className="p-4 border-t border-slate-200">
         <button
           type="button"
@@ -242,12 +238,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:bg-white lg:border-r lg:border-slate-200 lg:block">
         {SidebarContent}
       </aside>
 
-      {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
           <img
@@ -273,7 +267,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </button>
       </header>
 
-      {/* Mobile Sidebar */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div
@@ -295,7 +288,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="lg:pl-72">
         <div className="p-4 md:p-8">{children}</div>
       </main>
