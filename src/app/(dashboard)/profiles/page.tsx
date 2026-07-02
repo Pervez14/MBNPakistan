@@ -20,6 +20,8 @@ import {
   Baby,
   Trash2,
   RotateCcw,
+  Pencil,
+  ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -65,6 +67,7 @@ type MarriageProfile = {
 
   additional_notes: string | null;
   photo_url: string | null;
+  photo_visibility: string | null;
   bureau_email: string | null;
   status: string | null;
   created_at: string | null;
@@ -111,7 +114,7 @@ function DetailPill({
   color = 'slate',
 }: {
   children: ReactNode;
-  color?: 'green' | 'amber' | 'blue' | 'slate' | 'red';
+  color?: 'green' | 'amber' | 'blue' | 'slate' | 'red' | 'purple';
 }) {
   const styles = {
     green: 'bg-green-50 text-green-700',
@@ -119,6 +122,7 @@ function DetailPill({
     blue: 'bg-blue-50 text-blue-700',
     slate: 'bg-slate-100 text-slate-600',
     red: 'bg-red-50 text-red-700',
+    purple: 'bg-purple-50 text-purple-700',
   };
 
   return (
@@ -128,6 +132,12 @@ function DetailPill({
       {children}
     </span>
   );
+}
+
+function getPhotoPrivacyLabel(value: string | null) {
+  if (value === 'blurred') return 'Blurred in search';
+  if (value === 'hidden') return 'Hidden in search';
+  return 'Public photo';
 }
 
 export default function MyProfilesPage() {
@@ -200,6 +210,7 @@ export default function MyProfilesPage() {
           requirements,
           additional_notes,
           photo_url,
+          photo_visibility,
           bureau_email,
           status,
           created_at
@@ -344,14 +355,13 @@ export default function MyProfilesPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold text-slate-900">
             My Profiles
           </h1>
           <p className="text-slate-500 mt-1">
-            View and manage marriage profiles uploaded by your bureau.
+            View, edit, and manage marriage profiles uploaded by your bureau.
           </p>
         </div>
 
@@ -364,7 +374,6 @@ export default function MyProfilesPage() {
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
@@ -441,7 +450,6 @@ export default function MyProfilesPage() {
         </p>
       </div>
 
-      {/* Loading */}
       {loading ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {[1, 2].map((item) => (
@@ -478,8 +486,7 @@ export default function MyProfilesPage() {
               key={profile.id}
               className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
             >
-              {/* Image */}
-              <div className="h-80 bg-slate-100 border-b border-slate-100">
+              <div className="h-80 bg-slate-100 border-b border-slate-100 relative">
                 {profile.photo_url ? (
                   <img
                     src={profile.photo_url}
@@ -491,9 +498,15 @@ export default function MyProfilesPage() {
                     <Users className="w-16 h-16 text-slate-300" />
                   </div>
                 )}
+
+                <div className="absolute left-4 top-4">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 shadow text-xs font-semibold text-slate-700">
+                    <ShieldCheck className="w-3 h-3" />
+                    {getPhotoPrivacyLabel(profile.photo_visibility)}
+                  </span>
+                </div>
               </div>
 
-              {/* Content */}
               <div className="p-6">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   {profile.gender && (
@@ -516,6 +529,14 @@ export default function MyProfilesPage() {
 
                   {profile.status === 'inactive' && (
                     <DetailPill color="red">Inactive</DetailPill>
+                  )}
+
+                  {profile.photo_visibility === 'blurred' && (
+                    <DetailPill color="purple">Photo Blurred</DetailPill>
+                  )}
+
+                  {profile.photo_visibility === 'hidden' && (
+                    <DetailPill color="red">Photo Hidden</DetailPill>
                   )}
                 </div>
 
@@ -699,7 +720,15 @@ export default function MyProfilesPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/profiles/${profile.id}/edit`}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-semibold hover:bg-blue-100"
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Edit
+                    </Link>
+
                     {profile.status === 'inactive' ? (
                       <button
                         type="button"
