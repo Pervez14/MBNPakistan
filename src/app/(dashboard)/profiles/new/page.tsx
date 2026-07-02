@@ -138,7 +138,7 @@ export default function NewProfilePage() {
   const [formData, setFormData] = useState({
     profileCode: '',
     candidateName: '',
-    photoVisibility: 'blurred',
+    photoVisibility: 'public',
 
     gender: '',
     age: '',
@@ -318,7 +318,7 @@ export default function NewProfilePage() {
         additional_notes: formData.additionalNotes || null,
 
         photo_url: photoUrl,
-        photo_visibility: formData.photoVisibility || 'blurred',
+        photo_visibility: formData.photoVisibility || 'public',
 
         status: 'active',
       });
@@ -383,7 +383,6 @@ export default function NewProfilePage() {
       )}
 
       <form onSubmit={handleSubmit} className="card p-8 space-y-8">
-        {/* Photo Upload */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Candidate Photo & Privacy
@@ -392,11 +391,11 @@ export default function NewProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
             <div className="w-full">
               {photoPreview ? (
-                <div className="relative">
+                <div className="relative overflow-hidden rounded-2xl">
                   <img
                     src={photoPreview}
                     alt="Profile preview"
-                    className={`w-full h-72 object-cover object-top rounded-2xl border border-slate-200 bg-slate-50 ${
+                    className={`w-full h-72 object-cover object-top border border-slate-200 bg-slate-50 ${
                       formData.photoVisibility === 'blurred'
                         ? 'blur-md scale-105'
                         : ''
@@ -473,8 +472,8 @@ export default function NewProfilePage() {
                 <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
                   <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
-                    Recommended: keep photo blurred unless you have permission
-                    to show the candidate photo publicly.
+                    Public is default. Select blurred or hidden only when the
+                    candidate wants privacy.
                   </p>
                 </div>
               </div>
@@ -482,7 +481,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Basic Info */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Basic Information
@@ -626,7 +624,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Religious / Community */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Religious & Community Details
@@ -678,7 +675,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Location */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Location Details
@@ -763,7 +759,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Education / Career */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Education & Career
@@ -848,7 +843,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Family */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Family Details
@@ -902,7 +896,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Partner Requirements */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Partner Requirements
@@ -956,7 +949,6 @@ export default function NewProfilePage() {
           </div>
         </section>
 
-        {/* Notes */}
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
             Additional Notes
