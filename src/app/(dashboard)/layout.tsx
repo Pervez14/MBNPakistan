@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  ClipboardList,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -26,7 +27,7 @@ type BureauInfo = {
   status: string | null;
 };
 
-const navItems = [
+const baseNavItems = [
   {
     label: 'Dashboard',
     href: '/dashboard',
@@ -54,6 +55,12 @@ const navItems = [
   },
 ];
 
+const adminNavItem = {
+  label: 'Contact Logs',
+  href: '/admin/contact-logs',
+  icon: ClipboardList,
+};
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,6 +69,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bureauInfo, setBureauInfo] = useState<BureauInfo | null>(null);
   const [userEmail, setUserEmail] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -85,6 +93,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           .maybeSingle();
 
         setBureauInfo(data || null);
+
+        const { data: adminData } = await supabase
+          .from('site_admins')
+          .select('email')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        setIsAdmin(Boolean(adminData));
       } catch {
         localStorage.removeItem('mbn-auth');
         router.push('/login');
@@ -107,6 +123,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       return pathname === '/dashboard';
     }
 
+    if (href === '/profiles') {
+      return pathname === '/profiles';
+    }
+
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
@@ -118,6 +138,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       : status === 'rejected'
         ? 'bg-red-100 text-red-700'
         : 'bg-amber-100 text-amber-700';
+
+  const navItems = isAdmin ? [...baseNavItems, adminNavItem] : baseNavItems;
 
   if (checkingAuth) {
     return (
@@ -164,13 +186,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {bureauInfo?.full_name || userEmail}
         </p>
 
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <span
             className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusBadge}`}
           >
             <ShieldCheck className="w-3 h-3" />
             {status}
           </span>
+
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-white">
+              Admin
+            </span>
+          )}
         </div>
       </div>
 
