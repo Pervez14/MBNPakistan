@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Search,
   Users,
@@ -18,6 +18,11 @@ import {
   Ruler,
   Baby,
   RotateCcw,
+  Phone,
+  Mail,
+  Eye,
+  MessageCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -63,8 +68,20 @@ type MarriageProfile = {
 
   additional_notes: string | null;
   photo_url: string | null;
+  photo_visibility: string | null;
   bureau_email: string | null;
   created_at: string | null;
+};
+
+type ContactDetails = {
+  business_name: string | null;
+  full_name: string | null;
+  mobile_number: string | null;
+  whatsapp_number: string | null;
+  office_phone: string | null;
+  email: string | null;
+  city: string | null;
+  province: string | null;
 };
 
 const pakistaniCastes = [
@@ -159,7 +176,14 @@ const citiesByProvince: Record<string, string[]> = {
   ],
   Islamabad: ['Islamabad'],
   AJK: ['Muzaffarabad', 'Mirpur', 'Kotli', 'Rawalakot', 'Bagh', 'Bhimber'],
-  'Gilgit-Baltistan': ['Gilgit', 'Skardu', 'Hunza', 'Chilas', 'Ghizer', 'Astore'],
+  'Gilgit-Baltistan': [
+    'Gilgit',
+    'Skardu',
+    'Hunza',
+    'Chilas',
+    'Ghizer',
+    'Astore',
+  ],
   Overseas: [
     'United Kingdom',
     'United Arab Emirates',
@@ -198,7 +222,7 @@ function InfoItem({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string | number | null | undefined;
 }) {
@@ -221,7 +245,7 @@ function DetailPill({
   children,
   color = 'slate',
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   color?: 'green' | 'amber' | 'blue' | 'slate';
 }) {
   const styles = {
@@ -240,12 +264,27 @@ function DetailPill({
   );
 }
 
+function getWhatsAppLink(number: string | null) {
+  if (!number) return '';
+
+  const digitsOnly = number.replace(/\D/g, '');
+
+  if (!digitsOnly) return '';
+
+  return `https://wa.me/${digitsOnly}`;
+}
+
 export default function SearchProfilesPage() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [profiles, setProfiles] = useState<MarriageProfile[]>([]);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
+
+  const [contactDetails, setContactDetails] = useState<
+    Record<string, ContactDetails>
+  >({});
+  const [contactLoading, setContactLoading] = useState('');
 
   const updateFilter = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -323,6 +362,7 @@ export default function SearchProfilesPage() {
           requirements,
           additional_notes,
           photo_url,
+          photo_visibility,
           bureau_email,
           created_at
         `
@@ -416,6 +456,41 @@ export default function SearchProfilesPage() {
     }
   };
 
+  const revealContact = async (profileId: string) => {
+    try {
+      setContactLoading(profileId);
+      setErrorMessage('');
+
+      const { data, error } = await supabase.rpc('reveal_profile_contact', {
+        p_profile_id: profileId,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const contact = Array.isArray(data) ? data[0] : data;
+
+      if (!contact) {
+        throw new Error('Contact details could not be found.');
+      }
+
+      setContactDetails((prev) => ({
+        ...prev,
+        [profileId]: contact as ContactDetails,
+      }));
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Contact details could not be loaded. Please try again.';
+
+      setErrorMessage(message);
+    } finally {
+      setContactLoading('');
+    }
+  };
+
   useEffect(() => {
     loadProfiles(emptyFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -427,6 +502,7 @@ export default function SearchProfilesPage() {
 
   const resetFilters = () => {
     setFilters(emptyFilters);
+    setContactDetails({});
     loadProfiles(emptyFilters);
   };
 
@@ -633,233 +709,395 @@ export default function SearchProfilesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {profiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
-            >
-              {/* Image */}
-              <div className="h-80 bg-slate-100 border-b border-slate-100">
-                {profile.photo_url ? (
-                  <img
-                    src={profile.photo_url}
-                    alt={profile.profile_code || 'Marriage profile'}
-                    className="w-full h-full object-contain object-top bg-slate-50"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Users className="w-16 h-16 text-slate-300" />
-                  </div>
-                )}
-              </div>
+          {profiles.map((profile) => {
+            const contact = contactDetails[profile.id];
+            const whatsappLink = getWhatsAppLink(contact?.whatsapp_number);
 
-              {/* Content */}
-              <div className="p-6">
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  {profile.gender && (
-                    <DetailPill color="green">{profile.gender}</DetailPill>
-                  )}
+            return (
+              <div
+                key={profile.id}
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
+              >
+                {/* Image */}
+                <div className="h-80 bg-slate-100 border-b border-slate-100">
+                  {profile.photo_url && profile.photo_visibility !== 'hidden' ? (
+                    <div className="relative w-full h-full overflow-hidden">
+                      <img
+                        src={profile.photo_url}
+                        alt={profile.profile_code || 'Marriage profile'}
+                        className={`w-full h-full object-contain object-top bg-slate-50 ${
+                          profile.photo_visibility === 'blurred'
+                            ? 'blur-md scale-105'
+                            : ''
+                        }`}
+                      />
 
-                  {profile.age && (
-                    <DetailPill color="blue">{profile.age} years</DetailPill>
-                  )}
-
-                  {profile.marital_status && (
-                    <DetailPill color="amber">
-                      {profile.marital_status}
-                    </DetailPill>
-                  )}
-
-                  {profile.profile_code && (
-                    <DetailPill>{profile.profile_code}</DetailPill>
+                      {profile.photo_visibility === 'blurred' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/20">
+                          <span className="px-4 py-2 rounded-full bg-white/90 text-slate-700 text-sm font-semibold shadow">
+                            Photo blurred for privacy
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <Users className="w-16 h-16 text-slate-300" />
+                      <p className="text-sm text-slate-400 mt-2">
+                        Photo hidden for privacy
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                <h3 className="font-heading text-2xl font-bold text-slate-900">
-                  {profile.profile_code ||
-                    profile.candidate_name ||
-                    'Marriage Profile'}
-                </h3>
-
-                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InfoItem
-                    icon={<MapPin className="w-4 h-4" />}
-                    label="Location"
-                    value={
-                      profile.city || profile.province
-                        ? `${profile.city || ''}${
-                            profile.city && profile.province ? ', ' : ''
-                          }${profile.province || ''}`
-                        : null
-                    }
-                  />
-
-                  <InfoItem
-                    icon={<GraduationCap className="w-4 h-4" />}
-                    label="Education"
-                    value={profile.education}
-                  />
-
-                  <InfoItem
-                    icon={<Briefcase className="w-4 h-4" />}
-                    label="Profession"
-                    value={profile.profession}
-                  />
-
-                  <InfoItem
-                    icon={<Building2 className="w-4 h-4" />}
-                    label="Employment"
-                    value={profile.employment_status || profile.job_type}
-                  />
-
-                  <InfoItem
-                    icon={<BadgeDollarSign className="w-4 h-4" />}
-                    label="Income"
-                    value={profile.income_range}
-                  />
-
-                  <InfoItem
-                    icon={<Heart className="w-4 h-4" />}
-                    label="Caste / Sect"
-                    value={
-                      profile.caste || profile.sect
-                        ? `${profile.caste || ''}${
-                            profile.caste && profile.sect ? ' / ' : ''
-                          }${profile.sect || ''}`
-                        : null
-                    }
-                  />
-
-                  <InfoItem
-                    icon={<Ruler className="w-4 h-4" />}
-                    label="Height"
-                    value={profile.height}
-                  />
-
-                  <InfoItem
-                    icon={<UserRound className="w-4 h-4" />}
-                    label="Appearance"
-                    value={
-                      profile.complexion || profile.body_type
-                        ? `${profile.complexion || ''}${
-                            profile.complexion && profile.body_type ? ' / ' : ''
-                          }${profile.body_type || ''}`
-                        : null
-                    }
-                  />
-
-                  <InfoItem
-                    icon={<Languages className="w-4 h-4" />}
-                    label="Languages"
-                    value={profile.languages}
-                  />
-
-                  <InfoItem
-                    icon={<Home className="w-4 h-4" />}
-                    label="Residence"
-                    value={profile.residence_status}
-                  />
-
-                  <InfoItem
-                    icon={<Baby className="w-4 h-4" />}
-                    label="Siblings"
-                    value={profile.siblings}
-                  />
-
-                  <InfoItem
-                    icon={<Users className="w-4 h-4" />}
-                    label="Parents"
-                    value={
-                      profile.father_occupation || profile.mother_occupation
-                        ? `Father: ${
-                            profile.father_occupation || 'N/A'
-                          } | Mother: ${profile.mother_occupation || 'N/A'}`
-                        : null
-                    }
-                  />
-                </div>
-
-                {(profile.family_details ||
-                  profile.expected_partner_age ||
-                  profile.expected_partner_location ||
-                  profile.expected_partner_education ||
-                  profile.requirements) && (
-                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {profile.family_details && (
-                      <div className="p-4 rounded-xl bg-slate-50">
-                        <p className="font-semibold text-slate-800 mb-1">
-                          Family Details
-                        </p>
-                        <p className="text-sm text-slate-600 leading-relaxed">
-                          {profile.family_details}
-                        </p>
-                      </div>
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {profile.gender && (
+                      <DetailPill color="green">{profile.gender}</DetailPill>
                     )}
 
-                    {(profile.expected_partner_age ||
-                      profile.expected_partner_location ||
-                      profile.expected_partner_education ||
-                      profile.requirements) && (
-                      <div className="p-4 rounded-xl bg-green-50">
-                        <p className="font-semibold text-green-900 mb-2">
-                          Partner Requirements
-                        </p>
+                    {profile.age && (
+                      <DetailPill color="blue">{profile.age} years</DetailPill>
+                    )}
 
-                        <div className="space-y-1 text-sm text-green-800">
-                          {profile.expected_partner_age && (
+                    {profile.marital_status && (
+                      <DetailPill color="amber">
+                        {profile.marital_status}
+                      </DetailPill>
+                    )}
+
+                    {profile.profile_code && (
+                      <DetailPill>{profile.profile_code}</DetailPill>
+                    )}
+                  </div>
+
+                  <h3 className="font-heading text-2xl font-bold text-slate-900">
+                    {profile.profile_code ||
+                      profile.candidate_name ||
+                      'Marriage Profile'}
+                  </h3>
+
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InfoItem
+                      icon={<MapPin className="w-4 h-4" />}
+                      label="Location"
+                      value={
+                        profile.city || profile.province
+                          ? `${profile.city || ''}${
+                              profile.city && profile.province ? ', ' : ''
+                            }${profile.province || ''}`
+                          : null
+                      }
+                    />
+
+                    <InfoItem
+                      icon={<GraduationCap className="w-4 h-4" />}
+                      label="Education"
+                      value={profile.education}
+                    />
+
+                    <InfoItem
+                      icon={<Briefcase className="w-4 h-4" />}
+                      label="Profession"
+                      value={profile.profession}
+                    />
+
+                    <InfoItem
+                      icon={<Building2 className="w-4 h-4" />}
+                      label="Employment"
+                      value={profile.employment_status || profile.job_type}
+                    />
+
+                    <InfoItem
+                      icon={<BadgeDollarSign className="w-4 h-4" />}
+                      label="Income"
+                      value={profile.income_range}
+                    />
+
+                    <InfoItem
+                      icon={<Heart className="w-4 h-4" />}
+                      label="Caste / Sect"
+                      value={
+                        profile.caste || profile.sect
+                          ? `${profile.caste || ''}${
+                              profile.caste && profile.sect ? ' / ' : ''
+                            }${profile.sect || ''}`
+                          : null
+                      }
+                    />
+
+                    <InfoItem
+                      icon={<Ruler className="w-4 h-4" />}
+                      label="Height"
+                      value={profile.height}
+                    />
+
+                    <InfoItem
+                      icon={<UserRound className="w-4 h-4" />}
+                      label="Appearance"
+                      value={
+                        profile.complexion || profile.body_type
+                          ? `${profile.complexion || ''}${
+                              profile.complexion && profile.body_type
+                                ? ' / '
+                                : ''
+                            }${profile.body_type || ''}`
+                          : null
+                      }
+                    />
+
+                    <InfoItem
+                      icon={<Languages className="w-4 h-4" />}
+                      label="Languages"
+                      value={profile.languages}
+                    />
+
+                    <InfoItem
+                      icon={<Home className="w-4 h-4" />}
+                      label="Residence"
+                      value={profile.residence_status}
+                    />
+
+                    <InfoItem
+                      icon={<Baby className="w-4 h-4" />}
+                      label="Siblings"
+                      value={profile.siblings}
+                    />
+
+                    <InfoItem
+                      icon={<Users className="w-4 h-4" />}
+                      label="Parents"
+                      value={
+                        profile.father_occupation || profile.mother_occupation
+                          ? `Father: ${
+                              profile.father_occupation || 'N/A'
+                            } | Mother: ${profile.mother_occupation || 'N/A'}`
+                          : null
+                      }
+                    />
+                  </div>
+
+                  {(profile.family_details ||
+                    profile.expected_partner_age ||
+                    profile.expected_partner_location ||
+                    profile.expected_partner_education ||
+                    profile.requirements) && (
+                    <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {profile.family_details && (
+                        <div className="p-4 rounded-xl bg-slate-50">
+                          <p className="font-semibold text-slate-800 mb-1">
+                            Family Details
+                          </p>
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            {profile.family_details}
+                          </p>
+                        </div>
+                      )}
+
+                      {(profile.expected_partner_age ||
+                        profile.expected_partner_location ||
+                        profile.expected_partner_education ||
+                        profile.requirements) && (
+                        <div className="p-4 rounded-xl bg-green-50">
+                          <p className="font-semibold text-green-900 mb-2">
+                            Partner Requirements
+                          </p>
+
+                          <div className="space-y-1 text-sm text-green-800">
+                            {profile.expected_partner_age && (
+                              <p>
+                                <span className="font-semibold">Age:</span>{' '}
+                                {profile.expected_partner_age}
+                              </p>
+                            )}
+
+                            {profile.expected_partner_location && (
+                              <p>
+                                <span className="font-semibold">
+                                  Location:
+                                </span>{' '}
+                                {profile.expected_partner_location}
+                              </p>
+                            )}
+
+                            {profile.expected_partner_education && (
+                              <p>
+                                <span className="font-semibold">
+                                  Education:
+                                </span>{' '}
+                                {profile.expected_partner_education}
+                              </p>
+                            )}
+
+                            {profile.requirements && (
+                              <p className="pt-1 leading-relaxed">
+                                {profile.requirements}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {profile.additional_notes && (
+                    <div className="mt-4 p-4 rounded-xl bg-amber-50 text-sm text-amber-800">
+                      <p className="font-semibold mb-1">Additional Notes</p>
+                      <p>{profile.additional_notes}</p>
+                    </div>
+                  )}
+
+                  {/* Contact Section */}
+                  <div className="mt-6 pt-5 border-t border-slate-100">
+                    {!contact ? (
+                      <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="flex items-start gap-3">
+                            <ShieldCheck className="w-5 h-5 text-green-700 mt-0.5" />
+                            <div>
+                              <p className="font-semibold text-slate-900">
+                                Contact details hidden
+                              </p>
+                              <p className="text-sm text-slate-500 mt-1">
+                                Click View Contact to reveal uploader contact.
+                                This action will be logged for admin review.
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => revealContact(profile.id)}
+                            disabled={contactLoading === profile.id}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800 disabled:opacity-50"
+                          >
+                            <Eye className="w-4 h-4" />
+                            {contactLoading === profile.id
+                              ? 'Loading...'
+                              : 'View Contact'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-green-50 border border-green-200 p-4">
+                        <div className="flex items-start gap-3 mb-4">
+                          <Phone className="w-5 h-5 text-green-700 mt-0.5" />
+                          <div>
+                            <p className="font-semibold text-green-900">
+                              Contact Details Revealed
+                            </p>
+                            <p className="text-sm text-green-700">
+                              This view has been saved in admin contact logs.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          {contact.business_name && (
                             <p>
-                              <span className="font-semibold">Age:</span>{' '}
-                              {profile.expected_partner_age}
+                              <span className="font-semibold">
+                                Bureau Name:
+                              </span>{' '}
+                              {contact.business_name}
                             </p>
                           )}
 
-                          {profile.expected_partner_location && (
+                          {contact.full_name && (
+                            <p>
+                              <span className="font-semibold">
+                                Contact Person:
+                              </span>{' '}
+                              {contact.full_name}
+                            </p>
+                          )}
+
+                          {contact.mobile_number && (
+                            <p>
+                              <span className="font-semibold">Mobile:</span>{' '}
+                              <a
+                                href={`tel:${contact.mobile_number}`}
+                                className="text-green-800 font-semibold hover:underline"
+                              >
+                                {contact.mobile_number}
+                              </a>
+                            </p>
+                          )}
+
+                          {contact.whatsapp_number && (
+                            <p>
+                              <span className="font-semibold">WhatsApp:</span>{' '}
+                              {whatsappLink ? (
+                                <a
+                                  href={whatsappLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-green-800 font-semibold hover:underline"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  {contact.whatsapp_number}
+                                </a>
+                              ) : (
+                                contact.whatsapp_number
+                              )}
+                            </p>
+                          )}
+
+                          {contact.office_phone && (
+                            <p>
+                              <span className="font-semibold">
+                                Office Phone:
+                              </span>{' '}
+                              <a
+                                href={`tel:${contact.office_phone}`}
+                                className="text-green-800 font-semibold hover:underline"
+                              >
+                                {contact.office_phone}
+                              </a>
+                            </p>
+                          )}
+
+                          {contact.email && (
+                            <p>
+                              <span className="font-semibold">Email:</span>{' '}
+                              <a
+                                href={`mailto:${contact.email}`}
+                                className="inline-flex items-center gap-1 text-green-800 font-semibold hover:underline"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {contact.email}
+                              </a>
+                            </p>
+                          )}
+
+                          {(contact.city || contact.province) && (
                             <p>
                               <span className="font-semibold">Location:</span>{' '}
-                              {profile.expected_partner_location}
-                            </p>
-                          )}
-
-                          {profile.expected_partner_education && (
-                            <p>
-                              <span className="font-semibold">Education:</span>{' '}
-                              {profile.expected_partner_education}
-                            </p>
-                          )}
-
-                          {profile.requirements && (
-                            <p className="pt-1 leading-relaxed">
-                              {profile.requirements}
+                              {contact.city}
+                              {contact.province ? `, ${contact.province}` : ''}
                             </p>
                           )}
                         </div>
                       </div>
                     )}
                   </div>
-                )}
 
-                {profile.additional_notes && (
-                  <div className="mt-4 p-4 rounded-xl bg-amber-50 text-sm text-amber-800">
-                    <p className="font-semibold mb-1">Additional Notes</p>
-                    <p>{profile.additional_notes}</p>
-                  </div>
-                )}
-
-                <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <p className="text-xs text-slate-400">
-                    Bureau: {profile.bureau_email}
-                  </p>
-
-                  {profile.created_at && (
+                  <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-slate-400">
-                      Added:{' '}
-                      {new Date(profile.created_at).toLocaleDateString()}
+                      Uploader contact hidden until View Contact is clicked.
                     </p>
-                  )}
+
+                    {profile.created_at && (
+                      <p className="text-xs text-slate-400">
+                        Added:{' '}
+                        {new Date(profile.created_at).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
