@@ -1,234 +1,276 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Image from 'next/image';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
-  Search,
   Users,
   UserPlus,
-  Bell,
+  Search,
+  Settings,
   LogOut,
   Menu,
   X,
-  ChevronDown,
-  Settings,
-  Shield,
+  ShieldCheck,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { bureauAPI } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
-interface Notification {
-  id: string;
-  title: string;
-  isRead: boolean;
-}
+type DashboardLayoutProps = {
+  children: ReactNode;
+};
+
+type BureauInfo = {
+  business_name: string | null;
+  full_name: string | null;
+  status: string | null;
+};
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/search', label: 'Search Profiles', icon: Search },
-  { href: '/profiles', label: 'My Profiles', icon: Users },
-  { href: '/profiles/new', label: 'Add Profile', icon: UserPlus },
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'My Profiles',
+    href: '/profiles',
+    icon: Users,
+  },
+  {
+    label: 'Add Profile',
+    href: '/profiles/new',
+    icon: UserPlus,
+  },
+  {
+    label: 'Search Profiles',
+    href: '/search',
+    icon: Search,
+  },
+  {
+    label: 'Settings',
+    href: '/settings',
+    icon: Settings,
+  },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [bureauInfo, setBureauInfo] = useState<BureauInfo | null>(null);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, router]);
+    const checkUser = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    bureauAPI
-      .getNotifications()
-      .then((res) => {
-        const unread = (res.data.data as Notification[]).filter(
-          (n: Notification) => !n.isRead
-        ).length;
-        setUnreadCount(unread);
-      })
-      .catch(() => {});
-  }, []);
+        if (!user || !user.email) {
+          localStorage.removeItem('mbn-auth');
+          router.push('/login');
+          return;
+        }
 
-  const handleLogout = () => {
-    logout();
+        setUserEmail(user.email);
+
+        const { data } = await supabase
+          .from('bureau_applications')
+          .select('business_name, full_name, status')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        setBureauInfo(data || null);
+      } catch {
+        localStorage.removeItem('mbn-auth');
+        router.push('/login');
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('mbn-auth');
     router.push('/login');
   };
 
-  if (!isAuthenticated || !user) return null;
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const status = bureauInfo?.status || 'pending';
+
+  const statusBadge =
+    status === 'approved'
+      ? 'bg-green-100 text-green-700'
+      : status === 'rejected'
+        ? 'bg-red-100 text-red-700'
+        : 'bg-amber-100 text-amber-700';
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-green-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-500 text-sm">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const SidebarContent = (
+    <div className="h-full flex flex-col">
+      {/* Logo */}
+      <div className="p-6 border-b border-slate-200">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <img
+            src="/mbn-logo.png"
+            alt="MBN Pakistan"
+            className="w-14 h-14 object-contain"
+          />
+
+          <div>
+            <p className="font-heading font-bold text-slate-900 leading-tight">
+              MBN Pakistan
+            </p>
+            <p className="text-xs text-slate-500">Marriage Bureau Network</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Bureau Info */}
+      <div className="px-6 py-5 border-b border-slate-200">
+        <p className="text-xs uppercase tracking-wide text-slate-400 font-semibold mb-1">
+          Logged in as
+        </p>
+
+        <p className="font-semibold text-slate-900 truncate">
+          {bureauInfo?.business_name || 'Marriage Bureau'}
+        </p>
+
+        <p className="text-xs text-slate-500 truncate mt-1">
+          {bureauInfo?.full_name || userEmail}
+        </p>
+
+        <div className="mt-3">
+          <span
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusBadge}`}
+          >
+            <ShieldCheck className="w-3 h-3" />
+            {status}
+          </span>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                active
+                  ? 'bg-green-700 text-white'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-slate-200">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200">
-          <Link href="/dashboard" className="flex items-center">
-            <Image
-              src="/mbn-logo.png"
-              alt="MBN Pakistan"
-              width={180}
-              height={80}
-              className="h-12 w-auto object-contain"
-              priority
-            />
-          </Link>
-
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-slate-400 hover:text-slate-600"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Nav */}
-        <nav className="px-4 py-4 flex-1 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-green-50 text-green-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${
-                    active ? 'text-green-700' : 'text-slate-400'
-                  }`}
-                />
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {/* Admin link */}
-          {['ADMIN', 'SUPER_ADMIN'].includes(user.role) && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
-            >
-              <Shield className="w-4 h-4 text-amber-500" />
-              Admin Panel
-            </Link>
-          )}
-        </nav>
-
-        {/* Bottom */}
-        <div className="px-4 py-4 border-t border-slate-200 mt-auto">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-green-700 font-semibold text-xs">
-                {user.businessName?.charAt(0)?.toUpperCase() ?? 'B'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
-                {user.businessName}
-              </p>
-              <p className="text-xs text-slate-400 truncate">{user.email}</p>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:bg-white lg:border-r lg:border-slate-200 lg:block">
+        {SidebarContent}
       </aside>
 
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+      {/* Mobile Header */}
+      <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <img
+            src="/mbn-logo.png"
+            alt="MBN Pakistan"
+            className="w-10 h-10 object-contain"
+          />
+
+          <div>
+            <p className="font-heading font-bold text-slate-900 text-sm">
+              MBN Pakistan
+            </p>
+            <p className="text-[11px] text-slate-500">Dashboard</p>
+          </div>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className="w-10 h-10 rounded-lg border border-slate-200 flex items-center justify-center"
+        >
+          <Menu className="w-5 h-5 text-slate-700" />
+        </button>
+      </header>
+
+      {/* Mobile Sidebar */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-slate-900/40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          <aside className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-xl">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute right-4 top-4 w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center z-10"
+            >
+              <X className="w-5 h-5 text-slate-700" />
+            </button>
+
+            {SidebarContent}
+          </aside>
+        </div>
       )}
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-slate-500 hover:text-slate-700"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          <div className="flex items-center gap-3 ml-auto">
-            {/* Notifications */}
-            <Link
-              href="/notifications"
-              className="relative p-2 text-slate-500 hover:text-slate-700"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
-
-            {/* Profile menu */}
-            <div className="relative">
-              <button
-                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900"
-              >
-                <div className="w-8 h-8 bg-green-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">
-                    {user.businessName?.charAt(0)?.toUpperCase() ?? 'B'}
-                  </span>
-                </div>
-                <span className="hidden sm:block max-w-[120px] truncate">
-                  {user.businessName}
-                </span>
-                <ChevronDown className="w-3 h-3 hidden sm:block" />
-              </button>
-
-              {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
-                  <Link
-                    href="/settings"
-                    onClick={() => setProfileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Settings className="w-4 h-4" />
-                    Account Settings
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
-      </div>
+      {/* Main Content */}
+      <main className="lg:pl-72">
+        <div className="p-4 md:p-8">{children}</div>
+      </main>
     </div>
   );
 }
