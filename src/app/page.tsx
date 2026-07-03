@@ -544,6 +544,52 @@ function HeroGraphic({
   visualText: string;
   isUrdu: boolean;
 }) {
+  const stats = isUrdu
+    ? [
+        {
+          value: '5,000+',
+          label: 'رجسٹرڈ بیوروز',
+          text: 'پاکستان اور اوورسیز کمیونٹی کے لیے نیٹ ورک',
+        },
+        {
+          value: '10,000+',
+          label: 'پروفائلز',
+          text: 'دلہن اور دلہا کی منظم پروفائل لسٹنگ',
+        },
+        {
+          value: '25,000+',
+          label: 'رابطہ ویوز',
+          text: 'محفوظ اور ٹریک شدہ رابطہ سرگرمی',
+        },
+        {
+          value: '100+',
+          label: 'شہر اور علاقے',
+          text: 'ملک بھر میں بیورو نیٹ ورک کوریج',
+        },
+      ]
+    : [
+        {
+          value: '5,000+',
+          label: 'Registered Bureaus',
+          text: 'A growing network across Pakistan and overseas communities.',
+        },
+        {
+          value: '10,000+',
+          label: 'Profile Listings',
+          text: 'Bride and groom profiles organized in one professional system.',
+        },
+        {
+          value: '25,000+',
+          label: 'Contact Views',
+          text: 'Securely tracked contact reveal activity across the network.',
+        },
+        {
+          value: '100+',
+          label: 'Cities & Areas',
+          text: 'Bureau coverage across major cities, regions, and communities.',
+        },
+      ];
+
   return (
     <div className="relative p-8 md:p-12 flex items-center justify-center bg-[#0b5f38]/55">
       <div className="absolute inset-0 opacity-30">
@@ -555,57 +601,63 @@ function HeroGraphic({
         <div className="absolute -bottom-10 -right-8 w-36 h-36 rounded-full bg-emerald-200/20 blur-2xl" />
 
         <div className="relative bg-white rounded-[2rem] p-6 shadow-2xl border border-white/40">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
             <div>
               <p className="font-heading text-2xl font-bold text-slate-950">
-                {visualTitle}
+                {isUrdu ? 'نیٹ ورک اعداد و شمار' : 'Network at a Glance'}
               </p>
-              <p className="text-sm text-slate-500 mt-1">{visualText}</p>
+
+              <p className="text-sm text-slate-500 mt-1">
+                {isUrdu
+                  ? 'پیشہ ور میرج بیوروز کے لیے ایک بڑھتا ہوا ڈیجیٹل نیٹ ورک'
+                  : 'A growing digital network for professional marriage bureaus.'}
+              </p>
             </div>
 
-            <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
               <Network className="w-6 h-6 text-[#137a4a]" />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <MockProfile
-              title="MBN-1004"
-              meta={isUrdu ? 'دلہن • ملتان' : 'Bride • Multan'}
-              color="bg-green-50"
-              icon={<Users className="w-5 h-5 text-[#137a4a]" />}
-            />
+          <div className="grid grid-cols-1 gap-4">
+            {stats.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-bold text-[#137a4a]">
+                      {item.value}
+                    </p>
 
-            <MockProfile
-              title="MBN-1021"
-              meta={isUrdu ? 'دلہا • لاہور' : 'Groom • Lahore'}
-              color="bg-blue-50"
-              icon={<Search className="w-5 h-5 text-blue-700" />}
-            />
+                    <p className="font-bold text-slate-950 mt-1">
+                      {item.label}
+                    </p>
 
-            <MockProfile
-              title={isUrdu ? 'رابطہ محفوظ' : 'Contact Protected'}
-              meta={isUrdu ? 'ویو لاگ محفوظ' : 'View log saved'}
-              color="bg-amber-50"
-              icon={<Lock className="w-5 h-5 text-amber-700" />}
-            />
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      {item.text}
+                    </p>
+                  </div>
+
+                  <CheckCircle className="w-5 h-5 text-[#137a4a] flex-shrink-0 mt-1" />
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-slate-50 p-4 text-center">
-              <p className="font-bold text-slate-950">4</p>
-              <p className="text-[11px] text-slate-500">Profiles</p>
-            </div>
+          <div className="mt-6 rounded-2xl bg-[#137a4a] text-white p-5">
+            <p className="font-heading text-xl font-bold">
+              {isUrdu
+                ? 'ایک پلیٹ فارم، مکمل بیورو کنٹرول'
+                : 'One platform. Complete bureau control.'}
+            </p>
 
-            <div className="rounded-2xl bg-slate-50 p-4 text-center">
-              <p className="font-bold text-slate-950">6</p>
-              <p className="text-[11px] text-slate-500">Views</p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4 text-center">
-              <p className="font-bold text-slate-950">1</p>
-              <p className="text-[11px] text-slate-500">Bureau</p>
-            </div>
+            <p className="text-sm text-green-50/90 mt-2 leading-relaxed">
+              {isUrdu
+                ? 'پروفائل اپلوڈ، سرچ، پرائیویسی اور رابطہ لاگز سب ایک جگہ۔'
+                : 'Upload profiles, search matches, manage privacy, and track contact views in one place.'}
+            </p>
           </div>
         </div>
       </div>
