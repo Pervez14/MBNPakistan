@@ -1,5 +1,6 @@
 'use client';
 
+import { createWatermarkedImageFile } from '@/lib/watermarkImage';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
