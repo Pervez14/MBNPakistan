@@ -10,6 +10,7 @@ import {
   X,
   Image as ImageIcon,
   ShieldCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -136,7 +137,6 @@ export default function NewProfilePage() {
   const [photoPreview, setPhotoPreview] = useState('');
 
   const [formData, setFormData] = useState({
-    profileCode: '',
     candidateName: '',
     photoVisibility: 'public',
 
@@ -270,13 +270,23 @@ export default function NewProfilePage() {
         throw new Error('Please select gender.');
       }
 
+      if (!formData.province) {
+        throw new Error('Please select province / region.');
+      }
+
+      if (!formData.city) {
+        throw new Error(
+          'Please select city. The system needs city to generate profile ID.'
+        );
+      }
+
       const photoUrl = await uploadPhoto(user.id);
 
       const { error } = await supabase.from('marriage_profiles').insert({
         created_by: user.id,
         bureau_email: user.email,
 
-        profile_code: formData.profileCode || null,
+        profile_code: null,
         candidate_name: formData.candidateName || null,
         gender: formData.gender,
         age: formData.age ? Number(formData.age) : null,
@@ -327,7 +337,9 @@ export default function NewProfilePage() {
         throw error;
       }
 
-      setSuccessMessage('Marriage profile created successfully.');
+      setSuccessMessage(
+        'Marriage profile created successfully. Profile ID was generated automatically.'
+      );
 
       setTimeout(() => {
         router.push('/profiles');
@@ -486,18 +498,20 @@ export default function NewProfilePage() {
             Basic Information
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+            <BadgeCheck className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <div>
-              <label className="label">Profile Code</label>
-              <input
-                name="profileCode"
-                value={formData.profileCode}
-                onChange={updateField}
-                placeholder="e.g. MBN-1001"
-                className="input-field"
-              />
+              <p className="font-semibold text-green-900">
+                Profile ID will be generated automatically
+              </p>
+              <p className="mt-1">
+                The system will create a unique ID based on city and gender,
+                for example: MBN-LHR-B-1001 or MBN-MTN-G-1001.
+              </p>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label">Candidate Name</label>
               <input
@@ -680,13 +694,24 @@ export default function NewProfilePage() {
             Location Details
           </h2>
 
+          <div className="mb-4 rounded-xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800">
+            <p className="font-semibold text-blue-900">
+              Province and city are required for automatic profile ID.
+            </p>
+            <p className="mt-1">
+              Example: Lahore creates LHR code, Multan creates MTN code,
+              Karachi creates KHI code.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Province / Region</label>
+              <label className="label">Province / Region *</label>
               <select
                 name="province"
                 value={formData.province}
                 onChange={updateField}
+                required
                 className="input-field"
               >
                 <option value="">Select Province</option>
@@ -699,11 +724,12 @@ export default function NewProfilePage() {
             </div>
 
             <div>
-              <label className="label">City</label>
+              <label className="label">City *</label>
               <select
                 name="city"
                 value={formData.city}
                 onChange={updateField}
+                required
                 disabled={!formData.province}
                 className="input-field disabled:bg-slate-100 disabled:text-slate-400"
               >
