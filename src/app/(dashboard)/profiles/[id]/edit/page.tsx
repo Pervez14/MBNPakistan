@@ -14,6 +14,7 @@ import {
   Save,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { createWatermarkedImageFile } from '@/lib/watermarkImage';
 
 const pakistaniCastes = [
   'Arain',
@@ -227,34 +228,39 @@ export default function EditProfilePage() {
     setPhotoPreview('');
   };
 
-  const uploadPhoto = async (userId: string) => {
-    if (!selectedPhoto) return currentPhotoUrl || null;
+ const uploadPhoto = async (userId: string) => {
+  if (!selectedPhoto) return currentPhotoUrl || null;
 
-    const fileExt = selectedPhoto.name.split('.').pop() || 'jpg';
-    const safeFileName = selectedPhoto.name
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9.-]/g, '')
-      .toLowerCase();
+  const watermarkedPhoto = await createWatermarkedImageFile(
+    selectedPhoto,
+    'MBNPakistan.com'
+  );
 
-    const filePath = `${userId}/${Date.now()}-${safeFileName || `photo.${fileExt}`}`;
+  const safeFileName = watermarkedPhoto.name
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9.-]/g, '')
+    .toLowerCase();
 
-    const { error: uploadError } = await supabase.storage
-      .from('profile-photos')
-      .upload(filePath, selectedPhoto, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+  const filePath = `${userId}/${Date.now()}-${safeFileName}`;
 
-    if (uploadError) {
-      throw uploadError;
-    }
+  const { error: uploadError } = await supabase.storage
+    .from('profile-photos')
+    .upload(filePath, watermarkedPhoto, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: 'image/jpeg',
+    });
 
-    const { data } = supabase.storage
-      .from('profile-photos')
-      .getPublicUrl(filePath);
+  if (uploadError) {
+    throw uploadError;
+  }
 
-    return data.publicUrl;
-  };
+  const { data } = supabase.storage
+    .from('profile-photos')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
 
   const loadProfile = async () => {
     try {
