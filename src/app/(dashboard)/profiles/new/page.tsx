@@ -1,6 +1,5 @@
 'use client';
 
-import { createWatermarkedImageFile } from '@/lib/watermarkImage';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { createWatermarkedImageFile } from '@/lib/watermarkImage';
 
 const pakistaniCastes = [
   'Arain',
