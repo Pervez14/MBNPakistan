@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   ShieldCheck,
   Save,
+  Lock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { createWatermarkedImageFile } from '@/lib/watermarkImage';
@@ -43,6 +44,20 @@ const pakistaniCastes = [
   'Tareen',
   'Yousafzai',
   'Other',
+];
+
+const sectOptions = [
+  'Sunni',
+  'Shia',
+  'Deobandi',
+  'Barelvi',
+  'Ahl-e-Hadith',
+  'Salafi',
+  'Ismaili',
+  'Bohra',
+  'Ahmadi',
+  'Other',
+  'Prefer not to say',
 ];
 
 const citiesByProvince: Record<string, string[]> = {
@@ -185,6 +200,7 @@ export default function EditProfilePage() {
     requirements: '',
 
     additionalNotes: '',
+    bureauPrivateNotes: '',
   });
 
   const updateField = (
@@ -228,39 +244,39 @@ export default function EditProfilePage() {
     setPhotoPreview('');
   };
 
- const uploadPhoto = async (userId: string) => {
-  if (!selectedPhoto) return currentPhotoUrl || null;
+  const uploadPhoto = async (userId: string) => {
+    if (!selectedPhoto) return currentPhotoUrl || null;
 
-  const watermarkedPhoto = await createWatermarkedImageFile(
-    selectedPhoto,
-    'MBNPakistan.com'
-  );
+    const watermarkedPhoto = await createWatermarkedImageFile(
+      selectedPhoto,
+      'MBNPakistan.com'
+    );
 
-  const safeFileName = watermarkedPhoto.name
-    .replace(/\s+/g, '-')
-    .replace(/[^a-zA-Z0-9.-]/g, '')
-    .toLowerCase();
+    const safeFileName = watermarkedPhoto.name
+      .replace(/\s+/g, '-')
+      .replace(/[^a-zA-Z0-9.-]/g, '')
+      .toLowerCase();
 
-  const filePath = `${userId}/${Date.now()}-${safeFileName}`;
+    const filePath = `${userId}/${Date.now()}-${safeFileName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('profile-photos')
-    .upload(filePath, watermarkedPhoto, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: 'image/jpeg',
-    });
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, watermarkedPhoto, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: 'image/jpeg',
+      });
 
-  if (uploadError) {
-    throw uploadError;
-  }
+    if (uploadError) {
+      throw uploadError;
+    }
 
-  const { data } = supabase.storage
-    .from('profile-photos')
-    .getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(filePath);
 
-  return data.publicUrl;
-};
+    return data.publicUrl;
+  };
 
   const loadProfile = async () => {
     try {
@@ -314,6 +330,7 @@ export default function EditProfilePage() {
           expected_partner_education,
           requirements,
           additional_notes,
+          bureau_private_notes,
           photo_url,
           photo_visibility,
           status,
@@ -329,7 +346,9 @@ export default function EditProfilePage() {
       }
 
       if (!data) {
-        throw new Error('Profile not found or you do not have permission to edit it.');
+        throw new Error(
+          'Profile not found or you do not have permission to edit it.'
+        );
       }
 
       setCurrentPhotoUrl(data.photo_url || '');
@@ -377,6 +396,7 @@ export default function EditProfilePage() {
         requirements: data.requirements || '',
 
         additionalNotes: data.additional_notes || '',
+        bureauPrivateNotes: data.bureau_private_notes || '',
       });
     } catch (err: unknown) {
       const message =
@@ -416,7 +436,6 @@ export default function EditProfilePage() {
       const { error } = await supabase
         .from('marriage_profiles')
         .update({
-          profile_code: formData.profileCode || null,
           candidate_name: formData.candidateName || null,
           gender: formData.gender,
           age: formData.age ? Number(formData.age) : null,
@@ -456,6 +475,7 @@ export default function EditProfilePage() {
           requirements: formData.requirements || null,
 
           additional_notes: formData.additionalNotes || null,
+          bureau_private_notes: formData.bureauPrivateNotes || null,
 
           photo_url: photoUrl,
           photo_visibility: formData.photoVisibility || 'public',
@@ -522,7 +542,8 @@ export default function EditProfilePage() {
         </h1>
 
         <p className="text-slate-500 mt-1">
-          Update profile details, photo privacy, and active status.
+          Update profile details, private bureau notes, photo privacy, and active
+          status.
         </p>
       </div>
 
@@ -609,7 +630,8 @@ export default function EditProfilePage() {
               </label>
 
               <p className="text-sm text-slate-500 mt-3">
-                Leave empty to keep current photo.
+                Leave empty to keep current photo. New uploaded photos will
+                automatically include MBNPakistan.com watermark.
               </p>
 
               <div className="mt-5">
@@ -659,16 +681,27 @@ export default function EditProfilePage() {
             Basic Information
           </h2>
 
+          <div className="mb-5 rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+            <p className="font-semibold text-green-900">
+              Profile ID is system generated
+            </p>
+            <p className="mt-1">
+              This code cannot be edited manually. It protects uniqueness and
+              keeps all profile IDs organized.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label">Profile Code</label>
               <input
-                name="profileCode"
                 value={formData.profileCode}
-                onChange={updateField}
-                placeholder="e.g. MBN-1001"
-                className="input-field"
+                readOnly
+                className="input-field bg-slate-100 text-slate-500 cursor-not-allowed"
               />
+              <p className="text-xs text-slate-400 mt-1">
+                Profile code is system generated and cannot be edited.
+              </p>
             </div>
 
             <div>
@@ -822,10 +855,12 @@ export default function EditProfilePage() {
                 onChange={updateField}
                 className="input-field"
               >
-                <option value="">Select</option>
-                <option value="Sunni">Sunni</option>
-                <option value="Shia">Shia</option>
-                <option value="Other">Other</option>
+                <option value="">Select Sect</option>
+                {sectOptions.map((sect) => (
+                  <option key={sect} value={sect}>
+                    {sect}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -889,6 +924,10 @@ export default function EditProfilePage() {
                   </option>
                 ))}
               </select>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Changing city will not change the existing profile code.
+              </p>
             </div>
 
             <div>
@@ -1124,7 +1163,7 @@ export default function EditProfilePage() {
 
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
-            Additional Notes
+            Additional Public Notes
           </h2>
 
           <textarea
@@ -1132,7 +1171,40 @@ export default function EditProfilePage() {
             value={formData.additionalNotes}
             onChange={updateField}
             rows={3}
-            placeholder="Any additional private notes..."
+            placeholder="Any additional notes that can be visible on profile search..."
+            className="input-field resize-none"
+          />
+
+          <p className="text-xs text-slate-400 mt-2">
+            This note may appear on public profile search. Do not write private
+            bureau-only details here.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Bureau Private Notes
+          </h2>
+
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4 flex items-start gap-3 text-sm text-slate-600">
+            <Lock className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-slate-900">
+                Private note for your bureau only
+              </p>
+              <p className="mt-1">
+                This note will not appear in public profile search and other
+                bureaus will not see it.
+              </p>
+            </div>
+          </div>
+
+          <textarea
+            name="bureauPrivateNotes"
+            value={formData.bureauPrivateNotes}
+            onChange={updateField}
+            rows={4}
+            placeholder="Internal note for your bureau only. Example: family serious, father abroad, only Multan/Bahawalpur preference..."
             className="input-field resize-none"
           />
         </section>
