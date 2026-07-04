@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   ShieldCheck,
   BadgeCheck,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -43,6 +44,20 @@ const pakistaniCastes = [
   'Tareen',
   'Yousafzai',
   'Other',
+];
+
+const sectOptions = [
+  'Sunni',
+  'Shia',
+  'Deobandi',
+  'Barelvi',
+  'Ahl-e-Hadith',
+  'Salafi',
+  'Ismaili',
+  'Bohra',
+  'Ahmadi',
+  'Other',
+  'Prefer not to say',
 ];
 
 const citiesByProvince: Record<string, string[]> = {
@@ -178,6 +193,7 @@ export default function NewProfilePage() {
     requirements: '',
 
     additionalNotes: '',
+    bureauPrivateNotes: '',
   });
 
   const updateField = (
@@ -221,39 +237,39 @@ export default function NewProfilePage() {
     setPhotoPreview('');
   };
 
-const uploadPhoto = async (userId: string) => {
-  if (!selectedPhoto) return null;
+  const uploadPhoto = async (userId: string) => {
+    if (!selectedPhoto) return null;
 
-  const watermarkedPhoto = await createWatermarkedImageFile(
-    selectedPhoto,
-    'MBNPakistan.com'
-  );
+    const watermarkedPhoto = await createWatermarkedImageFile(
+      selectedPhoto,
+      'MBNPakistan.com'
+    );
 
-  const safeFileName = watermarkedPhoto.name
-    .replace(/\s+/g, '-')
-    .replace(/[^a-zA-Z0-9.-]/g, '')
-    .toLowerCase();
+    const safeFileName = watermarkedPhoto.name
+      .replace(/\s+/g, '-')
+      .replace(/[^a-zA-Z0-9.-]/g, '')
+      .toLowerCase();
 
-  const filePath = `${userId}/${Date.now()}-${safeFileName}`;
+    const filePath = `${userId}/${Date.now()}-${safeFileName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('profile-photos')
-    .upload(filePath, watermarkedPhoto, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: 'image/jpeg',
-    });
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, watermarkedPhoto, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: 'image/jpeg',
+      });
 
-  if (uploadError) {
-    throw uploadError;
-  }
+    if (uploadError) {
+      throw uploadError;
+    }
 
-  const { data } = supabase.storage
-    .from('profile-photos')
-    .getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(filePath);
 
-  return data.publicUrl;
-};
+    return data.publicUrl;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -332,6 +348,7 @@ const uploadPhoto = async (userId: string) => {
         requirements: formData.requirements || null,
 
         additional_notes: formData.additionalNotes || null,
+        bureau_private_notes: formData.bureauPrivateNotes || null,
 
         photo_url: photoUrl,
         photo_visibility: formData.photoVisibility || 'public',
@@ -491,7 +508,8 @@ const uploadPhoto = async (userId: string) => {
                   <ShieldCheck className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
                     Public is default. Select blurred or hidden only when the
-                    candidate wants privacy.
+                    candidate wants privacy. Uploaded photos will automatically
+                    include MBNPakistan.com watermark.
                   </p>
                 </div>
               </div>
@@ -669,10 +687,12 @@ const uploadPhoto = async (userId: string) => {
                 onChange={updateField}
                 className="input-field"
               >
-                <option value="">Select</option>
-                <option value="Sunni">Sunni</option>
-                <option value="Shia">Shia</option>
-                <option value="Other">Other</option>
+                <option value="">Select Sect</option>
+                {sectOptions.map((sect) => (
+                  <option key={sect} value={sect}>
+                    {sect}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -983,7 +1003,7 @@ const uploadPhoto = async (userId: string) => {
 
         <section>
           <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
-            Additional Notes
+            Additional Public Notes
           </h2>
 
           <textarea
@@ -991,7 +1011,40 @@ const uploadPhoto = async (userId: string) => {
             value={formData.additionalNotes}
             onChange={updateField}
             rows={3}
-            placeholder="Any additional private notes..."
+            placeholder="Any additional notes that can be visible on profile search..."
+            className="input-field resize-none"
+          />
+
+          <p className="text-xs text-slate-400 mt-2">
+            This note may appear on public profile search. Do not write private
+            bureau-only details here.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Bureau Private Notes
+          </h2>
+
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4 flex items-start gap-3 text-sm text-slate-600">
+            <Lock className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-slate-900">
+                Private note for your bureau only
+              </p>
+              <p className="mt-1">
+                This note will not appear in public profile search and other
+                bureaus will not see it.
+              </p>
+            </div>
+          </div>
+
+          <textarea
+            name="bureauPrivateNotes"
+            value={formData.bureauPrivateNotes}
+            onChange={updateField}
+            rows={4}
+            placeholder="Internal note for your bureau only. Example: family serious, father abroad, only Multan/Bahawalpur preference..."
             className="input-field resize-none"
           />
         </section>
