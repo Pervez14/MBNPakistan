@@ -113,6 +113,20 @@ const pakistaniCastes = [
   'Other',
 ];
 
+const sectOptions = [
+  'Sunni',
+  'Shia',
+  'Deobandi',
+  'Barelvi',
+  'Ahl-e-Hadith',
+  'Salafi',
+  'Ismaili',
+  'Bohra',
+  'Ahmadi',
+  'Other',
+  'Prefer not to say',
+];
+
 const citiesByProvince: Record<string, string[]> = {
   Punjab: [
     'Lahore',
@@ -200,6 +214,7 @@ type Filters = {
   gender: string;
   province: string;
   city: string;
+  sect: string;
   caste: string;
   maritalStatus: string;
   employmentStatus: string;
@@ -211,6 +226,7 @@ const emptyFilters: Filters = {
   gender: '',
   province: '',
   city: '',
+  sect: '',
   caste: '',
   maritalStatus: '',
   employmentStatus: '',
@@ -382,6 +398,10 @@ export default function SearchProfilesPage() {
         query = query.eq('city', activeFilters.city);
       }
 
+      if (activeFilters.sect) {
+        query = query.eq('sect', activeFilters.sect);
+      }
+
       if (activeFilters.caste) {
         query = query.eq('caste', activeFilters.caste);
       }
@@ -433,6 +453,7 @@ export default function SearchProfilesPage() {
             profile.expected_partner_location,
             profile.expected_partner_education,
             profile.languages,
+            profile.additional_notes,
           ]
             .filter(Boolean)
             .join(' ')
@@ -517,7 +538,6 @@ export default function SearchProfilesPage() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
           <Filter className="w-5 h-5 text-green-700" />
@@ -568,7 +588,7 @@ export default function SearchProfilesPage() {
           </div>
 
           <div>
-            <label className="label">Province</label>
+            <label className="label">Province / Region</label>
             <select
               name="province"
               value={filters.province}
@@ -599,6 +619,23 @@ export default function SearchProfilesPage() {
               {cityOptions.map((city) => (
                 <option key={city} value={city}>
                   {city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label">Sect</label>
+            <select
+              name="sect"
+              value={filters.sect}
+              onChange={updateFilter}
+              className="input-field"
+            >
+              <option value="">All Sects</option>
+              {sectOptions.map((sect) => (
+                <option key={sect} value={sect}>
+                  {sect}
                 </option>
               ))}
             </select>
@@ -683,7 +720,9 @@ export default function SearchProfilesPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          {loading ? 'Loading profiles...' : `${profiles.length} profile(s) found`}
+          {loading
+            ? 'Loading profiles...'
+            : `${profiles.length} profile(s) found`}
         </p>
       </div>
 
@@ -718,7 +757,6 @@ export default function SearchProfilesPage() {
                 key={profile.id}
                 className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
               >
-                {/* Image */}
                 <div className="h-80 bg-slate-100 border-b border-slate-100">
                   {profile.photo_url && profile.photo_visibility !== 'hidden' ? (
                     <div className="relative w-full h-full overflow-hidden">
@@ -750,7 +788,6 @@ export default function SearchProfilesPage() {
                   )}
                 </div>
 
-                {/* Content */}
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     {profile.gender && (
@@ -948,7 +985,6 @@ export default function SearchProfilesPage() {
                     </div>
                   )}
 
-                  {/* Contact Section */}
                   <div className="mt-6 pt-5 border-t border-slate-100">
                     {!contact ? (
                       <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
