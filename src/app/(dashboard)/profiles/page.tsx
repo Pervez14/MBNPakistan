@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Pencil,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -66,6 +67,8 @@ type MarriageProfile = {
   requirements: string | null;
 
   additional_notes: string | null;
+  bureau_private_notes: string | null;
+
   photo_url: string | null;
   photo_visibility: string | null;
   bureau_email: string | null;
@@ -209,6 +212,7 @@ export default function MyProfilesPage() {
           expected_partner_education,
           requirements,
           additional_notes,
+          bureau_private_notes,
           photo_url,
           photo_visibility,
           bureau_email,
@@ -261,6 +265,8 @@ export default function MyProfilesPage() {
             profile.expected_partner_location,
             profile.expected_partner_education,
             profile.languages,
+            profile.additional_notes,
+            profile.bureau_private_notes,
           ]
             .filter(Boolean)
             .join(' ')
@@ -382,7 +388,7 @@ export default function MyProfilesPage() {
               name="keyword"
               value={filters.keyword}
               onChange={updateFilter}
-              placeholder="Search code, education, city, profession..."
+              placeholder="Search code, education, city, private notes..."
               className="input-field"
             />
           </div>
@@ -546,6 +552,12 @@ export default function MyProfilesPage() {
                     'Marriage Profile'}
                 </h3>
 
+                {profile.candidate_name && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    Candidate: {profile.candidate_name}
+                  </p>
+                )}
+
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoItem
                     icon={<MapPin className="w-4 h-4" />}
@@ -705,8 +717,26 @@ export default function MyProfilesPage() {
 
                 {profile.additional_notes && (
                   <div className="mt-4 p-4 rounded-xl bg-amber-50 text-sm text-amber-800">
-                    <p className="font-semibold mb-1">Additional Notes</p>
+                    <p className="font-semibold mb-1">Additional Public Notes</p>
                     <p>{profile.additional_notes}</p>
+                  </div>
+                )}
+
+                {profile.bureau_private_notes && (
+                  <div className="mt-4 p-4 rounded-xl bg-slate-900 text-sm text-white">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lock className="w-4 h-4 text-slate-300" />
+                      <p className="font-semibold">Bureau Private Notes</p>
+                    </div>
+
+                    <p className="text-slate-200 leading-relaxed">
+                      {profile.bureau_private_notes}
+                    </p>
+
+                    <p className="text-[11px] text-slate-400 mt-3">
+                      Only your bureau can see this note. It is not shown in
+                      public search results.
+                    </p>
                   </div>
                 )}
 
