@@ -29,8 +29,8 @@ import {
   UserRoundSearch,
   Send,
   ClipboardList,
-  CalendarDays,
-  MessageSquareText,
+  Copy,
+  TriangleAlert,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -99,6 +99,8 @@ type MarriageProfile = {
 type PublicSubmission = {
   id: string;
 
+  submission_reference: string | null;
+
   source_type: string | null;
 
   submitter_full_name: string | null;
@@ -165,8 +167,45 @@ type PublicSubmission = {
   converted_profile_id: string | null;
   converted_at: string | null;
 
+  possible_duplicate: boolean | null;
+  duplicate_match_count: number | null;
+  duplicate_checked_at: string | null;
+
   submitted_at: string | null;
   updated_at: string | null;
+};
+
+
+type DuplicateMatch = {
+  id: string;
+  submission_id: string;
+  matched_submission_id: string;
+  match_score: number;
+  match_reasons: string[] | null;
+  created_at: string | null;
+};
+
+
+type AssignedProfileWork = {
+  id: string;
+  submission_id: string;
+  bureau_email: string;
+  work_status: string | null;
+  bureau_private_notes: string | null;
+  last_follow_up_at: string | null;
+  next_follow_up_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+
+type AssignedProfileFollowUp = {
+  id: string;
+  submission_id: string;
+  bureau_email: string;
+  note: string;
+  status_at_time: string | null;
+  created_at: string | null;
 };
 
 
@@ -193,28 +232,6 @@ type ContactLog = {
   uploader_email: string | null;
   uploader_business_name: string | null;
   viewed_at: string | null;
-};
-
-
-type AssignedProfileWork = {
-  id: string;
-  submission_id: string;
-  bureau_email: string | null;
-  work_status: string | null;
-  bureau_private_notes: string | null;
-  last_follow_up_at: string | null;
-  next_follow_up_at: string | null;
-  updated_at: string | null;
-};
-
-
-type AssignedProfileFollowUp = {
-  id: string;
-  submission_id: string;
-  bureau_email: string | null;
-  note: string | null;
-  status_at_time: string | null;
-  created_at: string | null;
 };
 
 
@@ -525,17 +542,24 @@ export default function SuperAdminPage() {
 
 
   const [
-    bureauWorkBySubmission,
-    setBureauWorkBySubmission,
+    duplicateMatches,
+    setDuplicateMatches,
   ] =
-    useState<Record<string, AssignedProfileWork>>({});
+    useState<DuplicateMatch[]>([]);
 
 
   const [
-    followUpsBySubmission,
-    setFollowUpsBySubmission,
+    assignedProfileWork,
+    setAssignedProfileWork,
   ] =
-    useState<Record<string, AssignedProfileFollowUp[]>>({});
+    useState<AssignedProfileWork[]>([]);
+
+
+  const [
+    assignedProfileFollowUps,
+    setAssignedProfileFollowUps,
+  ] =
+    useState<AssignedProfileFollowUp[]>([]);
 
 
   const [adminNotesDraft, setAdminNotesDraft] =
@@ -801,6 +825,7 @@ export default function SuperAdminPage() {
         .from('public_profile_submissions')
         .select(`
           id,
+          submission_reference,
           source_type,
 
           submitter_full_name,
@@ -867,6 +892,10 @@ export default function SuperAdminPage() {
           converted_profile_id,
           converted_at,
 
+          possible_duplicate,
+          duplicate_match_count,
+          duplicate_checked_at,
+
           submitted_at,
           updated_at
         `)
@@ -879,6 +908,31 @@ export default function SuperAdminPage() {
 
       if (publicSubmissionError) {
         throw publicSubmissionError;
+      }
+
+
+      const {
+        data: duplicateMatchData,
+        error: duplicateMatchError,
+      } = await supabase
+        .from('public_submission_duplicate_matches')
+        .select(`
+          id,
+          submission_id,
+          matched_submission_id,
+          match_score,
+          match_reasons,
+          created_at
+        `)
+        .order(
+          'match_score',
+          { ascending: false }
+        )
+        .limit(3000);
+
+
+      if (duplicateMatchError) {
+        throw duplicateMatchError;
       }
 
 
@@ -976,8 +1030,8 @@ export default function SuperAdminPage() {
 
 
       const {
-        data: workData,
-        error: workError,
+        data: assignedWorkData,
+        error: assignedWorkError,
       } = await supabase
         .from('assigned_profile_work')
         .select(`
@@ -988,6 +1042,7 @@ export default function SuperAdminPage() {
           bureau_private_notes,
           last_follow_up_at,
           next_follow_up_at,
+          created_at,
           updated_at
         `)
         .order(
@@ -997,8 +1052,8 @@ export default function SuperAdminPage() {
         .limit(1000);
 
 
-      if (workError) {
-        throw workError;
+      if (assignedWorkError) {
+        throw assignedWorkError;
       }
 
 
@@ -1019,7 +1074,7 @@ export default function SuperAdminPage() {
           'created_at',
           { ascending: false }
         )
-        .limit(2000);
+        .limit(3000);
 
 
       if (followUpError) {
@@ -1073,59 +1128,6 @@ export default function SuperAdminPage() {
       );
 
 
-      const workMap:
-        Record<string, AssignedProfileWork> = {};
-
-
-      ((workData || []) as AssignedProfileWork[]).forEach(
-        (work) => {
-          if (!work.submission_id) return;
-
-          if (
-            !workMap[work.submission_id]
-          ) {
-            workMap[work.submission_id] =
-              work;
-          }
-        }
-      );
-
-
-      const followUpMap:
-        Record<string, AssignedProfileFollowUp[]> = {};
-
-
-      ((followUpData || []) as AssignedProfileFollowUp[]).forEach(
-        (followUp) => {
-          if (!followUp.submission_id) return;
-
-          if (
-            !followUpMap[
-              followUp.submission_id
-            ]
-          ) {
-            followUpMap[
-              followUp.submission_id
-            ] = [];
-          }
-
-          followUpMap[
-            followUp.submission_id
-          ].push(followUp);
-        }
-      );
-
-
-      setBureauWorkBySubmission(
-        workMap
-      );
-
-
-      setFollowUpsBySubmission(
-        followUpMap
-      );
-
-
       setAdminNotesDraft(bureauNotes);
 
       setPublicAdminNotesDraft(
@@ -1149,6 +1151,11 @@ export default function SuperAdminPage() {
         loadedPublicSubmissions
       );
 
+
+      setDuplicateMatches(
+        (duplicateMatchData || []) as DuplicateMatch[]
+      );
+
       setProfiles(
         (profileData || []) as MarriageProfile[]
       );
@@ -1159,6 +1166,16 @@ export default function SuperAdminPage() {
 
       setLogs(
         (logData || []) as ContactLog[]
+      );
+
+
+      setAssignedProfileWork(
+        (assignedWorkData || []) as AssignedProfileWork[]
+      );
+
+
+      setAssignedProfileFollowUps(
+        (followUpData || []) as AssignedProfileFollowUp[]
       );
 
     } catch (err: unknown) {
@@ -1832,6 +1849,7 @@ export default function SuperAdminPage() {
 
 
       const matchesSearch = [
+        item.submission_reference,
         item.submitter_full_name,
         item.submitter_email,
         item.submitter_mobile,
@@ -1970,6 +1988,127 @@ export default function SuperAdminPage() {
         app.status === 'approved' &&
         app.email
     );
+
+
+  const getDuplicateMatchesForSubmission = (
+    submissionId: string
+  ) =>
+    duplicateMatches
+      .filter(
+        (match) =>
+          match.submission_id === submissionId
+      )
+      .sort(
+        (a, b) =>
+          b.match_score - a.match_score
+      );
+
+
+  const getSubmissionById = (
+    submissionId: string
+  ) =>
+    publicSubmissions.find(
+      (submission) =>
+        submission.id === submissionId
+    ) || null;
+
+
+  const recheckSubmissionDuplicates = async (
+    submissionId: string
+  ) => {
+    try {
+      setActionLoading(
+        `duplicate-${submissionId}`
+      );
+
+      setErrorMessage('');
+      setSuccessMessage('');
+
+
+      const {
+        data,
+        error,
+      } = await supabase.rpc(
+        'admin_recheck_submission_duplicates',
+        {
+          p_submission_id:
+            submissionId,
+        }
+      );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      await loadAdminData();
+
+
+      const result =
+        typeof data === 'object' &&
+        data !== null
+          ? (data as {
+              match_count?: number;
+              possible_duplicate?: boolean;
+            })
+          : null;
+
+
+      setSuccessMessage(
+        result?.possible_duplicate
+          ? `Duplicate check completed. ${result.match_count || 0} possible match(es) found.`
+          : 'Duplicate check completed. No possible duplicate matches found.'
+      );
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Duplicate check could not be completed.'
+      );
+
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+  const getBureauWorkForSubmission = (
+    submissionId: string
+  ) =>
+    assignedProfileWork.find(
+      (work) =>
+        work.submission_id === submissionId
+    ) || null;
+
+
+  const getFollowUpsForSubmission = (
+    submissionId: string
+  ) =>
+    assignedProfileFollowUps.filter(
+      (followUp) =>
+        followUp.submission_id === submissionId
+    );
+
+
+  const getBureauDisplayName = (
+    email: string | null
+  ) => {
+    if (!email) return 'Assigned Bureau';
+
+    const bureau = applications.find(
+      (item) =>
+        item.email?.toLowerCase() ===
+        email.toLowerCase()
+    );
+
+    return (
+      bureau?.business_name ||
+      bureau?.full_name ||
+      email
+    );
+  };
 
 
   const recentPendingApplications =
@@ -2618,6 +2757,37 @@ export default function SuperAdminPage() {
                   );
 
 
+                const duplicateMatchesForSubmission =
+                  getDuplicateMatchesForSubmission(
+                    submission.id
+                  );
+
+
+                const highestDuplicateMatch =
+                  duplicateMatchesForSubmission[0] ||
+                  null;
+
+
+                const highestMatchedSubmission =
+                  highestDuplicateMatch
+                    ? getSubmissionById(
+                        highestDuplicateMatch.matched_submission_id
+                      )
+                    : null;
+
+
+                const bureauWork =
+                  getBureauWorkForSubmission(
+                    submission.id
+                  );
+
+
+                const bureauFollowUps =
+                  getFollowUpsForSubmission(
+                    submission.id
+                  );
+
+
                 return (
                   <div
                     key={submission.id}
@@ -2665,7 +2835,46 @@ export default function SuperAdminPage() {
                             </span>
                           )}
 
+
+                          {submission.possible_duplicate && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                              <TriangleAlert className="w-3.5 h-3.5" />
+                              Possible Duplicate
+                            </span>
+                          )}
+
                         </div>
+
+
+                        {submission.submission_reference && (
+                          <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+
+                            <span className="text-xs text-slate-500">
+                              Reference
+                            </span>
+
+                            <span
+                              dir="ltr"
+                              className="font-mono text-sm font-bold text-slate-900"
+                            >
+                              {submission.submission_reference}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigator.clipboard.writeText(
+                                  submission.submission_reference || ''
+                                )
+                              }
+                              className="text-slate-400 hover:text-slate-700"
+                              title="Copy reference"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+
+                          </div>
+                        )}
 
 
                         <p className="text-xs text-slate-400 mt-2">
@@ -3079,6 +3288,254 @@ export default function SuperAdminPage() {
                         )}
 
 
+                        {/* Duplicate Detection */}
+                        <div
+                          className={`mt-4 rounded-xl border p-5 ${
+                            submission.possible_duplicate
+                              ? 'border-red-200 bg-red-50'
+                              : 'border-slate-200 bg-slate-50'
+                          }`}
+                        >
+
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+
+                            <div>
+
+                              <div className="flex items-center gap-2">
+
+                                <TriangleAlert
+                                  className={`w-5 h-5 ${
+                                    submission.possible_duplicate
+                                      ? 'text-red-700'
+                                      : 'text-slate-500'
+                                  }`}
+                                />
+
+                                <p
+                                  className={`font-bold ${
+                                    submission.possible_duplicate
+                                      ? 'text-red-900'
+                                      : 'text-slate-900'
+                                  }`}
+                                >
+                                  Duplicate Submission Check
+                                </p>
+
+                              </div>
+
+
+                              <p
+                                className={`text-sm mt-2 ${
+                                  submission.possible_duplicate
+                                    ? 'text-red-800'
+                                    : 'text-slate-600'
+                                }`}
+                              >
+                                {submission.possible_duplicate
+                                  ? `${submission.duplicate_match_count || duplicateMatchesForSubmission.length} possible similar submission(s) found.`
+                                  : 'No possible duplicate submissions are currently flagged.'}
+                              </p>
+
+
+                              {submission.duplicate_checked_at && (
+                                <p className="text-xs text-slate-400 mt-2">
+                                  Last checked:{' '}
+                                  {
+                                    formatDate(
+                                      submission.duplicate_checked_at
+                                    )
+                                  }
+                                </p>
+                              )}
+
+                            </div>
+
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                recheckSubmissionDuplicates(
+                                  submission.id
+                                )
+                              }
+                              disabled={
+                                actionLoading ===
+                                `duplicate-${submission.id}`
+                              }
+                              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 ${
+                                submission.possible_duplicate
+                                  ? 'bg-red-700 text-white hover:bg-red-800'
+                                  : 'bg-slate-900 text-white hover:bg-slate-800'
+                              }`}
+                            >
+                              <RefreshCcw
+                                className={`w-4 h-4 ${
+                                  actionLoading ===
+                                  `duplicate-${submission.id}`
+                                    ? 'animate-spin'
+                                    : ''
+                                }`}
+                              />
+
+                              {actionLoading ===
+                              `duplicate-${submission.id}`
+                                ? 'Checking...'
+                                : 'Recheck Duplicates'}
+                            </button>
+
+                          </div>
+
+
+                          {highestDuplicateMatch && (
+                            <div className="mt-4 rounded-xl border border-red-200 bg-white p-4">
+
+                              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+
+                                <div>
+
+                                  <p className="text-xs font-bold uppercase tracking-wide text-red-500">
+                                    Highest Match
+                                  </p>
+
+
+                                  <p className="font-bold text-slate-900 mt-2">
+                                    {
+                                      highestMatchedSubmission?.submission_reference ||
+                                      highestMatchedSubmission?.candidate_name ||
+                                      'Previous submission'
+                                    }
+                                  </p>
+
+
+                                  <p className="text-sm text-slate-500 mt-1">
+                                    Score:{' '}
+                                    <span className="font-bold text-red-700">
+                                      {highestDuplicateMatch.match_score}
+                                    </span>
+                                  </p>
+
+                                </div>
+
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchTerm(
+                                      highestMatchedSubmission?.submission_reference ||
+                                      highestMatchedSubmission?.candidate_name ||
+                                      highestDuplicateMatch.matched_submission_id
+                                    );
+
+                                    setStatusFilter('');
+
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: 'smooth',
+                                    });
+                                  }}
+                                  className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200"
+                                >
+                                  View Similar Submission
+                                </button>
+
+                              </div>
+
+
+                              <div className="mt-4">
+
+                                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                                  Match Reasons
+                                </p>
+
+
+                                <div className="mt-2 flex flex-wrap gap-2">
+
+                                  {(
+                                    highestDuplicateMatch.match_reasons || []
+                                  ).map(
+                                    (reason) => (
+                                      <span
+                                        key={reason}
+                                        className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-xs font-semibold"
+                                      >
+                                        {reason}
+                                      </span>
+                                    )
+                                  )}
+
+                                </div>
+
+                              </div>
+
+
+                              {duplicateMatchesForSubmission.length > 1 && (
+                                <div className="mt-4 border-t border-slate-100 pt-4">
+
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    Other possible matches
+                                  </p>
+
+
+                                  <div className="mt-3 space-y-2">
+
+                                    {duplicateMatchesForSubmission
+                                      .slice(1, 6)
+                                      .map((match) => {
+                                        const matchedSubmission =
+                                          getSubmissionById(
+                                            match.matched_submission_id
+                                          );
+
+                                        return (
+                                          <div
+                                            key={match.id}
+                                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"
+                                          >
+
+                                            <div>
+                                              <p className="text-sm font-semibold text-slate-900">
+                                                {
+                                                  matchedSubmission?.submission_reference ||
+                                                  matchedSubmission?.candidate_name ||
+                                                  'Previous submission'
+                                                }
+                                              </p>
+
+                                              <p className="text-xs text-slate-500 mt-0.5">
+                                                Score: {match.match_score}
+                                              </p>
+                                            </div>
+
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setSearchTerm(
+                                                  matchedSubmission?.submission_reference ||
+                                                  matchedSubmission?.candidate_name ||
+                                                  match.matched_submission_id
+                                                )
+                                              }
+                                              className="text-xs font-semibold text-red-700 hover:text-red-800"
+                                            >
+                                              View
+                                            </button>
+
+                                          </div>
+                                        );
+                                      })}
+
+                                  </div>
+
+                                </div>
+                              )}
+
+                            </div>
+                          )}
+
+                        </div>
+
+
                         {/* Private Notes */}
                         <div className="mt-4 rounded-xl bg-slate-900 p-5">
 
@@ -3182,86 +3639,106 @@ export default function SuperAdminPage() {
                         )}
 
 
-                        {/* Bureau Work Progress */}
+                        {/* Bureau Work Progress Monitoring */}
                         {submission.assigned_bureau_email && (
-                          <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 p-5">
+                          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-5">
 
-                            <div className="flex items-center gap-2">
-                              <HeartHandshake className="w-5 h-5 text-blue-700" />
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
 
-                              <p className="font-bold text-blue-900">
-                                Bureau Work Progress
-                              </p>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <HeartHandshake className="w-5 h-5 text-blue-700" />
+
+                                  <p className="font-bold text-blue-900">
+                                    Bureau Work Progress
+                                  </p>
+                                </div>
+
+                                <p className="text-sm text-blue-800 mt-1">
+                                  Progress reported by{' '}
+                                  <span className="font-semibold">
+                                    {
+                                      getBureauDisplayName(
+                                        submission.assigned_bureau_email
+                                      )
+                                    }
+                                  </span>
+                                </p>
+                              </div>
+
+
+                              <span
+                                className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
+                                  bureauWork?.work_status ||
+                                  submission.review_status
+                                )}`}
+                              >
+                                {
+                                  formatStatus(
+                                    bureauWork?.work_status ||
+                                    submission.review_status
+                                  )
+                                }
+                              </span>
+
                             </div>
 
 
-                            {bureauWorkBySubmission[
-                              submission.id
-                            ] ? (
-                              <div className="mt-4 space-y-4">
+                            {!bureauWork ? (
+                              <div className="mt-4 rounded-xl bg-white/80 border border-blue-100 p-4">
+                                <p className="text-sm font-semibold text-slate-700">
+                                  Bureau has not started its work log yet.
+                                </p>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Status, private bureau notes, and follow-up dates will appear here after the assigned bureau saves its first work update.
+                                </p>
+                              </div>
+                            ) : (
+                              <>
 
-                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
-                                    <p className="text-xs font-bold uppercase text-slate-400">
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                                  <div className="rounded-xl bg-white p-4 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                                       Work Status
                                     </p>
 
-                                    <span
-                                      className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
-                                        bureauWorkBySubmission[
-                                          submission.id
-                                        ].work_status
-                                      )}`}
-                                    >
+                                    <p className="font-semibold text-slate-900 mt-2">
                                       {
                                         formatStatus(
-                                          bureauWorkBySubmission[
-                                            submission.id
-                                          ].work_status
+                                          bureauWork.work_status
                                         )
                                       }
-                                    </span>
+                                    </p>
                                   </div>
 
 
-                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
-                                    <p className="text-xs font-bold uppercase text-slate-400">
+                                  <div className="rounded-xl bg-white p-4 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                                       Last Follow-up
                                     </p>
 
-                                    <p className="text-sm font-semibold text-slate-800 mt-2">
+                                    <p className="font-semibold text-slate-900 mt-2">
                                       {
-                                        bureauWorkBySubmission[
-                                          submission.id
-                                        ].last_follow_up_at
-                                          ? formatDate(
-                                              bureauWorkBySubmission[
-                                                submission.id
-                                              ].last_follow_up_at
-                                            )
-                                          : 'No follow-up yet'
+                                        formatDate(
+                                          bureauWork.last_follow_up_at
+                                        )
                                       }
                                     </p>
                                   </div>
 
 
-                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
-                                    <p className="text-xs font-bold uppercase text-slate-400">
+                                  <div className="rounded-xl bg-white p-4 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                                       Next Follow-up
                                     </p>
 
-                                    <p className="text-sm font-semibold text-slate-800 mt-2">
+                                    <p className="font-semibold text-slate-900 mt-2">
                                       {
-                                        bureauWorkBySubmission[
-                                          submission.id
-                                        ].next_follow_up_at
-                                          ? formatDate(
-                                              bureauWorkBySubmission[
-                                                submission.id
-                                              ].next_follow_up_at
-                                            )
-                                          : 'Not scheduled'
+                                        formatDate(
+                                          bureauWork.next_follow_up_at
+                                        )
                                       }
                                     </p>
                                   </div>
@@ -3269,168 +3746,129 @@ export default function SuperAdminPage() {
                                 </div>
 
 
-                                {bureauWorkBySubmission[
-                                  submission.id
-                                ].bureau_private_notes && (
-                                  <div className="rounded-xl bg-white p-4 border border-blue-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <NotebookPen className="w-4 h-4 text-blue-700" />
+                                <div className="mt-4 rounded-xl bg-white border border-blue-100 p-4">
 
-                                      <p className="font-bold text-slate-900">
-                                        Bureau Private Notes
-                                      </p>
-                                    </div>
+                                  <div className="flex items-center gap-2">
+                                    <Lock className="w-4 h-4 text-blue-700" />
 
-                                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                                      {
-                                        bureauWorkBySubmission[
-                                          submission.id
-                                        ].bureau_private_notes
-                                      }
+                                    <p className="font-bold text-slate-900">
+                                      Bureau Private Working Notes
                                     </p>
                                   </div>
-                                )}
 
 
-                                <p className="text-xs text-blue-700">
-                                  Updated:{' '}
-                                  {
-                                    bureauWorkBySubmission[
-                                      submission.id
-                                    ].updated_at
-                                      ? formatDate(
-                                          bureauWorkBySubmission[
-                                            submission.id
-                                          ].updated_at
-                                        )
-                                      : 'N/A'
-                                  }
-                                </p>
+                                  <p className="text-sm text-slate-600 mt-3 leading-relaxed whitespace-pre-wrap">
+                                    {
+                                      bureauWork.bureau_private_notes ||
+                                      'No bureau private working notes have been saved yet.'
+                                    }
+                                  </p>
 
-                              </div>
-                            ) : (
-                              <div className="mt-4 rounded-xl bg-white border border-blue-100 p-4">
-                                <p className="text-sm font-semibold text-slate-800">
-                                  No bureau work update yet.
-                                </p>
 
-                                <p className="text-xs text-slate-500 mt-1">
-                                  Assigned bureau has not saved work status, notes, or follow-up date yet.
-                                </p>
-                              </div>
+                                  <p className="text-xs text-slate-400 mt-3">
+                                    Last updated:{' '}
+                                    {
+                                      formatDate(
+                                        bureauWork.updated_at
+                                      )
+                                    }
+                                  </p>
+
+                                </div>
+
+                              </>
                             )}
 
-                          </div>
-                        )}
+
+                            <div className="mt-4 rounded-xl bg-white border border-blue-100 p-4">
+
+                              <div className="flex items-center justify-between gap-3">
+
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-purple-700" />
+
+                                  <p className="font-bold text-slate-900">
+                                    Bureau Follow-up Timeline
+                                  </p>
+                                </div>
 
 
-                        {/* Bureau Follow-up Timeline */}
-                        {submission.assigned_bureau_email && (
-                          <div className="mt-4 rounded-xl bg-purple-50 border border-purple-200 p-5">
+                                <span className="text-xs font-semibold text-slate-500">
+                                  {bureauFollowUps.length} note(s)
+                                </span>
 
-                            <div className="flex items-center justify-between gap-3">
-
-                              <div className="flex items-center gap-2">
-                                <MessageSquareText className="w-5 h-5 text-purple-700" />
-
-                                <p className="font-bold text-purple-900">
-                                  Bureau Follow-up Timeline
-                                </p>
                               </div>
 
 
-                              <span className="text-xs font-semibold text-purple-700">
-                                {
-                                  followUpsBySubmission[
-                                    submission.id
-                                  ]?.length || 0
-                                } note(s)
-                              </span>
+                              {bureauFollowUps.length === 0 ? (
+                                <p className="text-sm text-slate-500 mt-4">
+                                  No follow-up history has been added by the bureau yet.
+                                </p>
+                              ) : (
+                                <div className="mt-4 space-y-4">
 
-                            </div>
+                                  {bureauFollowUps.map(
+                                    (followUp) => (
+                                      <div
+                                        key={followUp.id}
+                                        className="relative pl-5 border-l-2 border-purple-200"
+                                      >
 
-
-                            {followUpsBySubmission[
-                              submission.id
-                            ]?.length ? (
-                              <div className="mt-4 space-y-4">
-
-                                {followUpsBySubmission[
-                                  submission.id
-                                ].slice(0, 8).map(
-                                  (followUp) => (
-                                    <div
-                                      key={followUp.id}
-                                      className="relative pl-5 border-l-2 border-purple-200"
-                                    >
-
-                                      <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-purple-600" />
+                                        <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-purple-600" />
 
 
-                                      <div className="rounded-xl bg-white border border-purple-100 p-4">
+                                        <div className="rounded-xl bg-slate-50 p-4">
 
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <div className="flex flex-wrap items-center justify-between gap-2">
 
-                                          <span
-                                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass(
-                                              followUp.status_at_time
-                                            )}`}
-                                          >
-                                            {
-                                              formatStatus(
+                                            <span
+                                              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass(
                                                 followUp.status_at_time
-                                              )
-                                            }
-                                          </span>
+                                              )}`}
+                                            >
+                                              {
+                                                formatStatus(
+                                                  followUp.status_at_time
+                                                )
+                                              }
+                                            </span>
 
 
-                                          <span className="text-xs text-slate-400">
+                                            <span className="text-xs text-slate-400">
+                                              {
+                                                formatDate(
+                                                  followUp.created_at
+                                                )
+                                              }
+                                            </span>
+
+                                          </div>
+
+
+                                          <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
+                                            {followUp.note}
+                                          </p>
+
+
+                                          <p className="text-xs text-slate-400 mt-2">
+                                            Bureau:{' '}
                                             {
-                                              formatDate(
-                                                followUp.created_at
+                                              getBureauDisplayName(
+                                                followUp.bureau_email
                                               )
                                             }
-                                          </span>
+                                          </p>
 
                                         </div>
 
-
-                                        {followUp.bureau_email && (
-                                          <p className="text-xs text-slate-500 mt-2">
-                                            Bureau:{' '}
-                                            <span className="font-semibold">
-                                              {
-                                                followUp.bureau_email
-                                              }
-                                            </span>
-                                          </p>
-                                        )}
-
-
-                                        <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
-                                          {
-                                            followUp.note ||
-                                            'No note'
-                                          }
-                                        </p>
-
                                       </div>
-                                    </div>
-                                  )
-                                )}
+                                    )
+                                  )}
 
-                              </div>
-                            ) : (
-                              <div className="mt-4 rounded-xl bg-white border border-purple-100 p-4">
-                                <p className="text-sm font-semibold text-slate-800">
-                                  No follow-up notes yet.
-                                </p>
+                                </div>
+                              )}
 
-                                <p className="text-xs text-slate-500 mt-1">
-                                  Timeline will appear here after the assigned bureau adds updates.
-                                </p>
-                              </div>
-                            )}
+                            </div>
 
                           </div>
                         )}
