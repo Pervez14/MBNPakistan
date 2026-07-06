@@ -170,6 +170,8 @@ type PublicSubmission = {
   possible_duplicate: boolean | null;
   duplicate_match_count: number | null;
   duplicate_checked_at: string | null;
+  duplicate_review_status: string | null;
+  duplicate_review_updated_at: string | null;
 
   submitted_at: string | null;
   updated_at: string | null;
@@ -182,6 +184,10 @@ type DuplicateMatch = {
   matched_submission_id: string;
   match_score: number;
   match_reasons: string[] | null;
+  review_decision: string | null;
+  review_notes: string | null;
+  reviewed_by_email: string | null;
+  reviewed_at: string | null;
   created_at: string | null;
 };
 
@@ -288,6 +294,35 @@ const publicSubmissionStatuses = [
   'closed',
   'rejected',
 ];
+
+const duplicateReviewDecisions = [
+  {
+    value: 'unreviewed',
+    label: 'Needs Review',
+  },
+  {
+    value: 'confirmed_duplicate',
+    label: 'Confirmed Duplicate',
+  },
+  {
+    value: 'not_duplicate',
+    label: 'Not a Duplicate',
+  },
+  {
+    value: 'related_family_member',
+    label: 'Related Family Member',
+  },
+  {
+    value: 'keep_both',
+    label: 'Keep Both Records',
+  },
+  {
+    value: 'needs_more_review',
+    label: 'Needs More Review',
+  },
+];
+
+
 
 
 function formatDate(value: string | null) {
@@ -546,6 +581,20 @@ export default function SuperAdminPage() {
     setDuplicateMatches,
   ] =
     useState<DuplicateMatch[]>([]);
+
+
+  const [
+    duplicateDecisionDraft,
+    setDuplicateDecisionDraft,
+  ] =
+    useState<Record<string, string>>({});
+
+
+  const [
+    duplicateReviewNotesDraft,
+    setDuplicateReviewNotesDraft,
+  ] =
+    useState<Record<string, string>>({});
 
 
   const [
@@ -895,6 +944,8 @@ export default function SuperAdminPage() {
           possible_duplicate,
           duplicate_match_count,
           duplicate_checked_at,
+          duplicate_review_status,
+          duplicate_review_updated_at,
 
           submitted_at,
           updated_at
@@ -922,6 +973,10 @@ export default function SuperAdminPage() {
           matched_submission_id,
           match_score,
           match_reasons,
+          review_decision,
+          review_notes,
+          reviewed_by_email,
+          reviewed_at,
           created_at
         `)
         .order(
@@ -1152,8 +1207,43 @@ export default function SuperAdminPage() {
       );
 
 
+      const loadedDuplicateMatches =
+        (duplicateMatchData || []) as DuplicateMatch[];
+
+
+      const duplicateDecisionValues:
+        Record<string, string> = {};
+
+
+      const duplicateNoteValues:
+        Record<string, string> = {};
+
+
+      loadedDuplicateMatches.forEach(
+        (match) => {
+          duplicateDecisionValues[match.id] =
+            match.review_decision ||
+            'unreviewed';
+
+          duplicateNoteValues[match.id] =
+            match.review_notes ||
+            '';
+        }
+      );
+
+
       setDuplicateMatches(
-        (duplicateMatchData || []) as DuplicateMatch[]
+        loadedDuplicateMatches
+      );
+
+
+      setDuplicateDecisionDraft(
+        duplicateDecisionValues
+      );
+
+
+      setDuplicateReviewNotesDraft(
+        duplicateNoteValues
       );
 
       setProfiles(
@@ -2066,6 +2156,76 @@ export default function SuperAdminPage() {
         err instanceof Error
           ? err.message
           : 'Duplicate check could not be completed.'
+      );
+
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+  const saveDuplicateReviewDecision = async (
+    duplicateMatchId: string
+  ) => {
+    try {
+      setActionLoading(
+        `review-${duplicateMatchId}`
+      );
+
+      setErrorMessage('');
+      setSuccessMessage('');
+
+
+      const decision =
+        duplicateDecisionDraft[
+          duplicateMatchId
+        ] ||
+        'unreviewed';
+
+
+      const notes =
+        duplicateReviewNotesDraft[
+          duplicateMatchId
+        ]?.trim() ||
+        null;
+
+
+      const {
+        error,
+      } = await supabase.rpc(
+        'admin_review_duplicate_match',
+        {
+          p_duplicate_match_id:
+            duplicateMatchId,
+
+          p_decision:
+            decision,
+
+          p_review_notes:
+            notes,
+        }
+      );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      setSuccessMessage(
+        `Duplicate review decision saved as ${formatStatus(
+          decision
+        )}.`
+      );
+
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Duplicate review decision could not be saved.'
       );
 
     } finally {
@@ -3348,6 +3508,26 @@ export default function SuperAdminPage() {
                                 </p>
                               )}
 
+
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-semibold text-slate-500">
+                                  Review Status:
+                                </span>
+
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
+                                    submission.duplicate_review_status
+                                  )}`}
+                                >
+                                  {
+                                    formatStatus(
+                                      submission.duplicate_review_status ||
+                                      'not_checked'
+                                    )
+                                  }
+                                </span>
+                              </div>
+
                             </div>
 
 
@@ -3468,32 +3648,37 @@ export default function SuperAdminPage() {
                               </div>
 
 
-                              {duplicateMatchesForSubmission.length > 1 && (
-                                <div className="mt-4 border-t border-slate-100 pt-4">
+                              <div className="mt-5 border-t border-slate-100 pt-5">
 
-                                  <p className="text-sm font-semibold text-slate-700">
-                                    Other possible matches
-                                  </p>
+                                <p className="text-sm font-bold text-slate-900">
+                                  Review Possible Matches
+                                </p>
+
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Save a decision for each possible duplicate relationship.
+                                </p>
 
 
-                                  <div className="mt-3 space-y-2">
+                                <div className="mt-4 space-y-4">
 
-                                    {duplicateMatchesForSubmission
-                                      .slice(1, 6)
-                                      .map((match) => {
-                                        const matchedSubmission =
-                                          getSubmissionById(
-                                            match.matched_submission_id
-                                          );
+                                  {duplicateMatchesForSubmission.map(
+                                    (match) => {
+                                      const matchedSubmission =
+                                        getSubmissionById(
+                                          match.matched_submission_id
+                                        );
 
-                                        return (
-                                          <div
-                                            key={match.id}
-                                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"
-                                          >
+
+                                      return (
+                                        <div
+                                          key={match.id}
+                                          className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                                        >
+
+                                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
 
                                             <div>
-                                              <p className="text-sm font-semibold text-slate-900">
+                                              <p className="font-semibold text-slate-900">
                                                 {
                                                   matchedSubmission?.submission_reference ||
                                                   matchedSubmission?.candidate_name ||
@@ -3501,34 +3686,178 @@ export default function SuperAdminPage() {
                                                 }
                                               </p>
 
-                                              <p className="text-xs text-slate-500 mt-0.5">
-                                                Score: {match.match_score}
+                                              <p className="text-xs text-slate-500 mt-1">
+                                                Match Score:{' '}
+                                                <span className="font-bold text-red-700">
+                                                  {match.match_score}
+                                                </span>
                                               </p>
                                             </div>
 
 
                                             <button
                                               type="button"
-                                              onClick={() =>
+                                              onClick={() => {
                                                 setSearchTerm(
                                                   matchedSubmission?.submission_reference ||
                                                   matchedSubmission?.candidate_name ||
                                                   match.matched_submission_id
-                                                )
-                                              }
+                                                );
+
+                                                setStatusFilter('');
+
+                                                window.scrollTo({
+                                                  top: 0,
+                                                  behavior: 'smooth',
+                                                });
+                                              }}
                                               className="text-xs font-semibold text-red-700 hover:text-red-800"
                                             >
-                                              View
+                                              View Similar Submission
                                             </button>
 
                                           </div>
-                                        );
-                                      })}
 
-                                  </div>
+
+                                          <div className="mt-3 flex flex-wrap gap-2">
+
+                                            {(match.match_reasons || []).map(
+                                              (reason) => (
+                                                <span
+                                                  key={reason}
+                                                  className="px-2.5 py-1 rounded-full bg-white border border-red-100 text-red-700 text-xs font-semibold"
+                                                >
+                                                  {reason}
+                                                </span>
+                                              )
+                                            )}
+
+                                          </div>
+
+
+                                          <div className="mt-4 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-3">
+
+                                            <div>
+                                              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">
+                                                Admin Decision
+                                              </label>
+
+                                              <select
+                                                value={
+                                                  duplicateDecisionDraft[
+                                                    match.id
+                                                  ] ||
+                                                  'unreviewed'
+                                                }
+                                                onChange={(e) =>
+                                                  setDuplicateDecisionDraft(
+                                                    (prev) => ({
+                                                      ...prev,
+
+                                                      [match.id]:
+                                                        e.target.value,
+                                                    })
+                                                  )
+                                                }
+                                                className="input-field"
+                                              >
+                                                {duplicateReviewDecisions.map(
+                                                  (decision) => (
+                                                    <option
+                                                      key={decision.value}
+                                                      value={decision.value}
+                                                    >
+                                                      {decision.label}
+                                                    </option>
+                                                  )
+                                                )}
+                                              </select>
+                                            </div>
+
+
+                                            <div>
+                                              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">
+                                                Review Notes
+                                              </label>
+
+                                              <textarea
+                                                value={
+                                                  duplicateReviewNotesDraft[
+                                                    match.id
+                                                  ] || ''
+                                                }
+                                                onChange={(e) =>
+                                                  setDuplicateReviewNotesDraft(
+                                                    (prev) => ({
+                                                      ...prev,
+
+                                                      [match.id]:
+                                                        e.target.value,
+                                                    })
+                                                  )
+                                                }
+                                                rows={3}
+                                                placeholder="Example: Same mother submitted profiles for two sisters. Both records are valid."
+                                                className="input-field resize-none"
+                                              />
+                                            </div>
+
+                                          </div>
+
+
+                                          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+                                            <div className="text-xs text-slate-400">
+
+                                              {match.reviewed_at ? (
+                                                <>
+                                                  Reviewed:{' '}
+                                                  {formatDate(
+                                                    match.reviewed_at
+                                                  )}
+
+                                                  {match.reviewed_by_email
+                                                    ? ` • ${match.reviewed_by_email}`
+                                                    : ''}
+                                                </>
+                                              ) : (
+                                                'Not reviewed yet'
+                                              )}
+
+                                            </div>
+
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                saveDuplicateReviewDecision(
+                                                  match.id
+                                                )
+                                              }
+                                              disabled={
+                                                actionLoading ===
+                                                `review-${match.id}`
+                                              }
+                                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-50"
+                                            >
+                                              <CheckCircle className="w-4 h-4" />
+
+                                              {actionLoading ===
+                                              `review-${match.id}`
+                                                ? 'Saving...'
+                                                : 'Save Decision'}
+                                            </button>
+
+                                          </div>
+
+                                        </div>
+                                      );
+                                    }
+                                  )}
 
                                 </div>
-                              )}
+
+                              </div>
 
                             </div>
                           )}
