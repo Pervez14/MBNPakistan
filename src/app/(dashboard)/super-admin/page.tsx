@@ -29,6 +29,8 @@ import {
   UserRoundSearch,
   Send,
   ClipboardList,
+  CalendarDays,
+  MessageSquareText,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -165,30 +167,6 @@ type PublicSubmission = {
 
   submitted_at: string | null;
   updated_at: string | null;
-
-  bureau_work_status?: string | null;
-  bureau_private_notes?: string | null;
-  bureau_last_follow_up_at?: string | null;
-  bureau_next_follow_up_at?: string | null;
-  bureau_work_updated_at?: string | null;
-};
-
-
-type AdminBureauWork = {
-  submission_id: string;
-  work_status: string | null;
-  bureau_private_notes: string | null;
-  last_follow_up_at: string | null;
-  next_follow_up_at: string | null;
-  updated_at: string | null;
-};
-
-
-type AdminFollowUp = {
-  id: string;
-  note: string;
-  status_at_time: string | null;
-  created_at: string | null;
 };
 
 
@@ -215,6 +193,28 @@ type ContactLog = {
   uploader_email: string | null;
   uploader_business_name: string | null;
   viewed_at: string | null;
+};
+
+
+type AssignedProfileWork = {
+  id: string;
+  submission_id: string;
+  bureau_email: string | null;
+  work_status: string | null;
+  bureau_private_notes: string | null;
+  last_follow_up_at: string | null;
+  next_follow_up_at: string | null;
+  updated_at: string | null;
+};
+
+
+type AssignedProfileFollowUp = {
+  id: string;
+  submission_id: string;
+  bureau_email: string | null;
+  note: string | null;
+  status_at_time: string | null;
+  created_at: string | null;
 };
 
 
@@ -293,7 +293,8 @@ function statusClass(status: string | null) {
 
   if (
     status === 'rejected' ||
-    status === 'inactive'
+    status === 'inactive' ||
+    status === 'no_suitable_match'
   ) {
     return 'bg-red-100 text-red-700';
   }
@@ -524,12 +525,17 @@ export default function SuperAdminPage() {
 
 
   const [
-    selectedMonitoringSubmission,
-    setSelectedMonitoringSubmission,
+    bureauWorkBySubmission,
+    setBureauWorkBySubmission,
   ] =
-    useState<PublicSubmission | null>(
-      null
-    );
+    useState<Record<string, AssignedProfileWork>>({});
+
+
+  const [
+    followUpsBySubmission,
+    setFollowUpsBySubmission,
+  ] =
+    useState<Record<string, AssignedProfileFollowUp[]>>({});
 
 
   const [adminNotesDraft, setAdminNotesDraft] =
@@ -877,19 +883,6 @@ export default function SuperAdminPage() {
 
 
       const {
-        data: bureauWorkData,
-        error: bureauWorkError,
-      } = await supabase.rpc(
-        'get_admin_assigned_profile_work'
-      );
-
-
-      if (bureauWorkError) {
-        throw bureauWorkError;
-      }
-
-
-      const {
         data: profileData,
         error: profileError,
       } = await supabase
@@ -982,63 +975,64 @@ export default function SuperAdminPage() {
       }
 
 
+      const {
+        data: workData,
+        error: workError,
+      } = await supabase
+        .from('assigned_profile_work')
+        .select(`
+          id,
+          submission_id,
+          bureau_email,
+          work_status,
+          bureau_private_notes,
+          last_follow_up_at,
+          next_follow_up_at,
+          updated_at
+        `)
+        .order(
+          'updated_at',
+          { ascending: false }
+        )
+        .limit(1000);
+
+
+      if (workError) {
+        throw workError;
+      }
+
+
+      const {
+        data: followUpData,
+        error: followUpError,
+      } = await supabase
+        .from('assigned_profile_followup_history')
+        .select(`
+          id,
+          submission_id,
+          bureau_email,
+          note,
+          status_at_time,
+          created_at
+        `)
+        .order(
+          'created_at',
+          { ascending: false }
+        )
+        .limit(2000);
+
+
+      if (followUpError) {
+        throw followUpError;
+      }
+
+
       const loadedApplications =
         (applicationData || []) as BureauApplication[];
 
 
       const loadedPublicSubmissions =
         (publicSubmissionData || []) as PublicSubmission[];
-
-
-      const loadedBureauWork =
-        (bureauWorkData || []) as AdminBureauWork[];
-
-
-      const bureauWorkMap = new Map(
-        loadedBureauWork.map(
-          (work) => [
-            work.submission_id,
-            work,
-          ]
-        )
-      );
-
-
-      const submissionsWithBureauWork =
-        loadedPublicSubmissions.map(
-          (submission) => {
-
-            const work =
-              bureauWorkMap.get(
-                submission.id
-              );
-
-
-            return {
-              ...submission,
-
-              bureau_work_status:
-                work?.work_status ||
-                null,
-
-              bureau_private_notes:
-                work?.bureau_private_notes ||
-                null,
-
-              bureau_last_follow_up_at:
-                work?.last_follow_up_at ||
-                null,
-
-              bureau_next_follow_up_at:
-                work?.next_follow_up_at ||
-                null,
-
-              bureau_work_updated_at:
-                work?.updated_at ||
-                null,
-            };
-          }
-        );
 
 
       const bureauNotes:
@@ -1079,6 +1073,59 @@ export default function SuperAdminPage() {
       );
 
 
+      const workMap:
+        Record<string, AssignedProfileWork> = {};
+
+
+      ((workData || []) as AssignedProfileWork[]).forEach(
+        (work) => {
+          if (!work.submission_id) return;
+
+          if (
+            !workMap[work.submission_id]
+          ) {
+            workMap[work.submission_id] =
+              work;
+          }
+        }
+      );
+
+
+      const followUpMap:
+        Record<string, AssignedProfileFollowUp[]> = {};
+
+
+      ((followUpData || []) as AssignedProfileFollowUp[]).forEach(
+        (followUp) => {
+          if (!followUp.submission_id) return;
+
+          if (
+            !followUpMap[
+              followUp.submission_id
+            ]
+          ) {
+            followUpMap[
+              followUp.submission_id
+            ] = [];
+          }
+
+          followUpMap[
+            followUp.submission_id
+          ].push(followUp);
+        }
+      );
+
+
+      setBureauWorkBySubmission(
+        workMap
+      );
+
+
+      setFollowUpsBySubmission(
+        followUpMap
+      );
+
+
       setAdminNotesDraft(bureauNotes);
 
       setPublicAdminNotesDraft(
@@ -1099,7 +1146,7 @@ export default function SuperAdminPage() {
       );
 
       setPublicSubmissions(
-        submissionsWithBureauWork
+        loadedPublicSubmissions
       );
 
       setProfiles(
@@ -2571,14 +2618,6 @@ export default function SuperAdminPage() {
                   );
 
 
-                const assignedBureau =
-                  applications.find(
-                    (item) =>
-                      item.email ===
-                      submission.assigned_bureau_email
-                  );
-
-
                 return (
                   <div
                     key={submission.id}
@@ -3143,178 +3182,255 @@ export default function SuperAdminPage() {
                         )}
 
 
-                        {/* Bureau Work Monitoring */}
+                        {/* Bureau Work Progress */}
                         {submission.assigned_bureau_email && (
-                          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-5">
+                          <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 p-5">
 
-                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                              <HeartHandshake className="w-5 h-5 text-blue-700" />
 
-                              <div className="flex-1">
-
-                                <div className="flex items-center gap-2">
-
-                                  <ClipboardList className="w-5 h-5 text-blue-700" />
-
-                                  <p className="font-bold text-blue-950">
-                                    Bureau Work Monitoring
-                                  </p>
-
-                                </div>
+                              <p className="font-bold text-blue-900">
+                                Bureau Work Progress
+                              </p>
+                            </div>
 
 
-                                <p className="text-sm text-blue-700 mt-1">
-                                  Live progress reported by the assigned marriage bureau.
-                                </p>
+                            {bureauWorkBySubmission[
+                              submission.id
+                            ] ? (
+                              <div className="mt-4 space-y-4">
 
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
 
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-
-                                  <div className="rounded-xl bg-white p-4">
-
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                                      Assigned Bureau
-                                    </p>
-
-                                    <p className="font-semibold text-slate-900 mt-1">
-                                      {
-                                        assignedBureau?.business_name ||
-                                        assignedBureau?.full_name ||
-                                        submission.assigned_bureau_email
-                                      }
-                                    </p>
-
-                                    {assignedBureau?.business_name &&
-                                      assignedBureau.email && (
-                                        <p className="text-xs text-slate-400 mt-1">
-                                          {assignedBureau.email}
-                                        </p>
-                                      )}
-
-                                  </div>
-
-
-                                  <div className="rounded-xl bg-white p-4">
-
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                                      Bureau Work Status
+                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase text-slate-400">
+                                      Work Status
                                     </p>
 
                                     <span
                                       className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
-                                        submission.bureau_work_status ||
-                                        'assigned'
+                                        bureauWorkBySubmission[
+                                          submission.id
+                                        ].work_status
                                       )}`}
                                     >
                                       {
                                         formatStatus(
-                                          submission.bureau_work_status ||
-                                          'assigned'
+                                          bureauWorkBySubmission[
+                                            submission.id
+                                          ].work_status
                                         )
                                       }
                                     </span>
-
                                   </div>
 
 
-                                  <div className="rounded-xl bg-white p-4">
-
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase text-slate-400">
                                       Last Follow-up
                                     </p>
 
-                                    <p className="font-semibold text-slate-900 mt-1">
+                                    <p className="text-sm font-semibold text-slate-800 mt-2">
                                       {
-                                        submission.bureau_last_follow_up_at
+                                        bureauWorkBySubmission[
+                                          submission.id
+                                        ].last_follow_up_at
                                           ? formatDate(
-                                              submission.bureau_last_follow_up_at
+                                              bureauWorkBySubmission[
+                                                submission.id
+                                              ].last_follow_up_at
                                             )
                                           : 'No follow-up yet'
                                       }
                                     </p>
-
                                   </div>
 
 
-                                  <div className="rounded-xl bg-white p-4">
-
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                                  <div className="rounded-xl bg-white p-3 border border-blue-100">
+                                    <p className="text-xs font-bold uppercase text-slate-400">
                                       Next Follow-up
                                     </p>
 
-                                    <p className="font-semibold text-slate-900 mt-1">
+                                    <p className="text-sm font-semibold text-slate-800 mt-2">
                                       {
-                                        submission.bureau_next_follow_up_at
+                                        bureauWorkBySubmission[
+                                          submission.id
+                                        ].next_follow_up_at
                                           ? formatDate(
-                                              submission.bureau_next_follow_up_at
+                                              bureauWorkBySubmission[
+                                                submission.id
+                                              ].next_follow_up_at
                                             )
                                           : 'Not scheduled'
                                       }
                                     </p>
-
                                   </div>
 
                                 </div>
 
 
-                                <div className="mt-3 rounded-xl bg-white p-4">
+                                {bureauWorkBySubmission[
+                                  submission.id
+                                ].bureau_private_notes && (
+                                  <div className="rounded-xl bg-white p-4 border border-blue-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <NotebookPen className="w-4 h-4 text-blue-700" />
 
-                                  <div className="flex items-center gap-2">
+                                      <p className="font-bold text-slate-900">
+                                        Bureau Private Notes
+                                      </p>
+                                    </div>
 
-                                    <Lock className="w-4 h-4 text-slate-500" />
-
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                                      Bureau Private Working Notes
-                                    </p>
-
-                                  </div>
-
-
-                                  <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
-                                    {
-                                      submission.bureau_private_notes ||
-                                      'The bureau has not added private work notes yet.'
-                                    }
-                                  </p>
-
-
-                                  {submission.bureau_work_updated_at && (
-                                    <p className="text-xs text-slate-400 mt-3">
-                                      Last work update:{' '}
+                                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                                       {
-                                        formatDate(
-                                          submission.bureau_work_updated_at
-                                        )
+                                        bureauWorkBySubmission[
+                                          submission.id
+                                        ].bureau_private_notes
                                       }
                                     </p>
-                                  )}
+                                  </div>
+                                )}
 
 
-                                  <p className="text-xs text-slate-400 mt-2">
-                                    Bureau work notes are separate from Super Admin private notes.
-                                  </p>
+                                <p className="text-xs text-blue-700">
+                                  Updated:{' '}
+                                  {
+                                    bureauWorkBySubmission[
+                                      submission.id
+                                    ].updated_at
+                                      ? formatDate(
+                                          bureauWorkBySubmission[
+                                            submission.id
+                                          ].updated_at
+                                        )
+                                      : 'N/A'
+                                  }
+                                </p>
 
-                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-4 rounded-xl bg-white border border-blue-100 p-4">
+                                <p className="text-sm font-semibold text-slate-800">
+                                  No bureau work update yet.
+                                </p>
 
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Assigned bureau has not saved work status, notes, or follow-up date yet.
+                                </p>
+                              </div>
+                            )}
+
+                          </div>
+                        )}
+
+
+                        {/* Bureau Follow-up Timeline */}
+                        {submission.assigned_bureau_email && (
+                          <div className="mt-4 rounded-xl bg-purple-50 border border-purple-200 p-5">
+
+                            <div className="flex items-center justify-between gap-3">
+
+                              <div className="flex items-center gap-2">
+                                <MessageSquareText className="w-5 h-5 text-purple-700" />
+
+                                <p className="font-bold text-purple-900">
+                                  Bureau Follow-up Timeline
+                                </p>
                               </div>
 
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setSelectedMonitoringSubmission(
-                                    submission
-                                  )
-                                }
-                                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-700 text-white text-sm font-semibold hover:bg-blue-800"
-                              >
-
-                                <Clock className="w-4 h-4" />
-
-                                View Timeline
-
-                              </button>
+                              <span className="text-xs font-semibold text-purple-700">
+                                {
+                                  followUpsBySubmission[
+                                    submission.id
+                                  ]?.length || 0
+                                } note(s)
+                              </span>
 
                             </div>
+
+
+                            {followUpsBySubmission[
+                              submission.id
+                            ]?.length ? (
+                              <div className="mt-4 space-y-4">
+
+                                {followUpsBySubmission[
+                                  submission.id
+                                ].slice(0, 8).map(
+                                  (followUp) => (
+                                    <div
+                                      key={followUp.id}
+                                      className="relative pl-5 border-l-2 border-purple-200"
+                                    >
+
+                                      <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-purple-600" />
+
+
+                                      <div className="rounded-xl bg-white border border-purple-100 p-4">
+
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+
+                                          <span
+                                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass(
+                                              followUp.status_at_time
+                                            )}`}
+                                          >
+                                            {
+                                              formatStatus(
+                                                followUp.status_at_time
+                                              )
+                                            }
+                                          </span>
+
+
+                                          <span className="text-xs text-slate-400">
+                                            {
+                                              formatDate(
+                                                followUp.created_at
+                                              )
+                                            }
+                                          </span>
+
+                                        </div>
+
+
+                                        {followUp.bureau_email && (
+                                          <p className="text-xs text-slate-500 mt-2">
+                                            Bureau:{' '}
+                                            <span className="font-semibold">
+                                              {
+                                                followUp.bureau_email
+                                              }
+                                            </span>
+                                          </p>
+                                        )}
+
+
+                                        <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
+                                          {
+                                            followUp.note ||
+                                            'No note'
+                                          }
+                                        </p>
+
+                                      </div>
+                                    </div>
+                                  )
+                                )}
+
+                              </div>
+                            ) : (
+                              <div className="mt-4 rounded-xl bg-white border border-purple-100 p-4">
+                                <p className="text-sm font-semibold text-slate-800">
+                                  No follow-up notes yet.
+                                </p>
+
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Timeline will appear here after the assigned bureau adds updates.
+                                </p>
+                              </div>
+                            )}
 
                           </div>
                         )}
@@ -4665,360 +4781,6 @@ export default function SuperAdminPage() {
           </div>
         </div>
       )}
-
-
-      {/* Bureau Follow-up Timeline Modal */}
-      {selectedMonitoringSubmission && (
-        <AdminBureauTimelineModal
-          submission={
-            selectedMonitoringSubmission
-          }
-          bureau={
-            applications.find(
-              (item) =>
-                item.email ===
-                selectedMonitoringSubmission.assigned_bureau_email
-            ) || null
-          }
-          onClose={() =>
-            setSelectedMonitoringSubmission(
-              null
-            )
-          }
-        />
-      )}
-
-    </div>
-  );
-}
-
-
-function AdminBureauTimelineModal({
-  submission,
-  bureau,
-  onClose,
-}: {
-  submission: PublicSubmission;
-  bureau: BureauApplication | null;
-  onClose: () => void;
-}) {
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-
-  const [
-    followUps,
-    setFollowUps,
-  ] = useState<AdminFollowUp[]>([]);
-
-
-  const [
-    errorMessage,
-    setErrorMessage,
-  ] = useState('');
-
-
-  const loadTimeline =
-    async () => {
-      try {
-        setLoading(true);
-        setErrorMessage('');
-
-
-        const {
-          data,
-          error,
-        } = await supabase.rpc(
-          'get_admin_assigned_profile_followups',
-          {
-            p_submission_id:
-              submission.id,
-          }
-        );
-
-
-        if (error) {
-          throw error;
-        }
-
-
-        setFollowUps(
-          (data || []) as AdminFollowUp[]
-        );
-
-      } catch (err: unknown) {
-        setErrorMessage(
-          err instanceof Error
-            ? err.message
-            : 'Follow-up timeline could not be loaded.'
-        );
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-
-  useEffect(() => {
-    loadTimeline();
-  }, [submission.id]);
-
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-
-      <div className="bg-white rounded-[2rem] max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-
-
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-5 flex items-start justify-between gap-4">
-
-          <div>
-
-            <div className="flex items-center gap-2">
-
-              <Clock className="w-6 h-6 text-blue-700" />
-
-              <h2 className="font-heading text-2xl font-bold text-slate-900">
-                Bureau Follow-up Timeline
-              </h2>
-
-            </div>
-
-
-            <p className="text-sm text-slate-500 mt-2">
-              {
-                submission.candidate_name ||
-                'Public Submission'
-              }
-
-              {' • '}
-
-              {
-                bureau?.business_name ||
-                bureau?.full_name ||
-                submission.assigned_bureau_email ||
-                'Assigned Bureau'
-              }
-            </p>
-
-          </div>
-
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200"
-          >
-            Close
-          </button>
-
-        </div>
-
-
-        <div className="p-6">
-
-
-          {/* Current Monitoring Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-            <div className="rounded-xl bg-blue-50 p-4">
-
-              <p className="text-xs font-bold uppercase text-blue-500">
-                Current Status
-              </p>
-
-              <p className="font-bold text-blue-900 mt-2">
-                {
-                  formatStatus(
-                    submission.bureau_work_status ||
-                    'assigned'
-                  )
-                }
-              </p>
-
-            </div>
-
-
-            <div className="rounded-xl bg-green-50 p-4">
-
-              <p className="text-xs font-bold uppercase text-green-600">
-                Last Follow-up
-              </p>
-
-              <p className="font-bold text-green-900 mt-2">
-                {
-                  submission.bureau_last_follow_up_at
-                    ? formatDate(
-                        submission.bureau_last_follow_up_at
-                      )
-                    : 'None'
-                }
-              </p>
-
-            </div>
-
-
-            <div className="rounded-xl bg-purple-50 p-4">
-
-              <p className="text-xs font-bold uppercase text-purple-600">
-                Next Follow-up
-              </p>
-
-              <p className="font-bold text-purple-900 mt-2">
-                {
-                  submission.bureau_next_follow_up_at
-                    ? formatDate(
-                        submission.bureau_next_follow_up_at
-                      )
-                    : 'Not scheduled'
-                }
-              </p>
-
-            </div>
-
-          </div>
-
-
-          {/* Current Bureau Notes */}
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-            <div className="flex items-center gap-2">
-
-              <Lock className="w-4 h-4 text-slate-500" />
-
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                Current Bureau Private Working Notes
-              </p>
-
-            </div>
-
-
-            <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
-              {
-                submission.bureau_private_notes ||
-                'No bureau private work notes have been added yet.'
-              }
-            </p>
-
-          </div>
-
-
-          {errorMessage && (
-            <div className="mt-5 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-
-              {errorMessage}
-
-            </div>
-          )}
-
-
-          {/* Timeline */}
-          <div className="mt-6">
-
-            <div className="flex items-center justify-between gap-3">
-
-              <h3 className="font-heading text-lg font-bold text-slate-900">
-                Follow-up History
-              </h3>
-
-
-              <span className="text-xs font-semibold text-slate-500">
-                {followUps.length} note(s)
-              </span>
-
-            </div>
-
-
-            {loading ? (
-              <div className="mt-4 space-y-3">
-
-                {[1, 2, 3].map(
-                  (item) => (
-                    <div
-                      key={item}
-                      className="h-24 rounded-xl bg-slate-100 animate-pulse"
-                    />
-                  )
-                )}
-
-              </div>
-            ) : followUps.length === 0 ? (
-              <div className="mt-4 rounded-xl bg-slate-50 p-10 text-center">
-
-                <Clock className="w-8 h-8 text-slate-300 mx-auto" />
-
-                <p className="font-semibold text-slate-700 mt-3">
-                  No follow-up notes yet
-                </p>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  The assigned bureau has not logged any follow-up activity for this case.
-                </p>
-
-              </div>
-            ) : (
-              <div className="mt-5 space-y-4">
-
-                {followUps.map(
-                  (followUp) => (
-                    <div
-                      key={followUp.id}
-                      className="relative pl-6 border-l-2 border-blue-200"
-                    >
-
-                      <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-blue-700" />
-
-
-                      <div className="rounded-xl bg-slate-50 p-4">
-
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
-                              followUp.status_at_time
-                            )}`}
-                          >
-                            {
-                              formatStatus(
-                                followUp.status_at_time
-                              )
-                            }
-                          </span>
-
-
-                          <span className="text-xs text-slate-400">
-                            {
-                              formatDate(
-                                followUp.created_at
-                              )
-                            }
-                          </span>
-
-                        </div>
-
-
-                        <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
-                          {followUp.note}
-                        </p>
-
-                      </div>
-
-                    </div>
-                  )
-                )}
-
-              </div>
-            )}
-
-          </div>
-
-        </div>
-
-      </div>
 
     </div>
   );
