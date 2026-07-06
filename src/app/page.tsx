@@ -16,6 +16,8 @@ import {
   HeartHandshake,
   Network,
   Sparkles,
+  UserRoundSearch,
+  ClipboardList,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/useLanguage';
 import LanguageToggle from '@/components/LanguageToggle';
@@ -42,6 +44,21 @@ const content = {
 
     visualTitle: 'Bureau Network',
     visualText: 'Upload, search, connect, and track securely.',
+
+    audienceTitle: 'One network. Two ways to begin.',
+    audienceText:
+      'MBN Pakistan connects professional marriage bureaus while also helping individuals submit their profile for private matchmaking review.',
+
+    bureauCardTitle: 'For Marriage Bureaus',
+    bureauCardText:
+      'Join the professional bureau network, upload profiles, search suitable matches, and connect securely with other verified bureaus.',
+    bureauCardButton: 'Apply as a Marriage Bureau',
+
+    matchCardTitle: 'Looking for a Match?',
+    matchCardText:
+      'Submit your profile privately. Our team will review your information and may connect you with a suitable matchmaker or verified marriage bureau.',
+    matchCardButton: 'Submit Your Profile',
+    matchCardNote: 'Private profile submission • Reviewed by MBN Pakistan',
 
     sectionTitle: 'Modern tools for serious marriage bureaus',
     sectionText:
@@ -71,6 +88,22 @@ const content = {
     step4Title: 'Connect Safely',
     step4Text: 'Contact details reveal only when requested and are logged.',
 
+    publicHowTitle: 'Looking for a match? Start privately.',
+    publicHowText:
+      'You do not need to be a marriage bureau to submit your profile. Individuals and families can securely send profile information to MBN Pakistan for matchmaking review.',
+    publicStep1Title: 'Submit Your Profile',
+    publicStep1Text:
+      'Complete your personal, family, education, career, and match preference details.',
+    publicStep2Title: 'Admin Review',
+    publicStep2Text:
+      'The MBN Pakistan team reviews the submission and checks the information provided.',
+    publicStep3Title: 'Profile Assignment',
+    publicStep3Text:
+      'Your profile may be assigned to a suitable matchmaker or verified marriage bureau.',
+    publicStep4Title: 'Matchmaking Follow-up',
+    publicStep4Text:
+      'The assigned team may contact you when suitable matching opportunities are available.',
+
     privacyTitle: 'Privacy built into every profile',
     privacyText:
       'Profile photos and contact details are sensitive. MBN Pakistan gives bureaus control over visibility and gives the admin visibility into contact activity.',
@@ -80,12 +113,16 @@ const content = {
 
     ctaTitle: 'Ready to join MBN Pakistan?',
     ctaText:
-      'Apply as a verified marriage bureau and start using a professional matchmaking dashboard.',
+      'Marriage bureaus can apply for network membership, while individuals can privately submit a profile for matchmaking review.',
+
+    individualCta: 'Submit Your Profile',
 
     footerText:
-      'A professional platform for verified marriage bureaus to manage profiles, search suitable matches, and protect candidate privacy.',
+      'A professional matchmaking network for marriage bureaus and individuals seeking a secure, organized, and privacy-focused way to explore suitable matches.',
     website: 'Website',
     bureauAccess: 'Bureau Access',
+    publicAccess: 'For Individuals',
+    submitProfile: 'Submit Profile',
     dashboard: 'Dashboard',
     rights: 'All rights reserved.',
   },
@@ -111,6 +148,21 @@ const content = {
 
     visualTitle: 'بیورو نیٹ ورک',
     visualText: 'محفوظ طریقے سے اپلوڈ، سرچ، رابطہ اور ٹریک کریں۔',
+
+    audienceTitle: 'ایک نیٹ ورک، آغاز کے دو طریقے',
+    audienceText:
+      'MBN Pakistan پیشہ ور میرج بیوروز کو آپس میں جوڑتا ہے اور عام افراد کو بھی اپنی پروفائل نجی طور پر جمع کروانے کی سہولت دیتا ہے۔',
+
+    bureauCardTitle: 'میرج بیوروز کے لیے',
+    bureauCardText:
+      'پیشہ ور بیورو نیٹ ورک میں شامل ہوں، پروفائلز اپلوڈ کریں، مناسب رشتے تلاش کریں، اور تصدیق شدہ بیوروز کے ساتھ محفوظ رابطہ کریں۔',
+    bureauCardButton: 'میرج بیورو کے طور پر درخواست دیں',
+
+    matchCardTitle: 'رشتہ تلاش کر رہے ہیں؟',
+    matchCardText:
+      'اپنی پروفائل نجی طور پر جمع کروائیں۔ ہماری ٹیم معلومات کا جائزہ لے گی اور مناسب صورت میں آپ کو کسی میچ میکر یا تصدیق شدہ میرج بیورو سے جوڑ سکتی ہے۔',
+    matchCardButton: 'اپنی پروفائل جمع کروائیں',
+    matchCardNote: 'نجی پروفائل سبمیشن • MBN Pakistan کی طرف سے جائزہ',
 
     sectionTitle: 'سنجیدہ میرج بیوروز کے لیے جدید ٹولز',
     sectionText:
@@ -140,6 +192,22 @@ const content = {
     step4Title: 'محفوظ رابطہ',
     step4Text: 'رابطہ تفصیلات صرف درخواست پر ظاہر ہوتی ہیں اور لاگ ہوتی ہیں۔',
 
+    publicHowTitle: 'رشتہ تلاش کر رہے ہیں؟ نجی طور پر آغاز کریں',
+    publicHowText:
+      'اپنی پروفائل جمع کروانے کے لیے میرج بیورو ہونا ضروری نہیں۔ عام افراد اور خاندان بھی MBN Pakistan کو اپنی معلومات نجی طور پر بھیج سکتے ہیں۔',
+    publicStep1Title: 'پروفائل جمع کروائیں',
+    publicStep1Text:
+      'اپنی ذاتی، خاندانی، تعلیمی، پیشہ ورانہ اور رشتے کی ترجیحات کی معلومات مکمل کریں۔',
+    publicStep2Title: 'ایڈمن جائزہ',
+    publicStep2Text:
+      'MBN Pakistan کی ٹیم سبمیشن اور فراہم کردہ معلومات کا جائزہ لے گی۔',
+    publicStep3Title: 'پروفائل اسائنمنٹ',
+    publicStep3Text:
+      'آپ کی پروفائل مناسب میچ میکر یا تصدیق شدہ میرج بیورو کو اسائن کی جا سکتی ہے۔',
+    publicStep4Title: 'میچ میکنگ فالو اپ',
+    publicStep4Text:
+      'مناسب رشتے کی صورت میں متعلقہ ٹیم یا میچ میکر آپ سے رابطہ کر سکتا ہے۔',
+
     privacyTitle: 'ہر پروفائل میں پرائیویسی شامل ہے',
     privacyText:
       'پروفائل تصاویر اور رابطہ تفصیلات حساس ہوتی ہیں۔ MBN Pakistan بیوروز کو visibility control دیتا ہے اور ایڈمن کو contact activity دیکھنے کی سہولت دیتا ہے۔',
@@ -149,12 +217,16 @@ const content = {
 
     ctaTitle: 'MBN Pakistan میں شامل ہونے کے لیے تیار ہیں؟',
     ctaText:
-      'تصدیق شدہ میرج بیورو کے طور پر درخواست دیں اور پیشہ ور میچ میکنگ ڈیش بورڈ استعمال کرنا شروع کریں۔',
+      'میرج بیوروز نیٹ ورک رکنیت کے لیے درخواست دے سکتے ہیں جبکہ عام افراد میچ میکنگ جائزے کے لیے اپنی پروفائل نجی طور پر جمع کروا سکتے ہیں۔',
+
+    individualCta: 'اپنی پروفائل جمع کروائیں',
 
     footerText:
-      'تصدیق شدہ میرج بیوروز کے لیے ایک پیشہ ور پلیٹ فارم جہاں وہ پروفائلز مینیج، مناسب رشتے تلاش، اور امیدواروں کی پرائیویسی محفوظ رکھ سکتے ہیں۔',
+      'میرج بیوروز اور رشتہ تلاش کرنے والے افراد کے لیے ایک منظم، محفوظ اور پرائیویسی پر مبنی میچ میکنگ نیٹ ورک۔',
     website: 'ویب سائٹ',
     bureauAccess: 'بیورو رسائی',
+    publicAccess: 'عام افراد کے لیے',
+    submitProfile: 'پروفائل جمع کروائیں',
     dashboard: 'ڈیش بورڈ',
     rights: 'تمام حقوق محفوظ ہیں۔',
   },
@@ -264,10 +336,11 @@ export default function HomePage() {
                 </Link>
 
                 <Link
-                  href="/how-it-works"
-                  className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10"
+                  href="/submit-profile"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#0b5f38] border border-white/25 text-white font-bold hover:bg-[#084b2d]"
                 >
-                  {t.seeHow}
+                  <HeartHandshake className="w-4 h-4" />
+                  {t.individualCta}
                 </Link>
               </div>
 
@@ -284,6 +357,47 @@ export default function HomePage() {
               isUrdu={isUrdu}
             />
           </div>
+        </div>
+      </section>
+
+      {/* Audience Choice */}
+      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-14">
+        <div className="text-center max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-2 text-sm font-bold text-[#137a4a]">
+            <Network className="w-4 h-4" />
+            MBN Pakistan
+          </span>
+
+          <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-4">
+            {t.audienceTitle}
+          </h2>
+
+          <p className="text-slate-600 mt-4 text-lg leading-relaxed">
+            {t.audienceText}
+          </p>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AudienceCard
+            icon={<Building2 className="w-8 h-8" />}
+            eyebrow={isUrdu ? 'پیشہ ور نیٹ ورک' : 'Professional Network'}
+            title={t.bureauCardTitle}
+            text={t.bureauCardText}
+            buttonText={t.bureauCardButton}
+            href="/register"
+            variant="light"
+          />
+
+          <AudienceCard
+            icon={<HeartHandshake className="w-8 h-8" />}
+            eyebrow={isUrdu ? 'نجی میچ میکنگ' : 'Private Matchmaking'}
+            title={t.matchCardTitle}
+            text={t.matchCardText}
+            buttonText={t.matchCardButton}
+            href="/submit-profile"
+            note={t.matchCardNote}
+            variant="green"
+          />
         </div>
       </section>
 
@@ -327,7 +441,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How it works visual section */}
+      {/* Bureau How it Works */}
       <section className="bg-white border-y border-emerald-900/10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
           <div className="text-center max-w-3xl mx-auto">
@@ -372,8 +486,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Privacy section */}
+      {/* Individual Workflow */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16">
+        <div className="relative overflow-hidden rounded-[2.25rem] bg-[#ecf7ef] border border-emerald-900/10 p-8 md:p-12">
+          <div className="absolute -right-20 -top-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl" />
+          <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl" />
+
+          <div className="relative text-center max-w-3xl mx-auto">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-emerald-900/10 text-[#137a4a] text-sm font-bold">
+              <UserRoundSearch className="w-4 h-4" />
+              {t.matchCardTitle}
+            </span>
+
+            <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-5">
+              {t.publicHowTitle}
+            </h2>
+
+            <p className="text-slate-600 mt-4 text-lg leading-relaxed">
+              {t.publicHowText}
+            </p>
+          </div>
+
+          <div className="relative mt-12 grid grid-cols-1 md:grid-cols-4 gap-5">
+            <PublicProcessCard
+              number="01"
+              icon={<ClipboardList className="w-6 h-6" />}
+              title={t.publicStep1Title}
+              text={t.publicStep1Text}
+            />
+
+            <PublicProcessCard
+              number="02"
+              icon={<ShieldCheck className="w-6 h-6" />}
+              title={t.publicStep2Title}
+              text={t.publicStep2Text}
+            />
+
+            <PublicProcessCard
+              number="03"
+              icon={<Building2 className="w-6 h-6" />}
+              title={t.publicStep3Title}
+              text={t.publicStep3Text}
+            />
+
+            <PublicProcessCard
+              number="04"
+              icon={<HeartHandshake className="w-6 h-6" />}
+              title={t.publicStep4Title}
+              text={t.publicStep4Text}
+            />
+          </div>
+
+          <div className="relative mt-10 text-center">
+            <Link
+              href="/submit-profile"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#137a4a] text-white font-bold hover:bg-[#0b5f38]"
+            >
+              {t.matchCardButton}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy */}
+      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
         <div className="relative overflow-hidden rounded-[2rem] bg-[#0b5f38] text-white p-8 md:p-12">
           <div className="absolute inset-0 opacity-20">
             <PatternLayer />
@@ -426,10 +603,10 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/contact"
-              className="inline-flex justify-center px-7 py-3.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50"
+              href="/submit-profile"
+              className="inline-flex justify-center px-7 py-3.5 rounded-xl border border-[#137a4a] text-[#137a4a] font-bold hover:bg-green-50"
             >
-              {t.navContact}
+              {t.individualCta}
             </Link>
           </div>
         </div>
@@ -438,7 +615,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-[#073b24] text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3">
                 <img
@@ -495,6 +672,20 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
+
+            <div>
+              <h3 className="font-bold text-white mb-4">{t.publicAccess}</h3>
+
+              <div className="space-y-3 text-sm text-green-50/70">
+                <Link href="/submit-profile" className="block hover:text-white">
+                  {t.submitProfile}
+                </Link>
+
+                <Link href="/contact" className="block hover:text-white">
+                  {t.navContact}
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="border-t border-white/10 mt-10 pt-6">
@@ -520,7 +711,8 @@ function PatternLayer() {
           linear-gradient(135deg, rgba(255,255,255,0.16) 0%, transparent 32%),
           linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 52%)
         `,
-        backgroundSize: '120px 120px, 150px 150px, 180px 180px, 100% 100%, 34px 34px',
+        backgroundSize:
+          '120px 120px, 150px 150px, 180px 180px, 100% 100%, 34px 34px',
       }}
     />
   );
@@ -531,6 +723,96 @@ function MiniStat({ title }: { title: string }) {
     <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-4">
       <CheckCircle className="w-5 h-5 text-green-100 mb-2" />
       <p className="font-semibold text-white text-sm">{title}</p>
+    </div>
+  );
+}
+
+function AudienceCard({
+  icon,
+  eyebrow,
+  title,
+  text,
+  buttonText,
+  href,
+  note,
+  variant,
+}: {
+  icon: ReactNode;
+  eyebrow: string;
+  title: string;
+  text: string;
+  buttonText: string;
+  href: string;
+  note?: string;
+  variant: 'light' | 'green';
+}) {
+  const isGreen = variant === 'green';
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-[2rem] p-8 md:p-10 ${
+        isGreen
+          ? 'bg-[#137a4a] text-white shadow-xl'
+          : 'bg-white border border-emerald-900/10 text-slate-950 shadow-sm'
+      }`}
+    >
+      {isGreen && (
+        <div className="absolute inset-0 opacity-20">
+          <PatternLayer />
+        </div>
+      )}
+
+      <div className="relative">
+        <div
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+            isGreen
+              ? 'bg-white/10 border border-white/15 text-white'
+              : 'bg-green-50 text-[#137a4a]'
+          }`}
+        >
+          {icon}
+        </div>
+
+        <p
+          className={`text-sm font-bold mt-6 ${
+            isGreen ? 'text-green-100' : 'text-[#137a4a]'
+          }`}
+        >
+          {eyebrow}
+        </p>
+
+        <h3 className="font-heading text-3xl font-bold mt-2">{title}</h3>
+
+        <p
+          className={`mt-4 leading-relaxed ${
+            isGreen ? 'text-green-50/90' : 'text-slate-600'
+          }`}
+        >
+          {text}
+        </p>
+
+        <Link
+          href={href}
+          className={`mt-7 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold ${
+            isGreen
+              ? 'bg-white text-[#137a4a] hover:bg-green-50'
+              : 'bg-[#137a4a] text-white hover:bg-[#0b5f38]'
+          }`}
+        >
+          {buttonText}
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+
+        {note && (
+          <p
+            className={`text-xs mt-4 ${
+              isGreen ? 'text-green-100/80' : 'text-slate-400'
+            }`}
+          >
+            {note}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -665,33 +947,6 @@ function HeroGraphic({
   );
 }
 
-function MockProfile({
-  title,
-  meta,
-  color,
-  icon,
-}: {
-  title: string;
-  meta: string;
-  color: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-      <div className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center`}>
-        {icon}
-      </div>
-
-      <div className="flex-1">
-        <p className="font-bold text-slate-950">{title}</p>
-        <p className="text-xs text-slate-500 mt-1">{meta}</p>
-      </div>
-
-      <div className="w-2.5 h-2.5 rounded-full bg-[#137a4a]" />
-    </div>
-  );
-}
-
 function FeatureCard({
   icon,
   title,
@@ -733,7 +988,39 @@ function ProcessCard({
         {number}
       </div>
 
-      <div className="relative w-13 h-13 rounded-2xl bg-white border border-emerald-900/10 flex items-center justify-center text-[#137a4a] mb-5">
+      <div className="relative w-14 h-14 rounded-2xl bg-white border border-emerald-900/10 flex items-center justify-center text-[#137a4a] mb-5">
+        {icon}
+      </div>
+
+      <h3 className="relative font-heading text-lg font-bold text-slate-950">
+        {title}
+      </h3>
+
+      <p className="relative text-sm text-slate-600 mt-3 leading-relaxed">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function PublicProcessCard({
+  number,
+  icon,
+  title,
+  text,
+}: {
+  number: string;
+  icon: ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="relative bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-sm overflow-hidden">
+      <div className="absolute right-5 top-4 text-5xl font-bold text-[#137a4a]/5">
+        {number}
+      </div>
+
+      <div className="relative w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-[#137a4a] mb-5">
         {icon}
       </div>
 
