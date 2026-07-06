@@ -449,6 +449,18 @@ export default function SuperAdminPage() {
     useState('');
 
 
+  const [conversionResult, setConversionResult] =
+    useState<
+      Record<
+        string,
+        {
+          profileCode: string | null;
+          profileId: string | null;
+        }
+      >
+    >({});
+
+
   const [stats, setStats] =
     useState<Stats>({
       totalApplications: 0,
@@ -1135,6 +1147,76 @@ export default function SuperAdminPage() {
         err instanceof Error
           ? err.message
           : 'Submission status could not be updated.'
+      );
+
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+
+  const convertPublicSubmission = async (
+    submissionId: string
+  ) => {
+    const confirmed = window.confirm(
+      'Convert this approved public submission into an active MBN network profile? This action should only be completed once.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(submissionId);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const { data, error } = await supabase.rpc(
+        'convert_public_submission_to_profile',
+        {
+          p_submission_id: submissionId,
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      const result =
+        typeof data === 'object' &&
+        data !== null
+          ? (data as {
+              profile_code?: string | null;
+              profile_id?: string | null;
+            })
+          : null;
+
+      const profileCode =
+        result?.profile_code || null;
+
+      const profileId =
+        result?.profile_id || null;
+
+      setConversionResult((prev) => ({
+        ...prev,
+        [submissionId]: {
+          profileCode,
+          profileId,
+        },
+      }));
+
+      setSuccessMessage(
+        profileCode
+          ? `Profile successfully converted. New MBN ID: ${profileCode}`
+          : 'Profile successfully converted to the MBN network.'
+      );
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Submission could not be converted.'
       );
 
     } finally {
@@ -3136,6 +3218,117 @@ export default function SuperAdminPage() {
                             <Send className="w-4 h-4" />
                             Assign Matchmaker
                           </button>
+
+                        </div>
+
+
+                        {/* Convert to Network Profile */}
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileText className="w-5 h-5 text-blue-700" />
+
+                            <p className="font-bold text-blue-900">
+                              Network Profile
+                            </p>
+                          </div>
+
+
+                          {submission.converted_to_profile ? (
+                            <div>
+
+                              <div className="flex items-center gap-2 text-green-700">
+                                <CheckCircle className="w-5 h-5" />
+
+                                <p className="font-semibold">
+                                  Already Converted
+                                </p>
+                              </div>
+
+
+                              <p className="text-xs text-slate-500 mt-2">
+                                This public submission already has a profile in the MBN network.
+                              </p>
+
+
+                              {submission.converted_at && (
+                                <p className="text-xs text-slate-400 mt-2">
+                                  Converted: {formatDate(submission.converted_at)}
+                                </p>
+                              )}
+
+
+                              {conversionResult[submission.id]?.profileCode && (
+                                <div className="mt-3 rounded-lg bg-white border border-blue-200 p-3">
+                                  <p className="text-xs text-slate-500">
+                                    Generated Profile ID
+                                  </p>
+
+                                  <p className="font-bold text-blue-900 mt-1">
+                                    {
+                                      conversionResult[submission.id]
+                                        .profileCode
+                                    }
+                                  </p>
+                                </div>
+                              )}
+
+                            </div>
+                          ) : (
+                            <>
+
+                              <p className="text-sm text-blue-800 leading-relaxed">
+                                Convert this reviewed submission into an active searchable profile in the MBN bureau network.
+                              </p>
+
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  convertPublicSubmission(
+                                    submission.id
+                                  )
+                                }
+                                disabled={
+                                  actionLoading === submission.id ||
+                                  ![
+                                    'approved_for_matching',
+                                    'assigned',
+                                    'matching_active',
+                                    'potential_match_found',
+                                    'in_discussion',
+                                  ].includes(
+                                    submission.review_status || ''
+                                  )
+                                }
+                                className="w-full mt-3 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-700 text-white text-sm font-semibold hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <FileText className="w-4 h-4" />
+
+                                {
+                                  actionLoading === submission.id
+                                    ? 'Converting...'
+                                    : 'Convert to Network Profile'
+                                }
+                              </button>
+
+
+                              {![
+                                'approved_for_matching',
+                                'assigned',
+                                'matching_active',
+                                'potential_match_found',
+                                'in_discussion',
+                              ].includes(
+                                submission.review_status || ''
+                              ) && (
+                                <p className="text-xs text-amber-700 mt-2">
+                                  Approve this submission for matching before conversion.
+                                </p>
+                              )}
+
+                            </>
+                          )}
 
                         </div>
 
