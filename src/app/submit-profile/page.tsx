@@ -462,12 +462,17 @@ export default function SubmitProfilePage() {
 
       const photoUrl = await uploadPhoto();
 
-      const {
-        data: submissionData,
-        error,
-      } = await supabase
+      const submissionId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+              .toString(36)
+              .slice(2)}`;
+
+      const { error } = await supabase
         .from('public_profile_submissions')
         .insert({
+          id: submissionId,
           source_type: 'public_submission',
 
           submitter_full_name:
@@ -593,18 +598,30 @@ export default function SubmitProfilePage() {
           review_status: 'new',
 
           converted_to_profile: false,
-        })
-        .select(
-          'id, submission_reference'
-        )
-        .single();
+        });
 
       if (error) {
         throw error;
       }
 
+      const {
+        data: referenceData,
+        error: referenceError,
+      } = await supabase.rpc(
+        'get_public_submission_reference',
+        {
+          p_submission_id: submissionId,
+        }
+      );
+
+      if (referenceError) {
+        throw referenceError;
+      }
+
       setSubmissionReference(
-        submissionData?.submission_reference || ''
+        typeof referenceData === 'string'
+          ? referenceData
+          : ''
       );
 
       window.scrollTo({
@@ -617,7 +634,12 @@ export default function SubmitProfilePage() {
       const message =
         err instanceof Error
           ? err.message
-          : 'Profile could not be submitted. Please try again.';
+          : typeof err === 'object' &&
+              err !== null &&
+              'message' in err &&
+              typeof (err as { message?: unknown }).message === 'string'
+            ? (err as { message: string }).message
+            : 'Profile could not be submitted. Please try again.';
 
       setErrorMessage(message);
 
