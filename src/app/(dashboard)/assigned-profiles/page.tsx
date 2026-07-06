@@ -23,6 +23,8 @@ import {
   ShieldCheck,
   UserRound,
   Users,
+  Save,
+  MessageSquareText,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -83,6 +85,30 @@ type AssignedProfile = {
   converted_to_profile: boolean | null;
 
   network_profile_status: string | null;
+
+  work_status?: string | null;
+  bureau_private_notes?: string | null;
+  last_follow_up_at?: string | null;
+  next_follow_up_at?: string | null;
+  work_updated_at?: string | null;
+};
+
+
+type FollowUp = {
+  id: string;
+  note: string;
+  status_at_time: string | null;
+  created_at: string | null;
+};
+
+
+type WorkRecord = {
+  submission_id: string;
+  work_status: string | null;
+  bureau_private_notes: string | null;
+  last_follow_up_at: string | null;
+  next_follow_up_at: string | null;
+  updated_at: string | null;
 };
 
 
@@ -226,6 +252,7 @@ const assignmentStatuses = [
   'potential_match_found',
   'in_discussion',
   'matched',
+  'no_suitable_match',
   'closed',
 ];
 
@@ -379,21 +406,75 @@ export default function AssignedProfilesPage() {
         }
 
 
-        const {
-          data,
-          error,
-        } = await supabase.rpc(
-          'get_my_assigned_profiles'
-        );
+        const [
+          profileResponse,
+          workResponse,
+        ] = await Promise.all([
+          supabase.rpc(
+            'get_my_assigned_profiles'
+          ),
+          supabase.rpc(
+            'get_my_assigned_profile_work'
+          ),
+        ]);
 
 
-        if (error) {
-          throw error;
+        if (profileResponse.error) {
+          throw profileResponse.error;
         }
 
 
+        if (workResponse.error) {
+          throw workResponse.error;
+        }
+
+
+        const workMap = new Map(
+          (
+            (workResponse.data || []) as WorkRecord[]
+          ).map((work) => [
+            work.submission_id,
+            work,
+          ])
+        );
+
+
+        const mergedProfiles = (
+          (profileResponse.data || []) as AssignedProfile[]
+        ).map((profile) => {
+          const work = workMap.get(
+            profile.submission_id
+          );
+
+          return {
+            ...profile,
+
+            work_status:
+              work?.work_status ||
+              profile.review_status ||
+              'assigned',
+
+            bureau_private_notes:
+              work?.bureau_private_notes ||
+              '',
+
+            last_follow_up_at:
+              work?.last_follow_up_at ||
+              null,
+
+            next_follow_up_at:
+              work?.next_follow_up_at ||
+              null,
+
+            work_updated_at:
+              work?.updated_at ||
+              null,
+          };
+        });
+
+
         setProfiles(
-          (data || []) as AssignedProfile[]
+          mergedProfiles
         );
 
       } catch (err: unknown) {
@@ -486,8 +567,11 @@ export default function AssignedProfilesPage() {
 
           const matchesStatus =
             filters.status
-              ? profile.review_status ===
-                filters.status
+              ? (
+                  profile.work_status ||
+                  profile.review_status ||
+                  'assigned'
+                ) === filters.status
               : true;
 
 
@@ -517,20 +601,26 @@ export default function AssignedProfilesPage() {
 
     active: profiles.filter(
       (item) =>
-        item.review_status ===
-        'matching_active'
+        (
+          item.work_status ||
+          item.review_status
+        ) === 'matching_active'
     ).length,
 
     potential: profiles.filter(
       (item) =>
-        item.review_status ===
-        'potential_match_found'
+        (
+          item.work_status ||
+          item.review_status
+        ) === 'potential_match_found'
     ).length,
 
     discussion: profiles.filter(
       (item) =>
-        item.review_status ===
-        'in_discussion'
+        (
+          item.work_status ||
+          item.review_status
+        ) === 'in_discussion'
     ).length,
   };
 
@@ -986,6 +1076,9 @@ export default function AssignedProfilesPage() {
           onClose={() =>
             setSelectedProfile(null)
           }
+          onSaved={async () => {
+            await loadAssignedProfiles(true);
+          }}
         />
       )}
 
@@ -1124,11 +1217,13 @@ function AssignedProfileCard({
 
             <span
               className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
+                profile.work_status ||
                 profile.review_status
               )}`}
             >
 
               {formatStatus(
+                profile.work_status ||
                 profile.review_status
               )}
 
@@ -1280,14 +1375,259 @@ function QuickInfo({
 function ProfileDetailModal({
   profile,
   onClose,
+  onSaved,
 }: {
   profile: AssignedProfile;
   onClose: () => void;
+  onSaved: () => Promise<void>;
 }) {
   const photoVisible =
     profile.photo_url &&
     profile.photo_visibility !==
       'hidden';
+
+
+  const [
+    workStatus,
+    setWorkStatus,
+  ] = useState(
+    profile.work_status ||
+      profile.review_status ||
+      'assigned'
+  );
+
+
+  const [
+    privateNotes,
+    setPrivateNotes,
+  ] = useState(
+    profile.bureau_private_notes ||
+      ''
+  );
+
+
+  const [
+    nextFollowUp,
+    setNextFollowUp,
+  ] = useState(
+    profile.next_follow_up_at
+      ? profile.next_follow_up_at.slice(
+          0,
+          10
+        )
+      : ''
+  );
+
+
+  const [
+    followUpNote,
+    setFollowUpNote,
+  ] = useState('');
+
+
+  const [
+    followUps,
+    setFollowUps,
+  ] = useState<FollowUp[]>([]);
+
+
+  const [
+    workflowLoading,
+    setWorkflowLoading,
+  ] = useState(false);
+
+
+  const [
+    followUpLoading,
+    setFollowUpLoading,
+  ] = useState(false);
+
+
+  const [
+    timelineLoading,
+    setTimelineLoading,
+  ] = useState(true);
+
+
+  const [
+    modalError,
+    setModalError,
+  ] = useState('');
+
+
+  const [
+    modalSuccess,
+    setModalSuccess,
+  ] = useState('');
+
+
+  const loadFollowUps =
+    async () => {
+      try {
+        setTimelineLoading(true);
+
+        const {
+          data,
+          error,
+        } = await supabase.rpc(
+          'get_assigned_profile_followups',
+          {
+            p_submission_id:
+              profile.submission_id,
+          }
+        );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        setFollowUps(
+          (data || []) as FollowUp[]
+        );
+
+      } catch (err: unknown) {
+        setModalError(
+          err instanceof Error
+            ? err.message
+            : 'Follow-up history could not be loaded.'
+        );
+
+      } finally {
+        setTimelineLoading(false);
+      }
+    };
+
+
+  useEffect(() => {
+    loadFollowUps();
+  }, [profile.submission_id]);
+
+
+  const saveWorkflow =
+    async () => {
+      try {
+        setWorkflowLoading(true);
+        setModalError('');
+        setModalSuccess('');
+
+
+        const nextFollowUpValue =
+          nextFollowUp
+            ? new Date(
+                `${nextFollowUp}T12:00:00`
+              ).toISOString()
+            : null;
+
+
+        const {
+          error,
+        } = await supabase.rpc(
+          'update_assigned_profile_work',
+          {
+            p_submission_id:
+              profile.submission_id,
+
+            p_work_status:
+              workStatus,
+
+            p_private_notes:
+              privateNotes.trim() ||
+              null,
+
+            p_next_follow_up_at:
+              nextFollowUpValue,
+          }
+        );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        setModalSuccess(
+          'Work status, private notes, and follow-up date saved.'
+        );
+
+
+        await onSaved();
+
+      } catch (err: unknown) {
+        setModalError(
+          err instanceof Error
+            ? err.message
+            : 'Workflow details could not be saved.'
+        );
+
+      } finally {
+        setWorkflowLoading(false);
+      }
+    };
+
+
+  const addFollowUp =
+    async () => {
+      try {
+        if (!followUpNote.trim()) {
+          setModalError(
+            'Please enter a follow-up note.'
+          );
+
+          return;
+        }
+
+
+        setFollowUpLoading(true);
+        setModalError('');
+        setModalSuccess('');
+
+
+        const {
+          error,
+        } = await supabase.rpc(
+          'add_assigned_profile_followup',
+          {
+            p_submission_id:
+              profile.submission_id,
+
+            p_note:
+              followUpNote.trim(),
+
+            p_status_at_time:
+              workStatus,
+          }
+        );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        setFollowUpNote('');
+
+        setModalSuccess(
+          'Follow-up note added successfully.'
+        );
+
+
+        await loadFollowUps();
+
+        await onSaved();
+
+      } catch (err: unknown) {
+        setModalError(
+          err instanceof Error
+            ? err.message
+            : 'Follow-up note could not be added.'
+        );
+
+      } finally {
+        setFollowUpLoading(false);
+      }
+    };
 
 
   return (
@@ -1314,12 +1654,12 @@ function ProfileDetailModal({
 
               <span
                 className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
-                  profile.review_status
+                  workStatus
                 )}`}
               >
 
                 {formatStatus(
-                  profile.review_status
+                  workStatus
                 )}
 
               </span>
@@ -1718,6 +2058,293 @@ function ProfileDetailModal({
           )}
 
 
+
+          {/* Bureau Workflow */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 md:p-6">
+
+            <div className="flex items-start gap-3">
+
+              <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <HeartHandshake className="w-5 h-5 text-blue-700" />
+              </div>
+
+
+              <div>
+                <h3 className="font-heading text-lg font-bold text-slate-900">
+                  Bureau Matchmaking Workflow
+                </h3>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Update your work status, keep private bureau notes, and schedule the next follow-up.
+                </p>
+              </div>
+
+            </div>
+
+
+            {modalError && (
+              <div className="mt-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+
+            {modalSuccess && (
+              <div className="mt-5 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span>{modalSuccess}</span>
+              </div>
+            )}
+
+
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+              <div>
+                <label className="block text-sm font-bold text-slate-900 mb-2">
+                  Work Status
+                </label>
+
+                <select
+                  value={workStatus}
+                  onChange={(e) =>
+                    setWorkStatus(
+                      e.target.value
+                    )
+                  }
+                  className="input-field"
+                >
+                  {assignmentStatuses
+                    .filter(
+                      (status) =>
+                        status !== 'closed'
+                    )
+                    .map((status) => (
+                      <option
+                        key={status}
+                        value={status}
+                      >
+                        {formatStatus(status)}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-bold text-slate-900 mb-2">
+                  Next Follow-up Date
+                </label>
+
+                <input
+                  type="date"
+                  value={nextFollowUp}
+                  onChange={(e) =>
+                    setNextFollowUp(
+                      e.target.value
+                    )
+                  }
+                  className="input-field"
+                />
+              </div>
+
+            </div>
+
+
+            <div className="mt-5">
+
+              <label className="block text-sm font-bold text-slate-900 mb-2">
+                Bureau Private Working Notes
+              </label>
+
+              <textarea
+                value={privateNotes}
+                onChange={(e) =>
+                  setPrivateNotes(
+                    e.target.value
+                  )
+                }
+                rows={5}
+                placeholder="Internal bureau notes, family preferences, match research, verification details, or next actions..."
+                className="input-field resize-none"
+              />
+
+              <p className="text-xs text-slate-500 mt-2">
+                These notes are separate from Super Admin private notes.
+              </p>
+
+            </div>
+
+
+            <button
+              type="button"
+              onClick={saveWorkflow}
+              disabled={workflowLoading}
+              className="mt-5 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-700 text-white font-semibold hover:bg-blue-800 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+
+              {workflowLoading
+                ? 'Saving...'
+                : 'Save Work Details'}
+            </button>
+
+          </div>
+
+
+          {/* Follow-up Center */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+
+              <div className="flex items-center gap-2">
+                <MessageSquareText className="w-5 h-5 text-green-700" />
+
+                <h3 className="font-heading text-lg font-bold text-slate-900">
+                  Add Follow-up Note
+                </h3>
+              </div>
+
+
+              <p className="text-sm text-slate-500 mt-2">
+                Keep a dated history of calls, meetings, introductions, and family feedback.
+              </p>
+
+
+              <textarea
+                value={followUpNote}
+                onChange={(e) =>
+                  setFollowUpNote(
+                    e.target.value
+                  )
+                }
+                rows={6}
+                placeholder="Example: Spoke with candidate family. They are interested in Lahore-based matches and requested two profiles for review."
+                className="input-field resize-none mt-5"
+              />
+
+
+              <button
+                type="button"
+                onClick={addFollowUp}
+                disabled={followUpLoading}
+                className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-green-700 text-white font-semibold hover:bg-green-800 disabled:opacity-50"
+              >
+                <MessageSquareText className="w-4 h-4" />
+
+                {followUpLoading
+                  ? 'Adding...'
+                  : 'Add Follow-up Note'}
+              </button>
+
+            </div>
+
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+
+              <div className="flex items-center justify-between gap-3">
+
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-purple-700" />
+
+                  <h3 className="font-heading text-lg font-bold text-slate-900">
+                    Follow-up Timeline
+                  </h3>
+                </div>
+
+
+                <span className="text-xs font-semibold text-slate-500">
+                  {followUps.length} note(s)
+                </span>
+
+              </div>
+
+
+              <div className="mt-5">
+
+                {timelineLoading ? (
+                  <div className="space-y-3">
+
+                    {[1, 2, 3].map(
+                      (item) => (
+                        <div
+                          key={item}
+                          className="h-20 rounded-xl bg-slate-100 animate-pulse"
+                        />
+                      )
+                    )}
+
+                  </div>
+                ) : followUps.length === 0 ? (
+                  <div className="rounded-xl bg-slate-50 p-6 text-center">
+
+                    <MessageSquareText className="w-8 h-8 text-slate-300 mx-auto" />
+
+                    <p className="text-sm font-semibold text-slate-700 mt-3">
+                      No follow-up notes yet
+                    </p>
+
+                    <p className="text-xs text-slate-500 mt-1">
+                      Add the first update after contacting or reviewing this profile.
+                    </p>
+
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+
+                    {followUps.map(
+                      (followUp) => (
+                        <div
+                          key={followUp.id}
+                          className="relative pl-5 border-l-2 border-green-200"
+                        >
+
+                          <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-green-600" />
+
+
+                          <div className="rounded-xl bg-slate-50 p-4">
+
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass(
+                                  followUp.status_at_time
+                                )}`}
+                              >
+                                {formatStatus(
+                                  followUp.status_at_time
+                                )}
+                              </span>
+
+
+                              <span className="text-xs text-slate-400">
+                                {formatDate(
+                                  followUp.created_at
+                                )}
+                              </span>
+
+                            </div>
+
+
+                            <p className="text-sm text-slate-700 mt-3 leading-relaxed whitespace-pre-wrap">
+                              {followUp.note}
+                            </p>
+
+                          </div>
+                        </div>
+                      )
+                    )}
+
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
+
           {/* Assignment Information */}
           <div className="rounded-2xl bg-green-50 border border-green-200 p-5">
 
@@ -1738,7 +2365,7 @@ function ProfileDetailModal({
                 label="Assignment Status"
                 value={
                   formatStatus(
-                    profile.review_status
+                    workStatus
                   )
                 }
               />
