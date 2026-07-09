@@ -205,13 +205,13 @@ export default function HomePage() {
   return (
     <div dir={isUrdu ? 'rtl' : 'ltr'} className="min-h-screen bg-white text-slate-950">
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-5 px-4 py-4 md:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/mbn-logo.png" alt="MBN Pakistan" className="h-12 w-12 object-contain" />
-            <div className="leading-tight">
-              <p className="font-heading text-xl font-bold tracking-[0.12em] text-[#063d25]">MBN</p>
-              <p className="text-xs font-bold tracking-[0.2em] text-[#063d25]">PAKISTAN</p>
-              <p className="mt-0.5 text-[10px] text-slate-500">{t.subtitle}</p>
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 md:px-8">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src="/mbn-logo.png" alt="MBN Pakistan" className="h-10 w-10 flex-shrink-0 object-contain sm:h-12 sm:w-12" />
+            <div className="hidden leading-tight min-[390px]:block">
+              <p className="font-heading text-base font-bold tracking-[0.1em] text-[#063d25] sm:text-xl sm:tracking-[0.12em]">MBN</p>
+              <p className="text-[10px] font-bold tracking-[0.14em] text-[#063d25] sm:text-xs sm:tracking-[0.2em]">PAKISTAN</p>
+              <p className="mt-0.5 hidden text-[10px] text-slate-500 sm:block">{t.subtitle}</p>
             </div>
           </Link>
 
@@ -224,7 +224,7 @@ export default function HomePage() {
             <Link href="/contact" className="hover:text-[#137a4a]">{t.contact}</Link>
           </nav>
 
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3">
             <LanguageToggle language={language} setLanguage={setLanguage} />
             <Link
               href="/login"
@@ -234,15 +234,15 @@ export default function HomePage() {
             </Link>
             <Link
               href="/submit-profile"
-              className="rounded-lg bg-[#0b6e34] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#07582a]"
+              className="rounded-lg bg-[#0b6e34] px-3 py-2.5 text-xs font-bold leading-tight text-white shadow-sm hover:bg-[#07582a] sm:px-5 sm:text-sm"
             >
               {t.submitProfile}
             </Link>
           </div>
         </div>
 
-        <div className="border-t border-slate-100 px-4 py-2 xl:hidden">
-          <div className="mx-auto flex max-w-[1440px] items-center justify-center gap-5 overflow-x-auto whitespace-nowrap text-xs font-semibold text-slate-600">
+        <div className="border-t border-slate-100 py-2 xl:hidden">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-start gap-5 overflow-x-auto whitespace-nowrap px-4 text-xs font-semibold text-slate-600 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Link href="#how-it-works">{t.how}</Link>
             <Link href="#families">{t.families}</Link>
             <Link href="#bureaus">{t.bureaus}</Link>
@@ -257,47 +257,83 @@ export default function HomePage() {
           {/* Families Hero Card */}
           <div
             id="families"
-            className="relative min-h-[560px] overflow-hidden rounded-[1.5rem] bg-[#fbf4e9] shadow-sm lg:min-h-[560px]"
+            className="overflow-hidden rounded-[1.5rem] bg-[#fbf4e9] shadow-sm lg:relative lg:min-h-[560px]"
           >
-            <img
-              src="/mbn-family-hero.png"
-              alt="Family reviewing a marriage profile"
-              className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
-                isUrdu ? 'left-0' : 'right-0'
-              }`}
-            />
+            {/* Mobile: text and image are deliberately separated */}
+            <div className="p-7 sm:p-8 lg:hidden">
+              <h1 className="font-heading text-4xl font-bold leading-[1.05] text-[#073b24] sm:text-5xl">
+                {t.familyTitle}
+              </h1>
 
-            <div
-              className={`absolute inset-y-0 w-[32%] ${
-                isUrdu
-                  ? 'left-[48%] bg-gradient-to-l'
-                  : 'right-[48%] bg-gradient-to-r'
-              } from-[#fbf4e9] via-[#fbf4e9]/85 to-transparent`}
-            />
+              <p className="mt-4 text-[15px] leading-7 text-slate-800">
+                {t.familyText}
+              </p>
 
-            <div className={`relative z-10 flex min-h-[560px] flex-col justify-center p-7 md:p-9 lg:p-10 ${isUrdu ? 'mr-auto' : ''}`}>
-              <div className="max-w-[340px]">
-                <h1 className="font-heading text-4xl font-bold leading-[1.05] text-[#073b24] md:text-5xl">
-                  {t.familyTitle}
-                </h1>
+              <div className="mt-5 space-y-2.5">
+                <HeroBullet text={t.familyBullet1} />
+                <HeroBullet text={t.familyBullet2} />
+                <HeroBullet text={t.familyBullet3} />
+              </div>
 
-                <p className="mt-4 text-[15px] leading-7 text-slate-800">
-                  {t.familyText}
-                </p>
+              <Link
+                href="/submit-profile"
+                className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
+              >
+                {t.submitProfile}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
 
-                <div className="mt-5 space-y-2.5">
-                  <HeroBullet text={t.familyBullet1} />
-                  <HeroBullet text={t.familyBullet2} />
-                  <HeroBullet text={t.familyBullet3} />
+            <div className="relative h-[330px] sm:h-[400px] lg:hidden">
+              <img
+                src="/mbn-family-hero.png"
+                alt="Family reviewing a marriage profile"
+                className="absolute inset-0 h-full w-full object-cover object-[68%_42%]"
+              />
+            </div>
+
+            {/* Desktop: original blended card layout */}
+            <div className="hidden lg:block">
+              <img
+                src="/mbn-family-hero.png"
+                alt="Family reviewing a marriage profile"
+                className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
+                  isUrdu ? 'left-0' : 'right-0'
+                }`}
+              />
+
+              <div
+                className={`absolute inset-y-0 w-[32%] ${
+                  isUrdu
+                    ? 'left-[48%] bg-gradient-to-l'
+                    : 'right-[48%] bg-gradient-to-r'
+                } from-[#fbf4e9] via-[#fbf4e9]/85 to-transparent`}
+              />
+
+              <div className={`relative z-10 flex min-h-[560px] flex-col justify-center p-10 ${isUrdu ? 'mr-auto' : ''}`}>
+                <div className="max-w-[340px]">
+                  <h1 className="font-heading text-5xl font-bold leading-[1.05] text-[#073b24]">
+                    {t.familyTitle}
+                  </h1>
+
+                  <p className="mt-4 text-[15px] leading-7 text-slate-800">
+                    {t.familyText}
+                  </p>
+
+                  <div className="mt-5 space-y-2.5">
+                    <HeroBullet text={t.familyBullet1} />
+                    <HeroBullet text={t.familyBullet2} />
+                    <HeroBullet text={t.familyBullet3} />
+                  </div>
+
+                  <Link
+                    href="/submit-profile"
+                    className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
+                  >
+                    {t.submitProfile}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-
-                <Link
-                  href="/submit-profile"
-                  className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
-                >
-                  {t.submitProfile}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           </div>
@@ -305,56 +341,103 @@ export default function HomePage() {
           {/* Bureau Hero Card */}
           <div
             id="bureaus"
-            className="relative min-h-[560px] overflow-hidden rounded-[1.5rem] bg-[#063f2a] text-white shadow-sm lg:min-h-[560px]"
+            className="overflow-hidden rounded-[1.5rem] bg-[#063f2a] text-white shadow-sm lg:relative lg:min-h-[560px]"
           >
-            <img
-              src="/mbn-bureau-dashboard.png"
-              alt="MBN bureau dashboard"
-              className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
-                isUrdu ? 'left-0' : 'right-0'
-              }`}
-            />
+            {/* Mobile: text and image are deliberately separated */}
+            <div className="p-7 sm:p-8 lg:hidden">
+              <h2 className="font-heading text-4xl font-bold leading-[1.05] sm:text-5xl">
+                {t.bureauTitle}
+              </h2>
 
-            <div
-              className={`absolute inset-y-0 w-[34%] ${
-                isUrdu
-                  ? 'left-[46%] bg-gradient-to-l'
-                  : 'right-[46%] bg-gradient-to-r'
-              } from-[#063f2a] via-[#063f2a]/90 to-transparent`}
-            />
+              <p className="mt-4 text-[15px] leading-7 text-green-50/95">
+                {t.bureauText}
+              </p>
 
-            <div className="relative z-10 flex min-h-[560px] flex-col justify-center p-7 md:p-9 lg:p-10">
-              <div className="max-w-[360px]">
-                <h2 className="font-heading text-4xl font-bold leading-[1.05] md:text-5xl">
-                  {t.bureauTitle}
-                </h2>
+              <div className="mt-5 space-y-2.5">
+                <HeroBullet text={t.bureauBullet1} light />
+                <HeroBullet text={t.bureauBullet2} light />
+                <HeroBullet text={t.bureauBullet3} light />
+                <HeroBullet text={t.bureauBullet4} light />
+              </div>
 
-                <p className="mt-4 text-[15px] leading-7 text-green-50/95">
-                  {t.bureauText}
-                </p>
+              <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-3 rounded-lg bg-white px-6 py-3.5 text-sm font-bold text-[#073b24] hover:bg-green-50"
+                >
+                  {t.applyBureau}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
 
-                <div className="mt-5 space-y-2.5">
-                  <HeroBullet text={t.bureauBullet1} light />
-                  <HeroBullet text={t.bureauBullet2} light />
-                  <HeroBullet text={t.bureauBullet3} light />
-                  <HeroBullet text={t.bureauBullet4} light />
-                </div>
+                <Link
+                  href="/login"
+                  className="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
+                >
+                  {t.memberLogin}
+                </Link>
+              </div>
+            </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-4">
-                  <Link
-                    href="/register"
-                    className="inline-flex items-center gap-3 rounded-lg bg-white px-6 py-3.5 text-sm font-bold text-[#073b24] hover:bg-green-50"
-                  >
-                    {t.applyBureau}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+            <div className="relative h-[300px] sm:h-[380px] lg:hidden">
+              <img
+                src="/mbn-bureau-dashboard.png"
+                alt="MBN bureau dashboard"
+                className="absolute inset-0 h-full w-full object-cover object-[72%_50%]"
+              />
+              <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#063f2a] to-transparent" />
+            </div>
 
-                  <Link
-                    href="/login"
-                    className="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
-                  >
-                    {t.memberLogin}
-                  </Link>
+            {/* Desktop: original blended card layout */}
+            <div className="hidden lg:block">
+              <img
+                src="/mbn-bureau-dashboard.png"
+                alt="MBN bureau dashboard"
+                className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
+                  isUrdu ? 'left-0' : 'right-0'
+                }`}
+              />
+
+              <div
+                className={`absolute inset-y-0 w-[34%] ${
+                  isUrdu
+                    ? 'left-[46%] bg-gradient-to-l'
+                    : 'right-[46%] bg-gradient-to-r'
+                } from-[#063f2a] via-[#063f2a]/90 to-transparent`}
+              />
+
+              <div className="relative z-10 flex min-h-[560px] flex-col justify-center p-10">
+                <div className="max-w-[360px]">
+                  <h2 className="font-heading text-5xl font-bold leading-[1.05]">
+                    {t.bureauTitle}
+                  </h2>
+
+                  <p className="mt-4 text-[15px] leading-7 text-green-50/95">
+                    {t.bureauText}
+                  </p>
+
+                  <div className="mt-5 space-y-2.5">
+                    <HeroBullet text={t.bureauBullet1} light />
+                    <HeroBullet text={t.bureauBullet2} light />
+                    <HeroBullet text={t.bureauBullet3} light />
+                    <HeroBullet text={t.bureauBullet4} light />
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <Link
+                      href="/register"
+                      className="inline-flex items-center gap-3 rounded-lg bg-white px-6 py-3.5 text-sm font-bold text-[#073b24] hover:bg-green-50"
+                    >
+                      {t.applyBureau}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+
+                    <Link
+                      href="/login"
+                      className="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
+                    >
+                      {t.memberLogin}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
