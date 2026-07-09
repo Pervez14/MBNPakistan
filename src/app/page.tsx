@@ -3,231 +3,197 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
-  ShieldCheck,
-  Search,
-  Lock,
   ArrowRight,
-  CheckCircle,
-  Users,
   Building2,
-  Eye,
-  Upload,
-  FileText,
-  HeartHandshake,
-  Network,
-  Sparkles,
-  UserRoundSearch,
+  CheckCircle,
   ClipboardList,
+  Clock,
+  HeartHandshake,
+  Lock,
+  Network,
+  Search,
+  ShieldCheck,
+  Upload,
+  UserCheck,
+  Users,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/useLanguage';
 import LanguageToggle from '@/components/LanguageToggle';
 
 const content = {
   en: {
-    navAbout: 'About Us',
-    navHow: 'How It Works',
-    navContact: 'Contact Us',
-    login: 'Login',
-    apply: 'Apply',
-
     subtitle: 'Marriage Bureau Network',
-    badge: 'Verified Marriage Bureau Network',
-    heroTitle: 'A Trusted Digital Network for Professional Marriage Bureaus',
-    heroText:
-      'MBN Pakistan helps verified marriage bureaus upload profiles, search suitable matches, protect privacy, and manage contact activity in one organized platform.',
-    applyMembership: 'Apply for Membership',
-    seeHow: 'How It Works',
+    home: 'Home',
+    how: 'How It Works',
+    families: 'For Families',
+    bureaus: 'For Bureaus',
+    about: 'About Us',
+    contact: 'Contact Us',
+    bureauLogin: 'Bureau Login',
+    submitProfile: 'Submit Your Profile',
 
-    stat1: 'Verified Bureaus',
-    stat2: 'Private Profiles',
-    stat3: 'Contact Logs',
+    familyTitle: 'Looking for a Life Partner?',
+    familyText:
+      'Submit your profile privately. Our team reviews your information and may connect you with a suitable matchmaker or verified marriage bureau.',
+    familyBullet1: 'Private submission',
+    familyBullet2: 'Reviewed before sharing',
+    familyBullet3: 'You stay informed',
 
-    visualTitle: 'Bureau Network',
-    visualText: 'Upload, search, connect, and track securely.',
+    bureauTitle: 'Grow Your Matchmaking Network',
+    bureauText:
+      'Join a professional network of verified marriage bureaus. Upload profiles, search suitable matches and manage matchmaking activity securely.',
+    bureauBullet1: 'Join a verified network',
+    bureauBullet2: 'Upload & search profiles',
+    bureauBullet3: 'Manage cases & follow-ups',
+    bureauBullet4: 'Work with professionalism',
+    applyBureau: 'Apply as a Bureau',
+    memberLogin: 'Already a member? Login',
 
-    audienceTitle: 'One network. Two ways to begin.',
-    audienceText:
-      'MBN Pakistan connects professional marriage bureaus while also helping individuals submit their profile for private matchmaking review.',
+    trust1Title: 'Private by Design',
+    trust1Text: 'Your information is always protected.',
+    trust2Title: 'Reviewed Before Action',
+    trust2Text: 'Every profile is reviewed before any sharing.',
+    trust3Title: 'Professional Network',
+    trust3Text: 'Only verified marriage bureaus can join.',
+    trust4Title: 'Trackable Follow-up',
+    trust4Text: 'Cases and follow-ups are recorded and monitored.',
 
-    bureauCardTitle: 'For Marriage Bureaus',
-    bureauCardText:
-      'Join the professional bureau network, upload profiles, search suitable matches, and connect securely with other verified bureaus.',
-    bureauCardButton: 'Apply as a Marriage Bureau',
+    howTitle: 'How It Works',
+    familyJourneyTitle: 'For Individuals & Families',
+    familyJourneyText: 'A simple and private journey to find the right match.',
+    familyStep1Title: 'Submit Your Profile',
+    familyStep1Text: 'Share your personal, family, education and preferences.',
+    familyStep2Title: 'MBN Reviews',
+    familyStep2Text: 'Our team reviews your submission and may contact you if needed.',
+    familyStep3Title: 'Profile Assignment',
+    familyStep3Text: 'Your profile may be assigned to a suitable matchmaker or bureau.',
+    familyStep4Title: 'Follow-up & Progress',
+    familyStep4Text: 'The assigned team works on suitable matches and keeps you informed.',
 
-    matchCardTitle: 'Looking for a Match?',
-    matchCardText:
-      'Submit your profile privately. Our team will review your information and may connect you with a suitable matchmaker or verified marriage bureau.',
-    matchCardButton: 'Submit Your Profile',
-    matchCardNote: 'Private profile submission • Reviewed by MBN Pakistan',
+    bureauJourneyTitle: 'For Marriage Bureaus',
+    bureauJourneyText: 'Build your network and manage matchmaking professionally.',
+    bureauStep1Title: 'Apply to Join',
+    bureauStep1Text: 'Submit your bureau information and business details.',
+    bureauStep2Title: 'Get Verified',
+    bureauStep2Text: 'Our team reviews your application and grants network access.',
+    bureauStep3Title: 'Upload & Search',
+    bureauStep3Text: 'Upload profiles and search across the network securely.',
+    bureauStep4Title: 'Manage & Follow-up',
+    bureauStep4Text: 'Work on cases, record follow-ups and manage matches professionally.',
 
-    sectionTitle: 'Modern tools for serious marriage bureaus',
-    sectionText:
-      'Move away from scattered WhatsApp chats, notebooks, and spreadsheets. MBN Pakistan gives bureaus a cleaner and more professional way to manage matchmaking work.',
+    whyTitle: 'Why MBN Pakistan?',
+    why1Title: 'For Families',
+    why1Text:
+      'A safe and respectful way to submit your profile and receive professional matchmaking support.',
+    why2Title: 'For Bureaus',
+    why2Text:
+      'A wider professional network, better tools, and organized profile management.',
+    why3Title: 'For the Network',
+    why3Text:
+      'Clear assignment, follow-up and accountability across all matchmaking cases.',
 
-    card1Title: 'Upload Profiles',
-    card1Text:
-      'Add bride and groom profiles with family, education, career, and match requirements.',
-
-    card2Title: 'Search Matches',
-    card2Text:
-      'Find suitable profiles by gender, city, province, caste, education, profession, and more.',
-
-    card3Title: 'Protect Privacy',
-    card3Text:
-      'Hide contacts until requested, blur or hide photos, and track contact views safely.',
-
-    howTitle: 'How it works',
-    howText:
-      'A simple approval-based system designed for trusted bureau-to-bureau matchmaking.',
-    step1Title: 'Apply',
-    step1Text: 'Marriage bureaus submit their business and contact details.',
-    step2Title: 'Get Approved',
-    step2Text: 'Admin reviews and approves trusted bureau applications.',
-    step3Title: 'Upload & Search',
-    step3Text: 'Approved bureaus upload profiles and search the network.',
-    step4Title: 'Connect Safely',
-    step4Text: 'Contact details reveal only when requested and are logged.',
-
-    publicHowTitle: 'Looking for a match? Start privately.',
-    publicHowText:
-      'You do not need to be a marriage bureau to submit your profile. Individuals and families can securely send profile information to MBN Pakistan for matchmaking review.',
-    publicStep1Title: 'Submit Your Profile',
-    publicStep1Text:
-      'Complete your personal, family, education, career, and match preference details.',
-    publicStep2Title: 'Admin Review',
-    publicStep2Text:
-      'The MBN Pakistan team reviews the submission and checks the information provided.',
-    publicStep3Title: 'Profile Assignment',
-    publicStep3Text:
-      'Your profile may be assigned to a suitable matchmaker or verified marriage bureau.',
-    publicStep4Title: 'Matchmaking Follow-up',
-    publicStep4Text:
-      'The assigned team may contact you when suitable matching opportunities are available.',
-
-    privacyTitle: 'Privacy built into every profile',
+    privacyTitle: 'Your Information Deserves Privacy',
     privacyText:
-      'Profile photos and contact details are sensitive. MBN Pakistan gives bureaus control over visibility and gives the admin visibility into contact activity.',
-    privacy1: 'Public, blurred, or hidden profile photos',
-    privacy2: 'Contact details hidden until View Contact is clicked',
-    privacy3: 'Admin can track who viewed which contact',
+      'We understand how important your privacy is. MBN Pakistan follows a review-first workflow designed to protect personal information.',
+    privacy1: 'Submitting a profile does not mean it is automatically public.',
+    privacy2: 'All submissions are reviewed before any action is taken.',
+    privacy3: 'Your profile may be assigned to a suitable bureau or matchmaker.',
+    privacy4: 'Contact details are shared only through the platform workflow.',
 
-    ctaTitle: 'Ready to join MBN Pakistan?',
-    ctaText:
-      'Marriage bureaus can apply for network membership, while individuals can privately submit a profile for matchmaking review.',
-
-    individualCta: 'Submit Your Profile',
+    readyTitle: 'Ready to Begin?',
+    readyText: "Choose the path that's right for you.",
+    choice1Title: 'I Want to Submit My Profile',
+    choice1Text: 'For individuals and families seeking serious marriage opportunities.',
+    choice2Title: 'I Represent a Marriage Bureau',
+    choice2Text: 'Join the professional MBN Pakistan network today.',
 
     footerText:
-      'A professional matchmaking network for marriage bureaus and individuals seeking a secure, organized, and privacy-focused way to explore suitable matches.',
-    website: 'Website',
-    bureauAccess: 'Bureau Access',
-    publicAccess: 'For Individuals',
-    submitProfile: 'Submit Profile',
-    dashboard: 'Dashboard',
+      'A trusted, privacy-focused matchmaking network for individuals, families, and professional marriage bureaus.',
     rights: 'All rights reserved.',
   },
-
   ur: {
-    navAbout: 'ہمارے بارے میں',
-    navHow: 'یہ کیسے کام کرتا ہے',
-    navContact: 'رابطہ کریں',
-    login: 'لاگ اِن',
-    apply: 'درخواست دیں',
-
     subtitle: 'میرج بیورو نیٹ ورک',
-    badge: 'تصدیق شدہ میرج بیورو نیٹ ورک',
-    heroTitle: 'پیشہ ور میرج بیوروز کے لیے قابلِ اعتماد ڈیجیٹل نیٹ ورک',
-    heroText:
-      'MBN Pakistan تصدیق شدہ میرج بیوروز کو پروفائلز اپلوڈ کرنے، مناسب رشتے تلاش کرنے، پرائیویسی محفوظ رکھنے، اور رابطہ سرگرمی کو ایک منظم پلیٹ فارم میں مینیج کرنے میں مدد دیتا ہے۔',
-    applyMembership: 'رکنیت کے لیے درخواست دیں',
-    seeHow: 'طریقہ کار دیکھیں',
+    home: 'ہوم',
+    how: 'یہ کیسے کام کرتا ہے',
+    families: 'خاندانوں کے لیے',
+    bureaus: 'بیوروز کے لیے',
+    about: 'ہمارے بارے میں',
+    contact: 'رابطہ کریں',
+    bureauLogin: 'بیورو لاگ اِن',
+    submitProfile: 'اپنی پروفائل جمع کروائیں',
 
-    stat1: 'تصدیق شدہ بیوروز',
-    stat2: 'پرائیویٹ پروفائلز',
-    stat3: 'رابطہ لاگز',
-
-    visualTitle: 'بیورو نیٹ ورک',
-    visualText: 'محفوظ طریقے سے اپلوڈ، سرچ، رابطہ اور ٹریک کریں۔',
-
-    audienceTitle: 'ایک نیٹ ورک، آغاز کے دو طریقے',
-    audienceText:
-      'MBN Pakistan پیشہ ور میرج بیوروز کو آپس میں جوڑتا ہے اور عام افراد کو بھی اپنی پروفائل نجی طور پر جمع کروانے کی سہولت دیتا ہے۔',
-
-    bureauCardTitle: 'میرج بیوروز کے لیے',
-    bureauCardText:
-      'پیشہ ور بیورو نیٹ ورک میں شامل ہوں، پروفائلز اپلوڈ کریں، مناسب رشتے تلاش کریں، اور تصدیق شدہ بیوروز کے ساتھ محفوظ رابطہ کریں۔',
-    bureauCardButton: 'میرج بیورو کے طور پر درخواست دیں',
-
-    matchCardTitle: 'رشتہ تلاش کر رہے ہیں؟',
-    matchCardText:
+    familyTitle: 'زندگی کا ساتھی تلاش کر رہے ہیں؟',
+    familyText:
       'اپنی پروفائل نجی طور پر جمع کروائیں۔ ہماری ٹیم معلومات کا جائزہ لے گی اور مناسب صورت میں آپ کو کسی میچ میکر یا تصدیق شدہ میرج بیورو سے جوڑ سکتی ہے۔',
-    matchCardButton: 'اپنی پروفائل جمع کروائیں',
-    matchCardNote: 'نجی پروفائل سبمیشن • MBN Pakistan کی طرف سے جائزہ',
+    familyBullet1: 'نجی سبمیشن',
+    familyBullet2: 'شیئرنگ سے پہلے جائزہ',
+    familyBullet3: 'آپ کو پیش رفت سے آگاہ رکھا جائے گا',
 
-    sectionTitle: 'سنجیدہ میرج بیوروز کے لیے جدید ٹولز',
-    sectionText:
-      'واٹس ایپ چیٹس، نوٹ بکس اور اسپریڈ شیٹس کے بجائے MBN Pakistan بیوروز کو میچ میکنگ کام کے لیے ایک صاف اور پیشہ ور سسٹم دیتا ہے۔',
+    bureauTitle: 'اپنا میچ میکنگ نیٹ ورک بڑھائیں',
+    bureauText:
+      'تصدیق شدہ میرج بیوروز کے پیشہ ور نیٹ ورک میں شامل ہوں۔ پروفائلز اپلوڈ کریں، مناسب رشتے تلاش کریں اور کام کو محفوظ طریقے سے منظم کریں۔',
+    bureauBullet1: 'تصدیق شدہ نیٹ ورک میں شامل ہوں',
+    bureauBullet2: 'پروفائل اپلوڈ اور سرچ کریں',
+    bureauBullet3: 'کیسز اور فالو اپ مینیج کریں',
+    bureauBullet4: 'پیشہ ورانہ انداز میں کام کریں',
+    applyBureau: 'بیورو کے طور پر درخواست دیں',
+    memberLogin: 'پہلے سے ممبر ہیں؟ لاگ اِن کریں',
 
-    card1Title: 'پروفائلز اپلوڈ کریں',
-    card1Text:
-      'دلہن اور دلہا کی پروفائلز فیملی، تعلیم، کیریئر اور رشتہ ضروریات کے ساتھ شامل کریں۔',
-
-    card2Title: 'رشتے تلاش کریں',
-    card2Text:
-      'جنس، شہر، صوبہ، ذات، تعلیم، پیشہ اور دیگر معلومات کے ذریعے مناسب پروفائلز تلاش کریں۔',
-
-    card3Title: 'پرائیویسی محفوظ رکھیں',
-    card3Text:
-      'رابطہ تفصیلات درخواست تک چھپی رہتی ہیں، تصاویر بلر یا ہائیڈ ہو سکتی ہیں، اور رابطہ ویوز ٹریک ہوتے ہیں۔',
+    trust1Title: 'پرائیویسی بنیادی اصول',
+    trust1Text: 'آپ کی معلومات محفوظ رکھی جاتی ہیں۔',
+    trust2Title: 'کارروائی سے پہلے جائزہ',
+    trust2Text: 'کسی بھی شیئرنگ سے پہلے ہر پروفائل دیکھی جاتی ہے۔',
+    trust3Title: 'پیشہ ور نیٹ ورک',
+    trust3Text: 'صرف تصدیق شدہ میرج بیوروز شامل ہو سکتے ہیں۔',
+    trust4Title: 'قابلِ نگرانی فالو اپ',
+    trust4Text: 'کیسز اور فالو اپ ریکارڈ اور مانیٹر ہوتے ہیں۔',
 
     howTitle: 'یہ کیسے کام کرتا ہے',
-    howText:
-      'قابلِ اعتماد بیورو ٹو بیورو میچ میکنگ کے لیے ایک آسان منظوری پر مبنی سسٹم۔',
-    step1Title: 'درخواست دیں',
-    step1Text: 'میرج بیوروز اپنی کاروباری اور رابطہ معلومات جمع کرواتے ہیں۔',
-    step2Title: 'منظوری حاصل کریں',
-    step2Text: 'ایڈمن قابلِ اعتماد بیورو درخواستوں کا جائزہ لے کر منظور کرتا ہے۔',
-    step3Title: 'اپلوڈ اور سرچ',
-    step3Text: 'منظور شدہ بیوروز پروفائلز اپلوڈ اور نیٹ ورک سرچ کرتے ہیں۔',
-    step4Title: 'محفوظ رابطہ',
-    step4Text: 'رابطہ تفصیلات صرف درخواست پر ظاہر ہوتی ہیں اور لاگ ہوتی ہیں۔',
+    familyJourneyTitle: 'افراد اور خاندانوں کے لیے',
+    familyJourneyText: 'درست رشتہ تلاش کرنے کے لیے سادہ اور نجی سفر۔',
+    familyStep1Title: 'پروفائل جمع کروائیں',
+    familyStep1Text: 'ذاتی، خاندانی، تعلیمی اور ترجیحی معلومات شیئر کریں۔',
+    familyStep2Title: 'MBN جائزہ لیتا ہے',
+    familyStep2Text: 'ہماری ٹیم سبمیشن دیکھتی ہے اور ضرورت پر رابطہ کر سکتی ہے۔',
+    familyStep3Title: 'پروفائل اسائنمنٹ',
+    familyStep3Text: 'پروفائل مناسب میچ میکر یا بیورو کو دی جا سکتی ہے۔',
+    familyStep4Title: 'فالو اپ اور پیش رفت',
+    familyStep4Text: 'متعلقہ ٹیم مناسب مواقع پر کام کرتی اور آپ کو آگاہ رکھتی ہے۔',
 
-    publicHowTitle: 'رشتہ تلاش کر رہے ہیں؟ نجی طور پر آغاز کریں',
-    publicHowText:
-      'اپنی پروفائل جمع کروانے کے لیے میرج بیورو ہونا ضروری نہیں۔ عام افراد اور خاندان بھی MBN Pakistan کو اپنی معلومات نجی طور پر بھیج سکتے ہیں۔',
-    publicStep1Title: 'پروفائل جمع کروائیں',
-    publicStep1Text:
-      'اپنی ذاتی، خاندانی، تعلیمی، پیشہ ورانہ اور رشتے کی ترجیحات کی معلومات مکمل کریں۔',
-    publicStep2Title: 'ایڈمن جائزہ',
-    publicStep2Text:
-      'MBN Pakistan کی ٹیم سبمیشن اور فراہم کردہ معلومات کا جائزہ لے گی۔',
-    publicStep3Title: 'پروفائل اسائنمنٹ',
-    publicStep3Text:
-      'آپ کی پروفائل مناسب میچ میکر یا تصدیق شدہ میرج بیورو کو اسائن کی جا سکتی ہے۔',
-    publicStep4Title: 'میچ میکنگ فالو اپ',
-    publicStep4Text:
-      'مناسب رشتے کی صورت میں متعلقہ ٹیم یا میچ میکر آپ سے رابطہ کر سکتا ہے۔',
+    bureauJourneyTitle: 'میرج بیوروز کے لیے',
+    bureauJourneyText: 'نیٹ ورک بڑھائیں اور میچ میکنگ کو پیشہ ورانہ طور پر منظم کریں۔',
+    bureauStep1Title: 'درخواست دیں',
+    bureauStep1Text: 'اپنی بیورو اور کاروباری معلومات جمع کروائیں۔',
+    bureauStep2Title: 'تصدیق حاصل کریں',
+    bureauStep2Text: 'ہماری ٹیم درخواست کا جائزہ لے کر نیٹ ورک رسائی دیتی ہے۔',
+    bureauStep3Title: 'اپلوڈ اور سرچ',
+    bureauStep3Text: 'پروفائلز اپلوڈ کریں اور نیٹ ورک میں محفوظ سرچ کریں۔',
+    bureauStep4Title: 'مینیج اور فالو اپ',
+    bureauStep4Text: 'کیسز پر کام کریں، فالو اپ ریکارڈ کریں اور میچز منظم کریں۔',
 
-    privacyTitle: 'ہر پروفائل میں پرائیویسی شامل ہے',
-    privacyText:
-      'پروفائل تصاویر اور رابطہ تفصیلات حساس ہوتی ہیں۔ MBN Pakistan بیوروز کو visibility control دیتا ہے اور ایڈمن کو contact activity دیکھنے کی سہولت دیتا ہے۔',
-    privacy1: 'پروفائل تصاویر پبلک، بلر یا ہِڈن ہو سکتی ہیں',
-    privacy2: 'رابطہ تفصیلات View Contact تک چھپی رہتی ہیں',
-    privacy3: 'ایڈمن دیکھ سکتا ہے کس نے کون سا رابطہ دیکھا',
+    whyTitle: 'MBN Pakistan کیوں؟',
+    why1Title: 'خاندانوں کے لیے',
+    why1Text: 'پروفائل جمع کروانے اور پیشہ ور میچ میکنگ سپورٹ حاصل کرنے کا محفوظ اور باوقار طریقہ۔',
+    why2Title: 'بیوروز کے لیے',
+    why2Text: 'وسیع پیشہ ور نیٹ ورک، بہتر ٹولز اور منظم پروفائل مینجمنٹ۔',
+    why3Title: 'پورے نیٹ ورک کے لیے',
+    why3Text: 'تمام کیسز میں واضح اسائنمنٹ، فالو اپ اور جواب دہی۔',
 
-    ctaTitle: 'MBN Pakistan میں شامل ہونے کے لیے تیار ہیں؟',
-    ctaText:
-      'میرج بیوروز نیٹ ورک رکنیت کے لیے درخواست دے سکتے ہیں جبکہ عام افراد میچ میکنگ جائزے کے لیے اپنی پروفائل نجی طور پر جمع کروا سکتے ہیں۔',
+    privacyTitle: 'آپ کی معلومات پرائیویسی کی مستحق ہیں',
+    privacyText: 'ہم آپ کی پرائیویسی کی اہمیت سمجھتے ہیں۔ MBN Pakistan ذاتی معلومات کے تحفظ کے لیے review-first workflow استعمال کرتا ہے۔',
+    privacy1: 'پروفائل جمع کروانے کا مطلب یہ نہیں کہ وہ خودکار طور پر پبلک ہو جائے گی۔',
+    privacy2: 'کسی بھی کارروائی سے پہلے ہر سبمیشن کا جائزہ لیا جاتا ہے۔',
+    privacy3: 'آپ کی پروفائل مناسب بیورو یا میچ میکر کو اسائن کی جا سکتی ہے۔',
+    privacy4: 'رابطہ معلومات صرف پلیٹ فارم ورک فلو کے مطابق شیئر ہوتی ہیں۔',
 
-    individualCta: 'اپنی پروفائل جمع کروائیں',
+    readyTitle: 'آغاز کے لیے تیار ہیں؟',
+    readyText: 'اپنے لیے درست راستہ منتخب کریں۔',
+    choice1Title: 'میں اپنی پروفائل جمع کروانا چاہتا/چاہتی ہوں',
+    choice1Text: 'سنجیدہ رشتے کے مواقع تلاش کرنے والے افراد اور خاندانوں کے لیے۔',
+    choice2Title: 'میں ایک میرج بیورو کی نمائندگی کرتا/کرتی ہوں',
+    choice2Text: 'آج ہی MBN Pakistan کے پیشہ ور نیٹ ورک میں شامل ہوں۔',
 
-    footerText:
-      'میرج بیوروز اور رشتہ تلاش کرنے والے افراد کے لیے ایک منظم، محفوظ اور پرائیویسی پر مبنی میچ میکنگ نیٹ ورک۔',
-    website: 'ویب سائٹ',
-    bureauAccess: 'بیورو رسائی',
-    publicAccess: 'عام افراد کے لیے',
-    submitProfile: 'پروفائل جمع کروائیں',
-    dashboard: 'ڈیش بورڈ',
+    footerText: 'افراد، خاندانوں اور پیشہ ور میرج بیوروز کے لیے قابلِ اعتماد اور پرائیویسی پر مبنی نیٹ ورک۔',
     rights: 'تمام حقوق محفوظ ہیں۔',
   },
 };
@@ -237,809 +203,360 @@ export default function HomePage() {
   const t = content[language];
 
   return (
-    <div dir={isUrdu ? 'rtl' : 'ltr'} className="min-h-screen bg-[#f3f8f4]">
-      {/* Header */}
-      <header className="bg-white/95 backdrop-blur border-b border-emerald-900/10 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
+    <div dir={isUrdu ? 'rtl' : 'ltr'} className="min-h-screen bg-white text-slate-950">
+      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-5 px-4 py-4 md:px-8">
           <Link href="/" className="flex items-center gap-3">
-            <img
-              src="/mbn-logo.png"
-              alt="MBN Pakistan"
-              className="w-12 h-12 object-contain"
-            />
-
-            <div>
-              <p className="font-heading font-bold text-slate-950">
-                MBN Pakistan
-              </p>
-              <p className="text-xs text-slate-500">{t.subtitle}</p>
+            <img src="/mbn-logo.png" alt="MBN Pakistan" className="h-12 w-12 object-contain" />
+            <div className="leading-tight">
+              <p className="font-heading text-xl font-bold tracking-[0.12em] text-[#063d25]">MBN</p>
+              <p className="text-xs font-bold tracking-[0.2em] text-[#063d25]">PAKISTAN</p>
+              <p className="mt-0.5 text-[10px] text-slate-500">{t.subtitle}</p>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
-            <Link href="/about" className="hover:text-[#137a4a]">
-              {t.navAbout}
-            </Link>
-
-            <Link href="/how-it-works" className="hover:text-[#137a4a]">
-              {t.navHow}
-            </Link>
-
-            <Link href="/contact" className="hover:text-[#137a4a]">
-              {t.navContact}
-            </Link>
+          <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-900 xl:flex">
+            <Link href="/" className="border-b-2 border-[#137a4a] pb-2 text-[#073b24]">{t.home}</Link>
+            <Link href="#how-it-works" className="hover:text-[#137a4a]">{t.how}</Link>
+            <Link href="#families" className="hover:text-[#137a4a]">{t.families}</Link>
+            <Link href="#bureaus" className="hover:text-[#137a4a]">{t.bureaus}</Link>
+            <Link href="/about" className="hover:text-[#137a4a]">{t.about}</Link>
+            <Link href="/contact" className="hover:text-[#137a4a]">{t.contact}</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <LanguageToggle language={language} setLanguage={setLanguage} />
-
             <Link
               href="/login"
-              className="hidden sm:inline-flex px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50"
+              className="hidden rounded-lg border border-[#0b5f38] px-5 py-2.5 text-sm font-bold text-[#073b24] hover:bg-green-50 sm:inline-flex"
             >
-              {t.login}
+              {t.bureauLogin}
             </Link>
-
             <Link
-              href="/register"
-              className="hidden sm:inline-flex px-4 py-2 rounded-lg bg-[#137a4a] text-white font-semibold hover:bg-[#0b5f38]"
+              href="/submit-profile"
+              className="rounded-lg bg-[#0b6e34] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#07582a]"
             >
-              {t.apply}
+              {t.submitProfile}
             </Link>
           </div>
         </div>
 
-        <div className="md:hidden bg-white border-t border-slate-100 px-4 py-3">
-          <div className="flex items-center justify-center gap-5 text-xs font-semibold text-slate-600">
-            <Link href="/about" className="hover:text-[#137a4a]">
-              {t.navAbout}
-            </Link>
-
-            <Link href="/how-it-works" className="hover:text-[#137a4a]">
-              {t.navHow}
-            </Link>
-
-            <Link href="/contact" className="hover:text-[#137a4a]">
-              {t.navContact}
-            </Link>
+        <div className="border-t border-slate-100 px-4 py-2 xl:hidden">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-center gap-5 overflow-x-auto whitespace-nowrap text-xs font-semibold text-slate-600">
+            <Link href="#how-it-works">{t.how}</Link>
+            <Link href="#families">{t.families}</Link>
+            <Link href="#bureaus">{t.bureaus}</Link>
+            <Link href="/about">{t.about}</Link>
+            <Link href="/contact">{t.contact}</Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
-        <div className="relative overflow-hidden rounded-[2.25rem] bg-[#137a4a] shadow-2xl">
-          <PatternLayer />
+      <main className="mx-auto max-w-[1440px] space-y-3 px-4 py-4 md:px-8 md:py-6">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div id="families" className="overflow-hidden rounded-[1.5rem] bg-[#fbf4e9] shadow-sm">
+            <div className="grid min-h-[370px] grid-cols-1 md:grid-cols-[1.03fr_0.97fr]">
+              <div className="relative z-10 flex flex-col justify-center p-7 md:p-9 lg:p-10">
+                <h1 className="font-heading text-4xl font-bold leading-[1.05] text-[#073b24] md:text-5xl">
+                  {t.familyTitle}
+                </h1>
+                <p className="mt-4 max-w-md text-[15px] leading-7 text-slate-800">{t.familyText}</p>
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] min-h-[620px]">
-            <div className="p-8 md:p-14 lg:p-16 flex flex-col justify-center">
-              <span className="inline-flex w-fit items-center gap-2 px-4 py-2 rounded-full bg-white/12 border border-white/20 text-white text-sm font-semibold">
-                <ShieldCheck className="w-4 h-4" />
-                {t.badge}
-              </span>
-
-              <h1 className="font-heading text-4xl md:text-6xl font-bold mt-7 leading-tight text-white max-w-4xl">
-                {t.heroTitle}
-              </h1>
-
-              <p className="text-green-50/95 text-lg mt-6 leading-relaxed max-w-2xl">
-                {t.heroText}
-              </p>
-
-              <div className="mt-9 flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#137a4a] font-bold hover:bg-green-50"
-                >
-                  {t.applyMembership}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                <div className="mt-5 space-y-2.5">
+                  <HeroBullet text={t.familyBullet1} />
+                  <HeroBullet text={t.familyBullet2} />
+                  <HeroBullet text={t.familyBullet3} />
+                </div>
 
                 <Link
                   href="/submit-profile"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#0b5f38] border border-white/25 text-white font-bold hover:bg-[#084b2d]"
+                  className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
                 >
-                  <HeartHandshake className="w-4 h-4" />
-                  {t.individualCta}
+                  {t.submitProfile}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
-                <MiniStat title={t.stat1} />
-                <MiniStat title={t.stat2} />
-                <MiniStat title={t.stat3} />
+              <div className="relative min-h-[300px] md:min-h-full">
+                <img
+                  src="/mbn-family-hero.png"
+                  alt="Family reviewing a marriage profile"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                />
+                <div className={`absolute inset-0 ${isUrdu ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-[#fbf4e9] via-[#fbf4e9]/20 to-transparent md:block`} />
               </div>
             </div>
-
-            <HeroGraphic
-              visualTitle={t.visualTitle}
-              visualText={t.visualText}
-              isUrdu={isUrdu}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Audience Choice */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-14">
-        <div className="text-center max-w-3xl mx-auto">
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-[#137a4a]">
-            <Network className="w-4 h-4" />
-            MBN Pakistan
-          </span>
-
-          <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-4">
-            {t.audienceTitle}
-          </h2>
-
-          <p className="text-slate-600 mt-4 text-lg leading-relaxed">
-            {t.audienceText}
-          </p>
-        </div>
-
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AudienceCard
-            icon={<Building2 className="w-8 h-8" />}
-            eyebrow={isUrdu ? 'پیشہ ور نیٹ ورک' : 'Professional Network'}
-            title={t.bureauCardTitle}
-            text={t.bureauCardText}
-            buttonText={t.bureauCardButton}
-            href="/register"
-            variant="light"
-          />
-
-          <AudienceCard
-            icon={<HeartHandshake className="w-8 h-8" />}
-            eyebrow={isUrdu ? 'نجی میچ میکنگ' : 'Private Matchmaking'}
-            title={t.matchCardTitle}
-            text={t.matchCardText}
-            buttonText={t.matchCardButton}
-            href="/submit-profile"
-            note={t.matchCardNote}
-            variant="green"
-          />
-        </div>
-      </section>
-
-      {/* Feature Intro */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 py-14 md:py-18">
-        <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-10 items-start">
-          <div>
-            <span className="inline-flex items-center gap-2 text-sm font-bold text-[#137a4a]">
-              <Sparkles className="w-4 h-4" />
-              MBN Pakistan
-            </span>
-
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-4 leading-tight">
-              {t.sectionTitle}
-            </h2>
-
-            <p className="text-slate-600 mt-5 text-lg leading-relaxed">
-              {t.sectionText}
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <FeatureCard
-              icon={<Building2 className="w-7 h-7 text-[#137a4a]" />}
-              title={t.card1Title}
-              text={t.card1Text}
-            />
+          <div id="bureaus" className="overflow-hidden rounded-[1.5rem] bg-[#063f2a] text-white shadow-sm">
+            <div className="grid min-h-[370px] grid-cols-1 md:grid-cols-[1.02fr_0.98fr]">
+              <div className="relative z-10 flex flex-col justify-center p-7 md:p-9 lg:p-10">
+                <h2 className="font-heading text-4xl font-bold leading-[1.05] md:text-5xl">{t.bureauTitle}</h2>
+                <p className="mt-4 max-w-md text-[15px] leading-7 text-green-50/95">{t.bureauText}</p>
 
-            <FeatureCard
-              icon={<Search className="w-7 h-7 text-[#137a4a]" />}
-              title={t.card2Title}
-              text={t.card2Text}
-            />
+                <div className="mt-5 space-y-2.5">
+                  <HeroBullet text={t.bureauBullet1} light />
+                  <HeroBullet text={t.bureauBullet2} light />
+                  <HeroBullet text={t.bureauBullet3} light />
+                  <HeroBullet text={t.bureauBullet4} light />
+                </div>
 
-            <FeatureCard
-              icon={<Lock className="w-7 h-7 text-[#137a4a]" />}
-              title={t.card3Title}
-              text={t.card3Text}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Bureau How it Works */}
-      <section className="bg-white border-y border-emerald-900/10">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950">
-              {t.howTitle}
-            </h2>
-
-            <p className="text-slate-600 mt-4 text-lg leading-relaxed">
-              {t.howText}
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-5">
-            <ProcessCard
-              number="01"
-              icon={<FileText className="w-6 h-6" />}
-              title={t.step1Title}
-              text={t.step1Text}
-            />
-
-            <ProcessCard
-              number="02"
-              icon={<ShieldCheck className="w-6 h-6" />}
-              title={t.step2Title}
-              text={t.step2Text}
-            />
-
-            <ProcessCard
-              number="03"
-              icon={<Upload className="w-6 h-6" />}
-              title={t.step3Title}
-              text={t.step3Text}
-            />
-
-            <ProcessCard
-              number="04"
-              icon={<Eye className="w-6 h-6" />}
-              title={t.step4Title}
-              text={t.step4Text}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Individual Workflow */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-        <div className="relative overflow-hidden rounded-[2.25rem] bg-[#ecf7ef] border border-emerald-900/10 p-8 md:p-12">
-          <div className="absolute -right-20 -top-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl" />
-          <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl" />
-
-          <div className="relative text-center max-w-3xl mx-auto">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-emerald-900/10 text-[#137a4a] text-sm font-bold">
-              <UserRoundSearch className="w-4 h-4" />
-              {t.matchCardTitle}
-            </span>
-
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-5">
-              {t.publicHowTitle}
-            </h2>
-
-            <p className="text-slate-600 mt-4 text-lg leading-relaxed">
-              {t.publicHowText}
-            </p>
-          </div>
-
-          <div className="relative mt-12 grid grid-cols-1 md:grid-cols-4 gap-5">
-            <PublicProcessCard
-              number="01"
-              icon={<ClipboardList className="w-6 h-6" />}
-              title={t.publicStep1Title}
-              text={t.publicStep1Text}
-            />
-
-            <PublicProcessCard
-              number="02"
-              icon={<ShieldCheck className="w-6 h-6" />}
-              title={t.publicStep2Title}
-              text={t.publicStep2Text}
-            />
-
-            <PublicProcessCard
-              number="03"
-              icon={<Building2 className="w-6 h-6" />}
-              title={t.publicStep3Title}
-              text={t.publicStep3Text}
-            />
-
-            <PublicProcessCard
-              number="04"
-              icon={<HeartHandshake className="w-6 h-6" />}
-              title={t.publicStep4Title}
-              text={t.publicStep4Text}
-            />
-          </div>
-
-          <div className="relative mt-10 text-center">
-            <Link
-              href="/submit-profile"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#137a4a] text-white font-bold hover:bg-[#0b5f38]"
-            >
-              {t.matchCardButton}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Privacy */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#0b5f38] text-white p-8 md:p-12">
-          <div className="absolute inset-0 opacity-20">
-            <PatternLayer />
-          </div>
-
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm font-bold">
-                <Lock className="w-4 h-4" />
-                Privacy System
-              </span>
-
-              <h2 className="font-heading text-3xl md:text-5xl font-bold mt-5 leading-tight">
-                {t.privacyTitle}
-              </h2>
-
-              <p className="text-green-50/90 mt-5 text-lg leading-relaxed">
-                {t.privacyText}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <PrivacyRow text={t.privacy1} />
-              <PrivacyRow text={t.privacy2} />
-              <PrivacyRow text={t.privacy3} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
-        <div className="rounded-[2rem] bg-white border border-emerald-900/10 p-8 md:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 shadow-sm">
-          <div>
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-slate-950">
-              {t.ctaTitle}
-            </h2>
-
-            <p className="text-slate-600 mt-3 max-w-2xl leading-relaxed">
-              {t.ctaText}
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/register"
-              className="inline-flex justify-center px-7 py-3.5 rounded-xl bg-[#137a4a] text-white font-bold hover:bg-[#0b5f38]"
-            >
-              {t.applyMembership}
-            </Link>
-
-            <Link
-              href="/submit-profile"
-              className="inline-flex justify-center px-7 py-3.5 rounded-xl border border-[#137a4a] text-[#137a4a] font-bold hover:bg-green-50"
-            >
-              {t.individualCta}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#073b24] text-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/mbn-logo.png"
-                  alt="MBN Pakistan"
-                  className="w-12 h-12 object-contain bg-white rounded-lg p-1"
-                />
-
-                <div>
-                  <p className="font-heading font-bold text-white">
-                    MBN Pakistan
-                  </p>
-                  <p className="text-xs text-green-100/70">{t.subtitle}</p>
+                <div className="mt-6 flex flex-wrap items-center gap-4">
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center gap-3 rounded-lg bg-white px-6 py-3.5 text-sm font-bold text-[#073b24] hover:bg-green-50"
+                  >
+                    {t.applyBureau}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link href="/login" className="text-sm font-semibold text-white/90 underline-offset-4 hover:underline">
+                    {t.memberLogin}
+                  </Link>
                 </div>
               </div>
 
-              <p className="text-green-50/70 text-sm mt-5 max-w-md leading-relaxed">
-                {t.footerText}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-white mb-4">{t.website}</h3>
-
-              <div className="space-y-3 text-sm text-green-50/70">
-                <Link href="/about" className="block hover:text-white">
-                  {t.navAbout}
-                </Link>
-
-                <Link href="/how-it-works" className="block hover:text-white">
-                  {t.navHow}
-                </Link>
-
-                <Link href="/contact" className="block hover:text-white">
-                  {t.navContact}
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-white mb-4">{t.bureauAccess}</h3>
-
-              <div className="space-y-3 text-sm text-green-50/70">
-                <Link href="/login" className="block hover:text-white">
-                  {t.login}
-                </Link>
-
-                <Link href="/register" className="block hover:text-white">
-                  {t.applyMembership}
-                </Link>
-
-                <Link href="/dashboard" className="block hover:text-white">
-                  {t.dashboard}
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-white mb-4">{t.publicAccess}</h3>
-
-              <div className="space-y-3 text-sm text-green-50/70">
-                <Link href="/submit-profile" className="block hover:text-white">
-                  {t.submitProfile}
-                </Link>
-
-                <Link href="/contact" className="block hover:text-white">
-                  {t.navContact}
-                </Link>
+              <div className="relative min-h-[300px] md:min-h-full">
+                <img
+                  src="/mbn-bureau-dashboard.png"
+                  alt="MBN bureau dashboard"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                />
+                <div className={`absolute inset-0 ${isUrdu ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-[#063f2a] via-[#063f2a]/50 to-transparent`} />
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="border-t border-white/10 mt-10 pt-6">
-            <p className="text-sm text-green-50/60">
-              © {new Date().getFullYear()} MBN Pakistan. {t.rights}
-            </p>
+        <section className="grid overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+          <TrustItem icon={<Lock className="h-8 w-8" />} title={t.trust1Title} text={t.trust1Text} />
+          <TrustItem icon={<UserCheck className="h-8 w-8" />} title={t.trust2Title} text={t.trust2Text} />
+          <TrustItem icon={<Network className="h-8 w-8" />} title={t.trust3Title} text={t.trust3Text} />
+          <TrustItem icon={<Clock className="h-8 w-8" />} title={t.trust4Title} text={t.trust4Text} />
+        </section>
+
+        <section id="how-it-works" className="rounded-2xl bg-gradient-to-b from-[#f7fbf8] to-white px-5 py-5 md:px-7 md:py-6">
+          <div className="text-center">
+            <h2 className="font-heading text-3xl font-bold text-[#073b24] md:text-4xl">{t.howTitle}</h2>
+            <div className="mx-auto mt-2 h-0.5 w-10 bg-[#137a4a]" />
           </div>
+
+          <div className="mt-1 grid grid-cols-1 lg:grid-cols-2">
+            <JourneyBlock
+              title={t.familyJourneyTitle}
+              subtitle={t.familyJourneyText}
+              steps={[
+                { icon: <ClipboardList className="h-7 w-7" />, title: t.familyStep1Title, text: t.familyStep1Text },
+                { icon: <ShieldCheck className="h-7 w-7" />, title: t.familyStep2Title, text: t.familyStep2Text },
+                { icon: <Users className="h-7 w-7" />, title: t.familyStep3Title, text: t.familyStep3Text },
+                { icon: <Clock className="h-7 w-7" />, title: t.familyStep4Title, text: t.familyStep4Text },
+              ]}
+              accent="green"
+            />
+
+            <JourneyBlock
+              title={t.bureauJourneyTitle}
+              subtitle={t.bureauJourneyText}
+              steps={[
+                { icon: <ClipboardList className="h-7 w-7" />, title: t.bureauStep1Title, text: t.bureauStep1Text },
+                { icon: <ShieldCheck className="h-7 w-7" />, title: t.bureauStep2Title, text: t.bureauStep2Text },
+                { icon: <Upload className="h-7 w-7" />, title: t.bureauStep3Title, text: t.bureauStep3Text },
+                { icon: <Network className="h-7 w-7" />, title: t.bureauStep4Title, text: t.bureauStep4Text },
+              ]}
+              accent="dark"
+              separated
+            />
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-[#f4faf5] px-6 py-5 md:px-8">
+          <h2 className="text-center font-heading text-3xl font-bold text-[#073b24]">{t.whyTitle}</h2>
+          <div className="mt-4 grid grid-cols-1 divide-y divide-emerald-900/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <Pillar icon={<Users className="h-7 w-7" />} title={t.why1Title} text={t.why1Text} />
+            <Pillar icon={<Building2 className="h-7 w-7" />} title={t.why2Title} text={t.why2Text} />
+            <Pillar icon={<Network className="h-7 w-7" />} title={t.why3Title} text={t.why3Text} />
+          </div>
+        </section>
+
+        <section className="grid items-center gap-7 rounded-2xl border border-slate-100 bg-white px-6 py-6 shadow-sm lg:grid-cols-[0.9fr_1.1fr] md:px-10">
+          <div className="flex items-start gap-5">
+            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[1.5rem] bg-green-50 text-[#137a4a]">
+              <ShieldCheck className="h-11 w-11" />
+            </div>
+            <div>
+              <h2 className="font-heading text-3xl font-bold text-[#073b24]">{t.privacyTitle}</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{t.privacyText}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
+            <PrivacyBullet text={t.privacy1} />
+            <PrivacyBullet text={t.privacy3} />
+            <PrivacyBullet text={t.privacy2} />
+            <PrivacyBullet text={t.privacy4} />
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-gradient-to-r from-[#073f46] via-[#0b5f38] to-[#168135] px-5 py-3 text-white md:px-7">
+          <div className="grid items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
+            <FinalChoice
+              icon={<Users className="h-6 w-6" />}
+              title={t.choice1Title}
+              text={t.choice1Text}
+              button={t.submitProfile}
+              href="/submit-profile"
+            />
+
+            <div className="text-center px-2">
+              <h2 className="font-heading text-3xl font-bold">{t.readyTitle}</h2>
+              <p className="mt-1 text-sm text-green-50/90">{t.readyText}</p>
+              <div className="mx-auto mt-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-xs font-bold text-[#073b24]">OR</div>
+            </div>
+
+            <FinalChoice
+              icon={<Building2 className="h-6 w-6" />}
+              title={t.choice2Title}
+              text={t.choice2Text}
+              button={t.applyBureau}
+              href="/register"
+            />
+          </div>
+        </section>
+      </main>
+
+      <footer className="mt-6 bg-[#073b24] text-white">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-4 py-8 md:flex-row md:items-center md:justify-between md:px-8">
+          <div className="flex items-center gap-3">
+            <img src="/mbn-logo.png" alt="MBN Pakistan" className="h-11 w-11 rounded-lg bg-white p-1 object-contain" />
+            <div>
+              <p className="font-heading font-bold">MBN Pakistan</p>
+              <p className="mt-1 max-w-xl text-xs text-green-50/70">{t.footerText}</p>
+            </div>
+          </div>
+          <p className="text-xs text-green-50/60">© {new Date().getFullYear()} MBN Pakistan. {t.rights}</p>
         </div>
       </footer>
     </div>
   );
 }
 
-function PatternLayer() {
+function HeroBullet({ text, light = false }: { text: string; light?: boolean }) {
   return (
-    <div
-      className="absolute inset-0"
-      style={{
-        backgroundImage: `
-          radial-gradient(circle at 18% 20%, rgba(255,255,255,0.22) 0 2px, transparent 2px),
-          radial-gradient(circle at 82% 28%, rgba(255,255,255,0.15) 0 2px, transparent 2px),
-          radial-gradient(circle at 55% 78%, rgba(255,255,255,0.16) 0 2px, transparent 2px),
-          linear-gradient(135deg, rgba(255,255,255,0.16) 0%, transparent 32%),
-          linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 52%)
-        `,
-        backgroundSize:
-          '120px 120px, 150px 150px, 180px 180px, 100% 100%, 34px 34px',
-      }}
-    />
-  );
-}
-
-function MiniStat({ title }: { title: string }) {
-  return (
-    <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-4">
-      <CheckCircle className="w-5 h-5 text-green-100 mb-2" />
-      <p className="font-semibold text-white text-sm">{title}</p>
+    <div className={`flex items-center gap-3 text-sm font-medium ${light ? 'text-white' : 'text-slate-800'}`}>
+      <CheckCircle className={`h-4 w-4 flex-shrink-0 ${light ? 'text-green-300' : 'text-[#159447]'}`} />
+      <span>{text}</span>
     </div>
   );
 }
 
-function AudienceCard({
+function TrustItem({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <div className="flex items-center gap-4 px-6 py-4 lg:border-e lg:border-slate-100 last:border-e-0">
+      <div className="text-[#137a4a]">{icon}</div>
+      <div>
+        <h3 className="text-sm font-bold text-slate-950">{title}</h3>
+        <p className="mt-0.5 text-xs leading-5 text-slate-600">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+type JourneyStep = { icon: ReactNode; title: string; text: string };
+
+function JourneyBlock({
+  title,
+  subtitle,
+  steps,
+  accent,
+  separated = false,
+}: {
+  title: string;
+  subtitle: string;
+  steps: JourneyStep[];
+  accent: 'green' | 'dark';
+  separated?: boolean;
+}) {
+  const isGreen = accent === 'green';
+
+  return (
+    <div className={`px-1 py-3 md:px-5 ${separated ? 'lg:border-s lg:border-slate-200' : ''}`}>
+      <div className="text-center">
+        <h3 className={`text-xl font-bold ${isGreen ? 'text-[#12803d]' : 'text-[#073b24]'}`}>{title}</h3>
+        <p className="mt-1 text-xs text-slate-600">{subtitle}</p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {steps.map((step, index) => (
+          <div key={step.title} className="relative text-center">
+            <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-xl border border-emerald-900/10 bg-white text-[#073b24] shadow-sm">
+              {step.icon}
+              <span className="absolute -top-3 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-[#0b5f38] text-xs font-bold text-white">
+                {index + 1}
+              </span>
+            </div>
+
+            <h4 className="mt-3 text-xs font-bold text-slate-950 md:text-sm">{step.title}</h4>
+            <p className="mt-2 text-[11px] leading-4 text-slate-600">{step.text}</p>
+
+            {index < steps.length - 1 && (
+              <ArrowRight className="absolute -end-3 top-7 hidden h-4 w-4 text-[#72bf7e] md:block" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Pillar({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <div className="flex items-center gap-5 px-5 py-4">
+      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#138140] to-[#075b2b] text-white shadow-sm">
+        {icon}
+      </div>
+      <div>
+        <h3 className="font-bold text-[#073b24]">{title}</h3>
+        <p className="mt-1 text-xs leading-5 text-slate-600">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyBullet({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-2.5 text-sm text-slate-700">
+      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#159447]" />
+      <span className="leading-5">{text}</span>
+    </div>
+  );
+}
+
+function FinalChoice({
   icon,
-  eyebrow,
   title,
   text,
-  buttonText,
+  button,
   href,
-  note,
-  variant,
 }: {
   icon: ReactNode;
-  eyebrow: string;
   title: string;
   text: string;
-  buttonText: string;
+  button: string;
   href: string;
-  note?: string;
-  variant: 'light' | 'green';
-}) {
-  const isGreen = variant === 'green';
-
-  return (
-    <div
-      className={`relative overflow-hidden rounded-[2rem] p-8 md:p-10 ${
-        isGreen
-          ? 'bg-[#137a4a] text-white shadow-xl'
-          : 'bg-white border border-emerald-900/10 text-slate-950 shadow-sm'
-      }`}
-    >
-      {isGreen && (
-        <div className="absolute inset-0 opacity-20">
-          <PatternLayer />
-        </div>
-      )}
-
-      <div className="relative">
-        <div
-          className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-            isGreen
-              ? 'bg-white/10 border border-white/15 text-white'
-              : 'bg-green-50 text-[#137a4a]'
-          }`}
-        >
-          {icon}
-        </div>
-
-        <p
-          className={`text-sm font-bold mt-6 ${
-            isGreen ? 'text-green-100' : 'text-[#137a4a]'
-          }`}
-        >
-          {eyebrow}
-        </p>
-
-        <h3 className="font-heading text-3xl font-bold mt-2">{title}</h3>
-
-        <p
-          className={`mt-4 leading-relaxed ${
-            isGreen ? 'text-green-50/90' : 'text-slate-600'
-          }`}
-        >
-          {text}
-        </p>
-
-        <Link
-          href={href}
-          className={`mt-7 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold ${
-            isGreen
-              ? 'bg-white text-[#137a4a] hover:bg-green-50'
-              : 'bg-[#137a4a] text-white hover:bg-[#0b5f38]'
-          }`}
-        >
-          {buttonText}
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-
-        {note && (
-          <p
-            className={`text-xs mt-4 ${
-              isGreen ? 'text-green-100/80' : 'text-slate-400'
-            }`}
-          >
-            {note}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function HeroGraphic({
-  visualTitle,
-  visualText,
-  isUrdu,
-}: {
-  visualTitle: string;
-  visualText: string;
-  isUrdu: boolean;
-}) {
-  const stats = isUrdu
-    ? [
-        {
-          value: '5,000+',
-          label: 'رجسٹرڈ بیوروز',
-          text: 'پاکستان اور اوورسیز کمیونٹی کے لیے نیٹ ورک',
-        },
-        {
-          value: '10,000+',
-          label: 'پروفائلز',
-          text: 'دلہن اور دلہا کی منظم پروفائل لسٹنگ',
-        },
-        {
-          value: '25,000+',
-          label: 'رابطہ ویوز',
-          text: 'محفوظ اور ٹریک شدہ رابطہ سرگرمی',
-        },
-        {
-          value: '100+',
-          label: 'شہر اور علاقے',
-          text: 'ملک بھر میں بیورو نیٹ ورک کوریج',
-        },
-      ]
-    : [
-        {
-          value: '5,000+',
-          label: 'Registered Bureaus',
-          text: 'A growing network across Pakistan and overseas communities.',
-        },
-        {
-          value: '10,000+',
-          label: 'Profile Listings',
-          text: 'Bride and groom profiles organized in one professional system.',
-        },
-        {
-          value: '25,000+',
-          label: 'Contact Views',
-          text: 'Securely tracked contact reveal activity across the network.',
-        },
-        {
-          value: '100+',
-          label: 'Cities & Areas',
-          text: 'Bureau coverage across major cities, regions, and communities.',
-        },
-      ];
-
-  return (
-    <div className="relative p-8 md:p-12 flex items-center justify-center bg-[#0b5f38]/55">
-      <div className="absolute inset-0 opacity-30">
-        <PatternLayer />
-      </div>
-
-      <div className="relative w-full max-w-md">
-        <div className="absolute -top-8 -left-8 w-28 h-28 rounded-full bg-white/10 blur-xl" />
-        <div className="absolute -bottom-10 -right-8 w-36 h-36 rounded-full bg-emerald-200/20 blur-2xl" />
-
-        <div className="relative bg-white rounded-[2rem] p-6 shadow-2xl border border-white/40">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              <p className="font-heading text-2xl font-bold text-slate-950">
-                {isUrdu ? 'نیٹ ورک اعداد و شمار' : 'Network at a Glance'}
-              </p>
-
-              <p className="text-sm text-slate-500 mt-1">
-                {isUrdu
-                  ? 'پیشہ ور میرج بیوروز کے لیے ایک بڑھتا ہوا ڈیجیٹل نیٹ ورک'
-                  : 'A growing digital network for professional marriage bureaus.'}
-              </p>
-            </div>
-
-            <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
-              <Network className="w-6 h-6 text-[#137a4a]" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {stats.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-3xl font-bold text-[#137a4a]">
-                      {item.value}
-                    </p>
-
-                    <p className="font-bold text-slate-950 mt-1">
-                      {item.label}
-                    </p>
-
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      {item.text}
-                    </p>
-                  </div>
-
-                  <CheckCircle className="w-5 h-5 text-[#137a4a] flex-shrink-0 mt-1" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-2xl bg-[#137a4a] text-white p-5">
-            <p className="font-heading text-xl font-bold">
-              {isUrdu
-                ? 'ایک پلیٹ فارم، مکمل بیورو کنٹرول'
-                : 'One platform. Complete bureau control.'}
-            </p>
-
-            <p className="text-sm text-green-50/90 mt-2 leading-relaxed">
-              {isUrdu
-                ? 'پروفائل اپلوڈ، سرچ، پرائیویسی اور رابطہ لاگز سب ایک جگہ۔'
-                : 'Upload profiles, search matches, manage privacy, and track contact views in one place.'}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  text,
-}: {
-  icon: ReactNode;
-  title: string;
-  text: string;
 }) {
   return (
-    <div className="bg-white border border-emerald-900/10 rounded-3xl p-7 shadow-sm hover:shadow-md transition">
-      <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mb-6">
-        {icon}
+    <div className="flex items-center gap-4 rounded-2xl bg-white px-5 py-3 text-slate-950 shadow-sm">
+      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#0b6e34] text-white">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <h3 className="font-bold text-[#073b24]">{title}</h3>
+        <p className="mt-1 text-xs text-slate-600">{text}</p>
       </div>
-
-      <h3 className="font-heading text-xl font-bold text-slate-950">
-        {title}
-      </h3>
-
-      <p className="text-sm text-slate-600 mt-3 leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function ProcessCard({
-  number,
-  icon,
-  title,
-  text,
-}: {
-  number: string;
-  icon: ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="relative bg-[#f3f8f4] border border-emerald-900/10 rounded-3xl p-6 overflow-hidden">
-      <div className="absolute right-5 top-4 text-5xl font-bold text-emerald-900/5">
-        {number}
-      </div>
-
-      <div className="relative w-14 h-14 rounded-2xl bg-white border border-emerald-900/10 flex items-center justify-center text-[#137a4a] mb-5">
-        {icon}
-      </div>
-
-      <h3 className="relative font-heading text-lg font-bold text-slate-950">
-        {title}
-      </h3>
-
-      <p className="relative text-sm text-slate-600 mt-3 leading-relaxed">
-        {text}
-      </p>
-    </div>
-  );
-}
-
-function PublicProcessCard({
-  number,
-  icon,
-  title,
-  text,
-}: {
-  number: string;
-  icon: ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="relative bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-sm overflow-hidden">
-      <div className="absolute right-5 top-4 text-5xl font-bold text-[#137a4a]/5">
-        {number}
-      </div>
-
-      <div className="relative w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-[#137a4a] mb-5">
-        {icon}
-      </div>
-
-      <h3 className="relative font-heading text-lg font-bold text-slate-950">
-        {title}
-      </h3>
-
-      <p className="relative text-sm text-slate-600 mt-3 leading-relaxed">
-        {text}
-      </p>
-    </div>
-  );
-}
-
-function PrivacyRow({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/10 border border-white/15 p-5">
-      <CheckCircle className="w-5 h-5 text-green-100 flex-shrink-0" />
-      <p className="font-semibold text-white">{text}</p>
+      <Link
+        href={href}
+        className="hidden flex-shrink-0 items-center gap-2 rounded-lg bg-[#0b6e34] px-4 py-2 text-xs font-bold text-white hover:bg-[#07582a] sm:inline-flex"
+      >
+        {button}
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   );
 }
