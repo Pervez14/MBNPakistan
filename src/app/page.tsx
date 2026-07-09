@@ -31,7 +31,6 @@ const content = {
     contact: 'Contact Us',
     bureauLogin: 'Bureau Login',
     submitProfile: 'Submit Your Profile',
-    joinNetwork: 'Join the Network',
 
     familyTitle: 'Looking for a Life Partner?',
     familyText:
@@ -40,9 +39,9 @@ const content = {
     familyBullet2: 'Reviewed before sharing',
     familyBullet3: 'You stay informed',
 
-    bureauTitle: "Pakistan's Professional Network for Marriage Bureaus",
+    bureauTitle: 'Grow Your Matchmaking Network',
     bureauText:
-      'Grow your network, find better matches, and manage cases professionally with a secure platform built for verified marriage bureaus.',
+      'Join a professional network of verified marriage bureaus. Upload profiles, search suitable matches and manage matchmaking activity securely.',
     bureauBullet1: 'Join a verified network',
     bureauBullet2: 'Upload & search profiles',
     bureauBullet3: 'Manage cases & follow-ups',
@@ -122,7 +121,6 @@ const content = {
     contact: 'رابطہ کریں',
     bureauLogin: 'بیورو لاگ اِن',
     submitProfile: 'اپنی پروفائل جمع کروائیں',
-    joinNetwork: 'نیٹ ورک میں شامل ہوں',
 
     familyTitle: 'زندگی کا ساتھی تلاش کر رہے ہیں؟',
     familyText:
@@ -131,9 +129,9 @@ const content = {
     familyBullet2: 'شیئرنگ سے پہلے جائزہ',
     familyBullet3: 'آپ کو پیش رفت سے آگاہ رکھا جائے گا',
 
-    bureauTitle: 'میرج بیوروز کے لیے پاکستان کا پیشہ ور نیٹ ورک',
+    bureauTitle: 'اپنا میچ میکنگ نیٹ ورک بڑھائیں',
     bureauText:
-      'اپنا نیٹ ورک بڑھائیں، بہتر رشتے تلاش کریں، اور تصدیق شدہ میرج بیوروز کے لیے بنائے گئے محفوظ پلیٹ فارم پر کیسز کو پیشہ ورانہ انداز میں منظم کریں۔',
+      'تصدیق شدہ میرج بیوروز کے پیشہ ور نیٹ ورک میں شامل ہوں۔ پروفائلز اپلوڈ کریں، مناسب رشتے تلاش کریں اور کام کو محفوظ طریقے سے منظم کریں۔',
     bureauBullet1: 'تصدیق شدہ نیٹ ورک میں شامل ہوں',
     bureauBullet2: 'پروفائل اپلوڈ اور سرچ کریں',
     bureauBullet3: 'کیسز اور فالو اپ مینیج کریں',
@@ -220,34 +218,25 @@ export default function HomePage() {
           <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-900 xl:flex">
             <Link href="/" className="border-b-2 border-[#137a4a] pb-2 text-[#073b24]">{t.home}</Link>
             <Link href="#how-it-works" className="hover:text-[#137a4a]">{t.how}</Link>
-            <Link href="#bureaus" className="hover:text-[#137a4a]">{t.bureaus}</Link>
             <Link href="#families" className="hover:text-[#137a4a]">{t.families}</Link>
+            <Link href="#bureaus" className="hover:text-[#137a4a]">{t.bureaus}</Link>
             <Link href="/about" className="hover:text-[#137a4a]">{t.about}</Link>
             <Link href="/contact" className="hover:text-[#137a4a]">{t.contact}</Link>
           </nav>
 
           <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3">
             <LanguageToggle language={language} setLanguage={setLanguage} />
-
-            <Link
-              href="/submit-profile"
-              className="hidden rounded-lg border border-[#0b5f38] px-4 py-2.5 text-sm font-bold text-[#073b24] hover:bg-green-50 md:inline-flex"
-            >
-              {t.submitProfile}
-            </Link>
-
             <Link
               href="/login"
-              className="hidden px-2 py-2.5 text-sm font-bold text-[#073b24] hover:text-[#137a4a] sm:inline-flex"
+              className="hidden rounded-lg border border-[#0b5f38] px-5 py-2.5 text-sm font-bold text-[#073b24] hover:bg-green-50 sm:inline-flex"
             >
               {t.bureauLogin}
             </Link>
-
             <Link
-              href="/register"
+              href="/submit-profile"
               className="rounded-lg bg-[#0b6e34] px-3 py-2.5 text-xs font-bold leading-tight text-white shadow-sm hover:bg-[#07582a] sm:px-5 sm:text-sm"
             >
-              {t.joinNetwork}
+              {t.submitProfile}
             </Link>
           </div>
         </div>
@@ -255,8 +244,8 @@ export default function HomePage() {
         <div className="border-t border-slate-100 py-2 xl:hidden">
           <div className="mx-auto flex max-w-[1440px] items-center justify-start gap-5 overflow-x-auto whitespace-nowrap px-4 text-xs font-semibold text-slate-600 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Link href="#how-it-works">{t.how}</Link>
-            <Link href="#bureaus">{t.bureaus}</Link>
             <Link href="#families">{t.families}</Link>
+            <Link href="#bureaus">{t.bureaus}</Link>
             <Link href="/about">{t.about}</Link>
             <Link href="/contact">{t.contact}</Link>
           </div>
@@ -264,21 +253,101 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] space-y-3 px-4 py-4 md:px-8 md:py-6">
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.62fr_1fr]">
-          {/* Primary Hero: Marriage Bureaus */}
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {/* Families Hero Card */}
+          <div
+            id="families"
+            className="overflow-hidden rounded-[1.5rem] bg-[#fbf4e9] shadow-sm lg:relative lg:min-h-[560px]"
+          >
+            {/* Mobile: text and image are deliberately separated */}
+            <div className="p-7 sm:p-8 lg:hidden">
+              <h1 className="font-heading text-4xl font-bold leading-[1.05] text-[#073b24] sm:text-5xl">
+                {t.familyTitle}
+              </h1>
+
+              <p className="mt-4 text-[15px] leading-7 text-slate-800">
+                {t.familyText}
+              </p>
+
+              <div className="mt-5 space-y-2.5">
+                <HeroBullet text={t.familyBullet1} />
+                <HeroBullet text={t.familyBullet2} />
+                <HeroBullet text={t.familyBullet3} />
+              </div>
+
+              <Link
+                href="/submit-profile"
+                className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
+              >
+                {t.submitProfile}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="relative h-[330px] sm:h-[400px] lg:hidden">
+              <img
+                src="/mbn-family-hero.png"
+                alt="Family reviewing a marriage profile"
+                className="absolute inset-0 h-full w-full object-cover object-[68%_42%]"
+              />
+            </div>
+
+            {/* Desktop: original blended card layout */}
+            <div className="hidden lg:block">
+              <img
+                src="/mbn-family-hero.png"
+                alt="Family reviewing a marriage profile"
+                className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
+                  isUrdu ? 'left-0' : 'right-0'
+                }`}
+              />
+
+              <div
+                className={`absolute inset-y-0 w-[32%] ${
+                  isUrdu
+                    ? 'left-[48%] bg-gradient-to-l'
+                    : 'right-[48%] bg-gradient-to-r'
+                } from-[#fbf4e9] via-[#fbf4e9]/85 to-transparent`}
+              />
+
+              <div className={`relative z-10 flex min-h-[560px] flex-col justify-center p-10 ${isUrdu ? 'mr-auto' : ''}`}>
+                <div className="max-w-[340px]">
+                  <h1 className="font-heading text-5xl font-bold leading-[1.05] text-[#073b24]">
+                    {t.familyTitle}
+                  </h1>
+
+                  <p className="mt-4 text-[15px] leading-7 text-slate-800">
+                    {t.familyText}
+                  </p>
+
+                  <div className="mt-5 space-y-2.5">
+                    <HeroBullet text={t.familyBullet1} />
+                    <HeroBullet text={t.familyBullet2} />
+                    <HeroBullet text={t.familyBullet3} />
+                  </div>
+
+                  <Link
+                    href="/submit-profile"
+                    className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
+                  >
+                    {t.submitProfile}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bureau Hero Card */}
           <div
             id="bureaus"
             className="overflow-hidden rounded-[1.5rem] bg-[#063f2a] text-white shadow-sm lg:relative lg:min-h-[560px]"
           >
-            {/* Mobile: text first, image separate */}
+            {/* Mobile: text and image are deliberately separated */}
             <div className="p-7 sm:p-8 lg:hidden">
-              <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-green-100">
-                {t.bureaus}
-              </span>
-
-              <h1 className="mt-4 font-heading text-4xl font-bold leading-[1.02] sm:text-5xl">
+              <h2 className="font-heading text-4xl font-bold leading-[1.05] sm:text-5xl">
                 {t.bureauTitle}
-              </h1>
+              </h2>
 
               <p className="mt-4 text-[15px] leading-7 text-green-50/95">
                 {t.bureauText}
@@ -309,7 +378,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative h-[320px] sm:h-[400px] lg:hidden">
+            <div className="relative h-[300px] sm:h-[380px] lg:hidden">
               <img
                 src="/mbn-bureau-dashboard.png"
                 alt="MBN bureau dashboard"
@@ -318,35 +387,31 @@ export default function HomePage() {
               <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#063f2a] to-transparent" />
             </div>
 
-            {/* Desktop: dominant wide bureau card */}
+            {/* Desktop: original blended card layout */}
             <div className="hidden lg:block">
               <img
                 src="/mbn-bureau-dashboard.png"
                 alt="MBN bureau dashboard"
-                className={`absolute inset-y-0 h-full w-[66%] object-cover object-center ${
+                className={`absolute inset-y-0 h-full w-[62%] object-cover object-bottom ${
                   isUrdu ? 'left-0' : 'right-0'
                 }`}
               />
 
               <div
-                className={`absolute inset-y-0 w-[38%] ${
+                className={`absolute inset-y-0 w-[34%] ${
                   isUrdu
                     ? 'left-[46%] bg-gradient-to-l'
                     : 'right-[46%] bg-gradient-to-r'
-                } from-[#063f2a] via-[#063f2a]/95 to-transparent`}
+                } from-[#063f2a] via-[#063f2a]/90 to-transparent`}
               />
 
-              <div className="relative z-10 flex min-h-[560px] flex-col justify-center p-10 xl:p-12">
-                <div className="max-w-[470px]">
-                  <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-green-100">
-                    {t.bureaus}
-                  </span>
-
-                  <h1 className="mt-4 font-heading text-5xl font-bold leading-[1.02] xl:text-[3.6rem]">
+              <div className="relative z-10 flex min-h-[560px] flex-col justify-center p-10">
+                <div className="max-w-[360px]">
+                  <h2 className="font-heading text-5xl font-bold leading-[1.05]">
                     {t.bureauTitle}
-                  </h1>
+                  </h2>
 
-                  <p className="mt-5 max-w-[430px] text-[15px] leading-7 text-green-50/95">
+                  <p className="mt-4 text-[15px] leading-7 text-green-50/95">
                     {t.bureauText}
                   </p>
 
@@ -357,7 +422,7 @@ export default function HomePage() {
                     <HeroBullet text={t.bureauBullet4} light />
                   </div>
 
-                  <div className="mt-7 flex flex-wrap items-center gap-4">
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
                     <Link
                       href="/register"
                       className="inline-flex items-center gap-3 rounded-lg bg-white px-6 py-3.5 text-sm font-bold text-[#073b24] hover:bg-green-50"
@@ -377,48 +442,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-
-          {/* Secondary Hero: Individuals & Families */}
-          <div
-            id="families"
-            className="overflow-hidden rounded-[1.5rem] bg-[#fbf4e9] shadow-sm"
-          >
-            <div className="p-7 sm:p-8 lg:p-8">
-              <span className="inline-flex rounded-full border border-emerald-900/10 bg-white/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#137a4a]">
-                {t.families}
-              </span>
-
-              <h2 className="mt-4 font-heading text-4xl font-bold leading-[1.05] text-[#073b24] lg:text-[2.75rem]">
-                {t.familyTitle}
-              </h2>
-
-              <p className="mt-4 text-[15px] leading-7 text-slate-800">
-                {t.familyText}
-              </p>
-
-              <div className="mt-5 space-y-2.5">
-                <HeroBullet text={t.familyBullet1} />
-                <HeroBullet text={t.familyBullet2} />
-                <HeroBullet text={t.familyBullet3} />
-              </div>
-
-              <Link
-                href="/submit-profile"
-                className="mt-6 inline-flex w-fit items-center gap-3 rounded-lg bg-[#0b7a36] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#075c29]"
-              >
-                {t.submitProfile}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="relative h-[320px] sm:h-[400px] lg:h-[250px]">
-              <img
-                src="/mbn-family-hero.png"
-                alt="Family reviewing a marriage profile"
-                className="absolute inset-0 h-full w-full object-cover object-[68%_38%]"
-              />
-            </div>
-          </div>
         </section>
 
         <section className="grid overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-4">
@@ -436,18 +459,6 @@ export default function HomePage() {
 
           <div className="mt-1 grid grid-cols-1 lg:grid-cols-2">
             <JourneyBlock
-              title={t.bureauJourneyTitle}
-              subtitle={t.bureauJourneyText}
-              steps={[
-                { icon: <ClipboardList className="h-7 w-7" />, title: t.bureauStep1Title, text: t.bureauStep1Text },
-                { icon: <ShieldCheck className="h-7 w-7" />, title: t.bureauStep2Title, text: t.bureauStep2Text },
-                { icon: <Upload className="h-7 w-7" />, title: t.bureauStep3Title, text: t.bureauStep3Text },
-                { icon: <Network className="h-7 w-7" />, title: t.bureauStep4Title, text: t.bureauStep4Text },
-              ]}
-              accent="dark"
-            />
-
-            <JourneyBlock
               title={t.familyJourneyTitle}
               subtitle={t.familyJourneyText}
               steps={[
@@ -457,6 +468,18 @@ export default function HomePage() {
                 { icon: <Clock className="h-7 w-7" />, title: t.familyStep4Title, text: t.familyStep4Text },
               ]}
               accent="green"
+            />
+
+            <JourneyBlock
+              title={t.bureauJourneyTitle}
+              subtitle={t.bureauJourneyText}
+              steps={[
+                { icon: <ClipboardList className="h-7 w-7" />, title: t.bureauStep1Title, text: t.bureauStep1Text },
+                { icon: <ShieldCheck className="h-7 w-7" />, title: t.bureauStep2Title, text: t.bureauStep2Text },
+                { icon: <Upload className="h-7 w-7" />, title: t.bureauStep3Title, text: t.bureauStep3Text },
+                { icon: <Network className="h-7 w-7" />, title: t.bureauStep4Title, text: t.bureauStep4Text },
+              ]}
+              accent="dark"
               separated
             />
           </div>
@@ -465,8 +488,8 @@ export default function HomePage() {
         <section className="rounded-2xl bg-[#f4faf5] px-6 py-5 md:px-8">
           <h2 className="text-center font-heading text-3xl font-bold text-[#073b24]">{t.whyTitle}</h2>
           <div className="mt-4 grid grid-cols-1 divide-y divide-emerald-900/10 md:grid-cols-3 md:divide-x md:divide-y-0">
-            <Pillar icon={<Building2 className="h-7 w-7" />} title={t.why2Title} text={t.why2Text} />
             <Pillar icon={<Users className="h-7 w-7" />} title={t.why1Title} text={t.why1Text} />
+            <Pillar icon={<Building2 className="h-7 w-7" />} title={t.why2Title} text={t.why2Text} />
             <Pillar icon={<Network className="h-7 w-7" />} title={t.why3Title} text={t.why3Text} />
           </div>
         </section>
@@ -493,11 +516,11 @@ export default function HomePage() {
         <section className="rounded-2xl bg-gradient-to-r from-[#073f46] via-[#0b5f38] to-[#168135] px-5 py-3 text-white md:px-7">
           <div className="grid items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
             <FinalChoice
-              icon={<Building2 className="h-6 w-6" />}
-              title={t.choice2Title}
-              text={t.choice2Text}
-              button={t.applyBureau}
-              href="/register"
+              icon={<Users className="h-6 w-6" />}
+              title={t.choice1Title}
+              text={t.choice1Text}
+              button={t.submitProfile}
+              href="/submit-profile"
             />
 
             <div className="text-center px-2">
@@ -507,11 +530,11 @@ export default function HomePage() {
             </div>
 
             <FinalChoice
-              icon={<Users className="h-6 w-6" />}
-              title={t.choice1Title}
-              text={t.choice1Text}
-              button={t.submitProfile}
-              href="/submit-profile"
+              icon={<Building2 className="h-6 w-6" />}
+              title={t.choice2Title}
+              text={t.choice2Text}
+              button={t.applyBureau}
+              href="/register"
             />
           </div>
         </section>
