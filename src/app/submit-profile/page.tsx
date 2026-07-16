@@ -2144,7 +2144,7 @@ function PremiumMatchPreview({
             </h3>
 
             <p className="text-sm text-slate-500 mt-1">
-              Real profile photos are softly blurred. Name and contact details stay protected.
+              Real profile photos are lightly blurred. Name and contact details stay protected.
             </p>
 
           </div>
@@ -2164,7 +2164,7 @@ function PremiumMatchPreview({
                     <img
                       src={profile.photoUrl}
                       alt="Blurred match preview"
-                      className="absolute inset-0 h-full w-full object-cover blur-lg scale-110 opacity-100"
+                      className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-100"
                     />
                   ) : (
                     <>
@@ -2190,7 +2190,7 @@ function PremiumMatchPreview({
                   )}
 
 
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
+                  <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]" />
 
 
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/35 to-transparent" />
