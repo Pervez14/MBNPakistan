@@ -95,6 +95,10 @@ const specializationOptions = [
 
 export default function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [
+    bureauRegistrationNumber,
+    setBureauRegistrationNumber,
+  ] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -115,7 +119,16 @@ export default function RegisterPage() {
     try {
       setServerError('');
 
+      const applicationId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+              .toString(36)
+              .slice(2)}`;
+
       const { error } = await supabase.from('bureau_applications').insert({
+        id: applicationId,
+
         full_name: data.fullName,
         role_in_bureau: data.roleInBureau,
         mobile_number: data.mobileNumber,
@@ -153,12 +166,41 @@ export default function RegisterPage() {
         throw error;
       }
 
+
+      const {
+        data: registrationNumber,
+        error: registrationNumberError,
+      } = await supabase.rpc(
+        'get_bureau_registration_number',
+        {
+          p_application_id: applicationId,
+        }
+      );
+
+
+      if (registrationNumberError) {
+        throw registrationNumberError;
+      }
+
+
+      setBureauRegistrationNumber(
+        typeof registrationNumber === 'string'
+          ? registrationNumber
+          : ''
+      );
+
+
       setSubmitted(true);
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
-          : 'Registration failed. Please try again.';
+          : typeof err === 'object' &&
+              err !== null &&
+              'message' in err &&
+              typeof (err as { message?: unknown }).message === 'string'
+            ? (err as { message: string }).message
+            : 'Registration failed. Please try again.';
 
       setServerError(msg);
     }
@@ -181,6 +223,27 @@ export default function RegisterPage() {
             your bureau details and get back to you within{' '}
             <strong>24-48 hours</strong>.
           </p>
+
+
+          {bureauRegistrationNumber && (
+            <div className="bg-slate-950 rounded-2xl p-5 text-center mb-6">
+              <p className="text-xs uppercase tracking-[0.18em] text-green-200 font-bold">
+                Your Bureau Registration ID
+              </p>
+
+              <p
+                dir="ltr"
+                className="font-mono text-2xl md:text-3xl font-black text-white mt-3 break-all"
+              >
+                {bureauRegistrationNumber}
+              </p>
+
+              <p className="text-xs text-slate-300 mt-3 leading-relaxed">
+                Please save this ID. Use it when contacting MBN Pakistan about
+                your bureau membership application.
+              </p>
+            </div>
+          )}
 
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-left text-sm text-green-800 mb-6">
             <strong>Next step:</strong> To speed up approval, please prepare
