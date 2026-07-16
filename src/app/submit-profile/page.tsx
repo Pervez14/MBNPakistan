@@ -1895,7 +1895,7 @@ function PremiumMatchPreview({
       : 0;
 
 
-  const whatsappNumber = '923001234567';
+  const whatsappNumber = '923336612404';
 
   const planMessage = (planName: string) =>
     encodeURIComponent(
