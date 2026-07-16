@@ -277,6 +277,18 @@ const content = {
 };
 
 
+type MatchPreviewProfile = {
+  id: string | null;
+  gender: string | null;
+  age: number | string | null;
+  city: string | null;
+  profession: string | null;
+  education: string | null;
+  photo_url: string | null;
+  match_score: number | null;
+};
+
+
 export default function SubmitProfilePage() {
   const { language, setLanguage, isUrdu } = useLanguage();
   const t = content[language];
@@ -298,6 +310,11 @@ export default function SubmitProfilePage() {
     matchPreviewCount,
     setMatchPreviewCount,
   ] = useState(0);
+
+  const [
+    matchPreviewProfiles,
+    setMatchPreviewProfiles,
+  ] = useState<MatchPreviewProfile[]>([]);
 
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -660,9 +677,42 @@ export default function SubmitProfilePage() {
           : ''
       );
 
+      const generatedMatchCount =
+        Math.floor(Math.random() * 25) + 25;
+
+
       setMatchPreviewCount(
-        Math.floor(Math.random() * 25) + 25
+        generatedMatchCount
       );
+
+
+      try {
+        const {
+          data: previewProfileData,
+          error: previewProfileError,
+        } = await supabase.rpc(
+          'get_public_match_preview_profiles',
+          {
+            p_gender: formData.gender,
+            p_city: formData.city,
+            p_province: formData.province,
+            p_limit: 3,
+          }
+        );
+
+
+        if (!previewProfileError && previewProfileData) {
+          setMatchPreviewProfiles(
+            previewProfileData as MatchPreviewProfile[]
+          );
+        } else {
+          setMatchPreviewProfiles([]);
+        }
+
+      } catch {
+        setMatchPreviewProfiles([]);
+      }
+
 
       window.scrollTo({
         top: 0,
@@ -785,6 +835,7 @@ export default function SubmitProfilePage() {
                 count={matchPreviewCount}
                 reference={submissionReference}
                 submittedGender={formData.gender}
+                databaseProfiles={matchPreviewProfiles}
                 isUrdu={isUrdu}
                 t={t}
               />
@@ -811,6 +862,7 @@ export default function SubmitProfilePage() {
                   setSubmissionReference('');
                   setReferenceCopied(false);
                   setMatchPreviewCount(0);
+                  setMatchPreviewProfiles([]);
                   setErrorMessage('');
                   window.location.reload();
                 }}
@@ -1833,16 +1885,19 @@ export default function SubmitProfilePage() {
 
 
 
+
 function PremiumMatchPreview({
   count,
   reference,
   submittedGender,
+  databaseProfiles,
   isUrdu,
   t,
 }: {
   count: number;
   reference: string;
   submittedGender: string;
+  databaseProfiles: MatchPreviewProfile[];
   isUrdu: boolean;
   t: typeof content.en;
 }) {
@@ -1862,7 +1917,7 @@ function PremiumMatchPreview({
     matchGender === 'female';
 
 
-  const previewProfiles = isShowingFemaleMatches
+  const fallbackProfiles = isShowingFemaleMatches
     ? isUrdu
       ? [
           {
@@ -1871,6 +1926,7 @@ function PremiumMatchPreview({
             profession: 'Doctor',
             education: 'MBBS',
             score: '91%',
+            photoUrl: '',
           },
           {
             age: '27 سال',
@@ -1878,6 +1934,7 @@ function PremiumMatchPreview({
             profession: 'Teacher',
             education: 'Masters',
             score: '88%',
+            photoUrl: '',
           },
           {
             age: '25 سال',
@@ -1885,6 +1942,7 @@ function PremiumMatchPreview({
             profession: 'Bank Officer',
             education: 'MBA',
             score: '84%',
+            photoUrl: '',
           },
         ]
       : [
@@ -1894,6 +1952,7 @@ function PremiumMatchPreview({
             profession: 'Doctor',
             education: 'MBBS',
             score: '91%',
+            photoUrl: '',
           },
           {
             age: '27 years',
@@ -1901,6 +1960,7 @@ function PremiumMatchPreview({
             profession: 'Teacher',
             education: 'Masters',
             score: '88%',
+            photoUrl: '',
           },
           {
             age: '25 years',
@@ -1908,6 +1968,7 @@ function PremiumMatchPreview({
             profession: 'Bank Officer',
             education: 'MBA',
             score: '84%',
+            photoUrl: '',
           },
         ]
     : isUrdu
@@ -1918,6 +1979,7 @@ function PremiumMatchPreview({
             profession: 'Software Engineer',
             education: 'BS Computer Science',
             score: '90%',
+            photoUrl: '',
           },
           {
             age: '32 سال',
@@ -1925,6 +1987,7 @@ function PremiumMatchPreview({
             profession: 'Business Owner',
             education: 'MBA',
             score: '87%',
+            photoUrl: '',
           },
           {
             age: '30 سال',
@@ -1932,6 +1995,7 @@ function PremiumMatchPreview({
             profession: 'Civil Engineer',
             education: 'BSc Engineering',
             score: '83%',
+            photoUrl: '',
           },
         ]
       : [
@@ -1941,6 +2005,7 @@ function PremiumMatchPreview({
             profession: 'Software Engineer',
             education: 'BS Computer Science',
             score: '90%',
+            photoUrl: '',
           },
           {
             age: '32 years',
@@ -1948,6 +2013,7 @@ function PremiumMatchPreview({
             profession: 'Business Owner',
             education: 'MBA',
             score: '87%',
+            photoUrl: '',
           },
           {
             age: '30 years',
@@ -1955,8 +2021,44 @@ function PremiumMatchPreview({
             profession: 'Civil Engineer',
             education: 'BSc Engineering',
             score: '83%',
+            photoUrl: '',
           },
         ];
+
+
+  const previewProfiles =
+    databaseProfiles.length > 0
+      ? databaseProfiles.map((profile, index) => ({
+          age:
+            profile.age !== null && profile.age !== undefined
+              ? `${profile.age}${isUrdu ? ' سال' : ' years'}`
+              : fallbackProfiles[index]?.age || 'Hidden',
+
+          city:
+            profile.city ||
+            fallbackProfiles[index]?.city ||
+            'Pakistan',
+
+          profession:
+            profile.profession ||
+            fallbackProfiles[index]?.profession ||
+            'Profession hidden',
+
+          education:
+            profile.education ||
+            fallbackProfiles[index]?.education ||
+            'Education hidden',
+
+          score:
+            profile.match_score !== null &&
+            profile.match_score !== undefined
+              ? `${profile.match_score}%`
+              : fallbackProfiles[index]?.score || '86%',
+
+          photoUrl:
+            profile.photo_url || '',
+        }))
+      : fallbackProfiles;
 
 
   const remainingCount =
@@ -2042,7 +2144,7 @@ function PremiumMatchPreview({
             </h3>
 
             <p className="text-sm text-slate-500 mt-1">
-              Basic details are shown. Photo, name, and contact stay protected.
+              Real profile photos are heavily blurred. Name and contact details stay protected.
             </p>
 
           </div>
@@ -2052,33 +2154,46 @@ function PremiumMatchPreview({
 
             {previewProfiles.map((profile, index) => (
               <div
-                key={`${profile.city}-${index}`}
+                key={`${profile.city}-${profile.profession}-${index}`}
                 className="rounded-[1.5rem] border border-slate-200 bg-white overflow-hidden shadow-sm"
               >
 
                 <div className="relative h-64 bg-slate-100 overflow-hidden">
 
-                  <div
-                    className={`absolute inset-0 ${
-                      isShowingFemaleMatches
-                        ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-200'
-                        : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
-                    }`}
-                  />
+                  {profile.photoUrl ? (
+                    <img
+                      src={profile.photoUrl}
+                      alt="Blurred match preview"
+                      className="absolute inset-0 h-full w-full object-cover blur-2xl scale-125 opacity-95"
+                    />
+                  ) : (
+                    <>
+                      <div
+                        className={`absolute inset-0 ${
+                          isShowingFemaleMatches
+                            ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-200'
+                            : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
+                        }`}
+                      />
 
 
-                  <div className="absolute inset-x-0 bottom-0 flex justify-center">
+                      <div className="absolute inset-x-0 bottom-0 flex justify-center">
 
-                    {isShowingFemaleMatches ? (
-                      <FemaleBlurredFigure />
-                    ) : (
-                      <MaleBlurredFigure />
-                    )}
+                        {isShowingFemaleMatches ? (
+                          <FemaleBlurredFigure />
+                        ) : (
+                          <MaleBlurredFigure />
+                        )}
 
-                  </div>
+                      </div>
+                    </>
+                  )}
 
 
-                  <div className="absolute inset-0 backdrop-blur-[4px] bg-white/5" />
+                  <div className="absolute inset-0 bg-white/20 backdrop-blur-[8px]" />
+
+
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/45 to-transparent" />
 
 
                   <div className="absolute top-4 left-4">
