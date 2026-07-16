@@ -1888,7 +1888,7 @@ function PremiumMatchPreview({
       : 0;
 
 
-  const whatsappNumber = '923001234567';
+  const whatsappNumber = '923336612404';
 
   const whatsappMessage = encodeURIComponent(
     `Assalamualaikum MBN Pakistan, I want to activate Verified Premium for my profile reference ${reference}.`
