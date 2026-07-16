@@ -1832,6 +1832,7 @@ export default function SubmitProfilePage() {
 
 
 
+
 function PremiumMatchPreview({
   count,
   reference,
@@ -1987,9 +1988,9 @@ function PremiumMatchPreview({
 
       <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
 
-        <div className="border-b border-slate-100 bg-slate-50 px-6 py-6 md:px-8">
+        <div className="bg-slate-50 border-b border-slate-100 px-6 py-7 md:px-8">
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
             <div>
               <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
@@ -2000,9 +2001,10 @@ function PremiumMatchPreview({
                 {count} {t.matchesAvailable}
               </h2>
 
-              <p className="text-slate-600 mt-3 max-w-2xl leading-relaxed">
+              <p className="text-slate-600 mt-3 max-w-3xl leading-relaxed">
                 {t.previewNote}
               </p>
+
 
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
                 <Lock className="w-4 h-4 text-green-700" />
@@ -2033,205 +2035,167 @@ function PremiumMatchPreview({
 
         <div className="p-6 md:p-8">
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
+          <div className="mb-5">
 
-            <div>
+            <h3 className="font-heading text-2xl font-black text-slate-950">
+              Preview Matches
+            </h3>
 
-              <div className="flex items-center justify-between gap-3 mb-4">
+            <p className="text-sm text-slate-500 mt-1">
+              Basic details are shown. Photo, name, and contact stay protected.
+            </p>
 
-                <div>
-                  <h3 className="font-heading text-2xl font-black text-slate-950">
-                    Preview Matches
-                  </h3>
+          </div>
 
-                  <p className="text-sm text-slate-500 mt-1">
-                    Basic details are shown. Photo, name, and contact stay protected.
-                  </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+            {previewProfiles.map((profile, index) => (
+              <div
+                key={`${profile.city}-${index}`}
+                className="rounded-[1.5rem] border border-slate-200 bg-white overflow-hidden shadow-sm"
+              >
+
+                <div className="relative h-64 bg-slate-100 overflow-hidden">
+
+                  <div
+                    className={`absolute inset-0 ${
+                      isShowingFemaleMatches
+                        ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-200'
+                        : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
+                    }`}
+                  />
+
+
+                  <div className="absolute inset-x-0 bottom-0 flex justify-center">
+
+                    {isShowingFemaleMatches ? (
+                      <FemaleBlurredFigure />
+                    ) : (
+                      <MaleBlurredFigure />
+                    )}
+
+                  </div>
+
+
+                  <div className="absolute inset-0 backdrop-blur-[4px] bg-white/5" />
+
+
+                  <div className="absolute top-4 left-4">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm">
+                      <Lock className="w-3 h-3" />
+                      {t.premiumRequired}
+                    </span>
+                  </div>
+
+
+                  <div className="absolute bottom-4 right-4">
+                    <span className="rounded-full bg-green-700 px-3 py-1.5 text-xs font-black text-white shadow-sm">
+                      {profile.score} Match
+                    </span>
+                  </div>
+
                 </div>
 
-              </div>
 
+                <div className="p-5">
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-start justify-between gap-3">
 
-                {previewProfiles.map((profile, index) => (
-                  <div
-                    key={`${profile.city}-${index}`}
-                    className="rounded-3xl border border-slate-200 bg-white overflow-hidden hover:border-green-200 transition"
-                  >
-
-                    <div className="relative h-52 bg-slate-100 overflow-hidden">
-
-                      <div
-                        className={`absolute inset-0 ${
-                          isShowingFemaleMatches
-                            ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-300'
-                            : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
-                        }`}
-                      />
-
-
-                      <div className="absolute inset-x-0 bottom-0 flex justify-center">
-
-                        {isShowingFemaleMatches ? (
-                          <FemaleBlurredFigure />
-                        ) : (
-                          <MaleBlurredFigure />
-                        )}
-
-                      </div>
-
-
-                      <div className="absolute inset-0 backdrop-blur-[5px] bg-white/10" />
-
-
-                      <div className="absolute top-3 left-3">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
-                          <Lock className="w-3 h-3" />
-                          {t.premiumRequired}
-                        </span>
-                      </div>
-
-
-                      <div className="absolute bottom-3 right-3">
-                        <span className="rounded-full bg-green-700 px-3 py-1 text-xs font-black text-white shadow-sm">
-                          {profile.score} Match
-                        </span>
-                      </div>
-
-                    </div>
-
-
-                    <div className="p-5">
-
+                    <div>
                       <p className="font-heading text-xl font-black text-slate-950">
                         {t.nameHidden}
                       </p>
 
-
-                      <div className="mt-4 space-y-2 text-sm text-slate-600">
-
-                        <p>
-                          <span className="font-bold text-slate-950">
-                            Gender:
-                          </span>{' '}
-                          {isShowingFemaleMatches ? 'Female' : 'Male'}
-                        </p>
-
-
-                        <p>
-                          <span className="font-bold text-slate-950">
-                            Age:
-                          </span>{' '}
-                          {profile.age}
-                        </p>
-
-
-                        <p>
-                          <span className="font-bold text-slate-950">
-                            City:
-                          </span>{' '}
-                          {profile.city}
-                        </p>
-
-
-                        <p>
-                          <span className="font-bold text-slate-950">
-                            Profession:
-                          </span>{' '}
-                          {profile.profession}
-                        </p>
-
-
-                        <p>
-                          <span className="font-bold text-slate-950">
-                            Education:
-                          </span>{' '}
-                          {profile.education}
-                        </p>
-
-                      </div>
-
-
-                      <div className="mt-4 rounded-2xl bg-slate-50 border border-slate-200 p-3">
-                        <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
-                          <Lock className="w-3.5 h-3.5" />
-                          {t.contactHidden}
-                        </p>
-                      </div>
-
+                      <p className="text-sm text-slate-500 mt-1">
+                        {isShowingFemaleMatches ? 'Female' : 'Male'} Profile
+                      </p>
                     </div>
 
+
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                      Private
+                    </span>
+
                   </div>
-                ))}
+
+
+                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+
+                    <ProfileDetail label="Age" value={profile.age} />
+
+                    <ProfileDetail label="City" value={profile.city} />
+
+                    <ProfileDetail
+                      label="Profession"
+                      value={profile.profession}
+                    />
+
+                    <ProfileDetail
+                      label="Education"
+                      value={profile.education}
+                    />
+
+                  </div>
+
+
+                  <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                    <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
+                      <Lock className="w-3.5 h-3.5" />
+                      {t.contactHidden}
+                    </p>
+                  </div>
+
+                </div>
 
               </div>
+            ))}
+
+          </div>
 
 
-              {remainingCount > 0 && (
-                <div className="mt-4 rounded-2xl bg-green-50 border border-green-100 px-5 py-4">
+          {remainingCount > 0 && (
+            <div className="mt-5 rounded-2xl bg-green-50 border border-green-100 px-5 py-4">
 
-                  <p className="text-sm font-black text-green-900 text-center">
-                    +{remainingCount} {t.moreMatchesText}
-                  </p>
-
-                </div>
-              )}
+              <p className="text-sm font-black text-green-900 text-center">
+                +{remainingCount} {t.moreMatchesText}
+              </p>
 
             </div>
+          )}
 
 
-            <div>
+          <div className="mt-10 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 md:p-6">
 
-              <div className="rounded-[1.5rem] bg-slate-950 text-white p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-black text-green-100">
-                  <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  Recommended
-                </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
+                  Recommended Plan
+                </p>
 
-
-                <h3 className="font-heading text-2xl font-black mt-4">
+                <h3 className="font-heading text-3xl font-black text-slate-950 mt-2">
                   Verified Premium
                 </h3>
 
-
-                <p className="text-slate-300 text-sm leading-relaxed mt-3">
-                  Best for serious families who want more visibility, priority support,
+                <p className="text-slate-600 text-sm leading-relaxed mt-2 max-w-2xl">
+                  Best for serious families who want higher visibility, priority support,
                   and more match recommendations.
                 </p>
+              </div>
 
 
-                <div className="mt-5 flex items-end gap-1">
-                  <p className="text-4xl font-black">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+
+                <div>
+                  <p className="text-4xl font-black text-slate-950">
                     1499 PKR
                   </p>
 
-                  <p className="text-slate-400">
-                    / month
+                  <p className="text-sm text-slate-500">
+                    per month
                   </p>
                 </div>
-
-
-                <ul className="mt-5 space-y-3 text-sm">
-
-                  {[
-                    'View suitable profiles',
-                    'Verified badge',
-                    'Higher visibility',
-                    'Priority support',
-                    '30 interests per month',
-                  ].map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-2 text-slate-200"
-                    >
-                      <CheckCircle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-
-                </ul>
 
 
                 <a
@@ -2240,7 +2204,7 @@ function PremiumMatchPreview({
                   )}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-amber-300 px-5 py-4 font-black text-slate-950 hover:bg-amber-200"
+                  className="inline-flex items-center justify-center rounded-2xl bg-green-700 px-6 py-4 font-black text-white hover:bg-green-800"
                 >
                   Get Verified Premium
                 </a>
@@ -2252,13 +2216,13 @@ function PremiumMatchPreview({
           </div>
 
 
-          <div className="mt-8 border-t border-slate-100 pt-8">
+          <div className="mt-8">
 
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
 
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
-                  Other Options
+                  Premium Plans
                 </p>
 
                 <h3 className="font-heading text-2xl font-black text-slate-950 mt-2">
@@ -2348,21 +2312,44 @@ function PremiumMatchPreview({
 }
 
 
+function ProfileDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+
+      <p className="text-[11px] uppercase tracking-wide font-black text-slate-400">
+        {label}
+      </p>
+
+      <p className="text-sm font-bold text-slate-900 mt-1 leading-snug">
+        {value}
+      </p>
+
+    </div>
+  );
+}
+
+
 function FemaleBlurredFigure() {
   return (
-    <div className="relative h-48 w-32">
+    <div className="relative h-64 w-44">
 
-      <div className="absolute left-1/2 top-3 h-16 w-16 -translate-x-1/2 rounded-full bg-amber-900/80" />
+      <div className="absolute left-1/2 top-5 h-20 w-20 -translate-x-1/2 rounded-full bg-amber-900/80" />
 
-      <div className="absolute left-1/2 top-6 h-20 w-20 -translate-x-1/2 rounded-t-full bg-slate-900/80" />
+      <div className="absolute left-1/2 top-3 h-28 w-28 -translate-x-1/2 rounded-t-full bg-slate-950/85" />
 
-      <div className="absolute left-1/2 top-20 h-24 w-24 -translate-x-1/2 rounded-t-[3rem] bg-rose-600/85" />
+      <div className="absolute left-1/2 top-28 h-28 w-32 -translate-x-1/2 rounded-t-[4rem] bg-rose-600/90" />
 
-      <div className="absolute left-1/2 top-32 h-28 w-32 -translate-x-1/2 rounded-t-[4rem] bg-pink-700/75" />
+      <div className="absolute left-1/2 top-[10.5rem] h-32 w-44 -translate-x-1/2 rounded-t-[5rem] bg-pink-700/80" />
 
-      <div className="absolute left-4 top-24 h-16 w-6 rotate-12 rounded-full bg-amber-800/60" />
+      <div className="absolute left-7 top-32 h-20 w-7 rotate-12 rounded-full bg-amber-800/65" />
 
-      <div className="absolute right-4 top-24 h-16 w-6 -rotate-12 rounded-full bg-amber-800/60" />
+      <div className="absolute right-7 top-32 h-20 w-7 -rotate-12 rounded-full bg-amber-800/65" />
 
     </div>
   );
@@ -2371,19 +2358,19 @@ function FemaleBlurredFigure() {
 
 function MaleBlurredFigure() {
   return (
-    <div className="relative h-48 w-32">
+    <div className="relative h-64 w-44">
 
-      <div className="absolute left-1/2 top-5 h-16 w-16 -translate-x-1/2 rounded-full bg-amber-800/80" />
+      <div className="absolute left-1/2 top-7 h-20 w-20 -translate-x-1/2 rounded-full bg-amber-800/80" />
 
-      <div className="absolute left-1/2 top-4 h-10 w-20 -translate-x-1/2 rounded-t-full bg-slate-900/80" />
+      <div className="absolute left-1/2 top-5 h-12 w-24 -translate-x-1/2 rounded-t-full bg-slate-950/85" />
 
-      <div className="absolute left-1/2 top-[5.5rem] h-28 w-28 -translate-x-1/2 rounded-t-[2rem] bg-blue-900/85" />
+      <div className="absolute left-1/2 top-[7.5rem] h-32 w-36 -translate-x-1/2 rounded-t-[2.5rem] bg-blue-900/90" />
 
-      <div className="absolute left-1/2 top-[8.5rem] h-24 w-32 -translate-x-1/2 rounded-t-[1.5rem] bg-slate-800/80" />
+      <div className="absolute left-1/2 top-[11rem] h-32 w-44 -translate-x-1/2 rounded-t-[2rem] bg-slate-800/85" />
 
-      <div className="absolute left-3 top-24 h-16 w-7 rotate-12 rounded-full bg-blue-950/70" />
+      <div className="absolute left-4 top-32 h-20 w-8 rotate-12 rounded-full bg-blue-950/75" />
 
-      <div className="absolute right-3 top-24 h-16 w-7 -rotate-12 rounded-full bg-blue-950/70" />
+      <div className="absolute right-4 top-32 h-20 w-8 -rotate-12 rounded-full bg-blue-950/75" />
 
     </div>
   );
