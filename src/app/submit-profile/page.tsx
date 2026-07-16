@@ -784,6 +784,7 @@ export default function SubmitProfilePage() {
               <PremiumMatchPreview
                 count={matchPreviewCount}
                 reference={submissionReference}
+                submittedGender={formData.gender}
                 isUrdu={isUrdu}
                 t={t}
               />
@@ -1829,64 +1830,132 @@ export default function SubmitProfilePage() {
 
 
 
+
+
 function PremiumMatchPreview({
   count,
   reference,
+  submittedGender,
   isUrdu,
   t,
 }: {
   count: number;
   reference: string;
+  submittedGender: string;
   isUrdu: boolean;
   t: typeof content.en;
 }) {
-  const previewProfiles = isUrdu
-    ? [
-        {
-          age: '26 سال',
-          city: 'Lahore',
-          profession: 'Doctor',
-          score: '91%',
-          initials: 'P1',
-        },
-        {
-          age: '29 سال',
-          city: 'Islamabad',
-          profession: 'Software Engineer',
-          score: '87%',
-          initials: 'P2',
-        },
-        {
-          age: '25 سال',
-          city: 'Multan',
-          profession: 'Teacher',
-          score: '84%',
-          initials: 'P3',
-        },
-      ]
-    : [
-        {
-          age: '26 years',
-          city: 'Lahore',
-          profession: 'Doctor',
-          score: '91%',
-          initials: 'P1',
-        },
-        {
-          age: '29 years',
-          city: 'Islamabad',
-          profession: 'Software Engineer',
-          score: '87%',
-          initials: 'P2',
-        },
-        {
-          age: '25 years',
-          city: 'Multan',
-          profession: 'Teacher',
-          score: '84%',
-          initials: 'P3',
-        },
-      ];
+  const submittedGenderValue =
+    submittedGender.toLowerCase().trim();
+
+
+  const matchGender =
+    submittedGenderValue === 'male'
+      ? 'female'
+      : submittedGenderValue === 'female'
+        ? 'male'
+        : 'female';
+
+
+  const isShowingFemaleMatches =
+    matchGender === 'female';
+
+
+  const previewProfiles = isShowingFemaleMatches
+    ? isUrdu
+      ? [
+          {
+            age: '24 سال',
+            city: 'Lahore',
+            profession: 'Doctor',
+            education: 'MBBS',
+            score: '91%',
+          },
+          {
+            age: '27 سال',
+            city: 'Islamabad',
+            profession: 'Teacher',
+            education: 'Masters',
+            score: '88%',
+          },
+          {
+            age: '25 سال',
+            city: 'Multan',
+            profession: 'Bank Officer',
+            education: 'MBA',
+            score: '84%',
+          },
+        ]
+      : [
+          {
+            age: '24 years',
+            city: 'Lahore',
+            profession: 'Doctor',
+            education: 'MBBS',
+            score: '91%',
+          },
+          {
+            age: '27 years',
+            city: 'Islamabad',
+            profession: 'Teacher',
+            education: 'Masters',
+            score: '88%',
+          },
+          {
+            age: '25 years',
+            city: 'Multan',
+            profession: 'Bank Officer',
+            education: 'MBA',
+            score: '84%',
+          },
+        ]
+    : isUrdu
+      ? [
+          {
+            age: '29 سال',
+            city: 'Lahore',
+            profession: 'Software Engineer',
+            education: 'BS Computer Science',
+            score: '90%',
+          },
+          {
+            age: '32 سال',
+            city: 'Islamabad',
+            profession: 'Business Owner',
+            education: 'MBA',
+            score: '87%',
+          },
+          {
+            age: '30 سال',
+            city: 'Multan',
+            profession: 'Civil Engineer',
+            education: 'BSc Engineering',
+            score: '83%',
+          },
+        ]
+      : [
+          {
+            age: '29 years',
+            city: 'Lahore',
+            profession: 'Software Engineer',
+            education: 'BS Computer Science',
+            score: '90%',
+          },
+          {
+            age: '32 years',
+            city: 'Islamabad',
+            profession: 'Business Owner',
+            education: 'MBA',
+            score: '87%',
+          },
+          {
+            age: '30 years',
+            city: 'Multan',
+            profession: 'Civil Engineer',
+            education: 'BSc Engineering',
+            score: '83%',
+          },
+        ];
 
 
   const remainingCount =
@@ -1895,7 +1964,7 @@ function PremiumMatchPreview({
       : 0;
 
 
-  const whatsappNumber = '923336612404';
+  const whatsappNumber = '923001234567';
 
   const planMessage = (planName: string) =>
     encodeURIComponent(
@@ -1903,312 +1972,370 @@ function PremiumMatchPreview({
     );
 
 
+  const matchGenderLabel =
+    isShowingFemaleMatches
+      ? isUrdu
+        ? 'خواتین پروفائلز'
+        : 'Female Profiles'
+      : isUrdu
+        ? 'مرد پروفائلز'
+        : 'Male Profiles';
+
+
   return (
-    <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white shadow-xl overflow-hidden text-left">
+    <section className="mt-10 text-left">
 
-      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-green-950 px-6 py-8 md:px-10 md:py-10 text-white">
+      <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="border-b border-slate-100 bg-slate-50 px-6 py-6 md:px-8">
 
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-4 py-2 text-sm font-bold text-green-100">
-              <ShieldCheck className="w-4 h-4" />
-              {t.premiumTitle}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
+                Private Match Review
+              </p>
+
+              <h2 className="font-heading text-3xl md:text-4xl font-black text-slate-950 mt-2">
+                {count} {t.matchesAvailable}
+              </h2>
+
+              <p className="text-slate-600 mt-3 max-w-2xl leading-relaxed">
+                {t.previewNote}
+              </p>
+
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
+                <Lock className="w-4 h-4 text-green-700" />
+                Showing {matchGenderLabel} based on submitted profile
+              </div>
             </div>
 
 
-            <h2 className="font-heading text-3xl md:text-5xl font-black mt-5 leading-tight">
-              <span className="text-amber-300">
-                {count}
-              </span>{' '}
-              {t.matchesAvailable}
-            </h2>
+            <div className="rounded-2xl bg-white border border-slate-200 px-5 py-4 min-w-[220px]">
 
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                Reference
+              </p>
 
-            <p className="mt-4 text-slate-200 leading-relaxed">
-              {t.premiumSubtitle}
-            </p>
+              <p
+                dir="ltr"
+                className="font-mono text-lg font-black text-slate-950 mt-1 break-all"
+              >
+                {reference || 'Pending'}
+              </p>
 
-
-            <p className="mt-2 text-sm text-slate-300 leading-relaxed">
-              {t.previewNote}
-            </p>
-          </div>
-
-
-          <div className="rounded-3xl bg-white/10 border border-white/15 p-5 min-w-[220px]">
-
-            <p className="text-xs uppercase tracking-[0.18em] text-green-200 font-black">
-              Profile Reference
-            </p>
-
-
-            <p
-              dir="ltr"
-              className="font-mono text-lg font-black text-white mt-3 break-all"
-            >
-              {reference || 'Pending'}
-            </p>
-
-
-            <div className="mt-4 flex items-center gap-2 text-sm text-slate-200">
-              <Lock className="w-4 h-4 text-amber-300" />
-              Private preview mode
             </div>
 
           </div>
 
         </div>
 
-      </div>
 
+        <div className="p-6 md:p-8">
 
-      <div className="p-6 md:p-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
+            <div>
 
-          <div>
+              <div className="flex items-center justify-between gap-3 mb-4">
 
-            <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-heading text-2xl font-black text-slate-950">
+                    Preview Matches
+                  </h3>
 
-              <div>
-                <h3 className="font-heading text-2xl font-black text-slate-950">
-                  Limited Match Preview
-                </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Basic details are shown. Photo, name, and contact stay protected.
+                  </p>
+                </div>
 
-                <p className="text-sm text-slate-500 mt-1">
-                  Identity and contact details stay hidden until access is approved.
-                </p>
               </div>
 
 
-              <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 border border-green-100">
-                <Star className="w-3.5 h-3.5" />
-                Recommended
-              </span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {previewProfiles.map((profile, index) => (
+                  <div
+                    key={`${profile.city}-${index}`}
+                    className="rounded-3xl border border-slate-200 bg-white overflow-hidden hover:border-green-200 transition"
+                  >
+
+                    <div className="relative h-52 bg-slate-100 overflow-hidden">
+
+                      <div
+                        className={`absolute inset-0 ${
+                          isShowingFemaleMatches
+                            ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-300'
+                            : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
+                        }`}
+                      />
+
+
+                      <div className="absolute inset-x-0 bottom-0 flex justify-center">
+
+                        {isShowingFemaleMatches ? (
+                          <FemaleBlurredFigure />
+                        ) : (
+                          <MaleBlurredFigure />
+                        )}
+
+                      </div>
+
+
+                      <div className="absolute inset-0 backdrop-blur-[5px] bg-white/10" />
+
+
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
+                          <Lock className="w-3 h-3" />
+                          {t.premiumRequired}
+                        </span>
+                      </div>
+
+
+                      <div className="absolute bottom-3 right-3">
+                        <span className="rounded-full bg-green-700 px-3 py-1 text-xs font-black text-white shadow-sm">
+                          {profile.score} Match
+                        </span>
+                      </div>
+
+                    </div>
+
+
+                    <div className="p-5">
+
+                      <p className="font-heading text-xl font-black text-slate-950">
+                        {t.nameHidden}
+                      </p>
+
+
+                      <div className="mt-4 space-y-2 text-sm text-slate-600">
+
+                        <p>
+                          <span className="font-bold text-slate-950">
+                            Gender:
+                          </span>{' '}
+                          {isShowingFemaleMatches ? 'Female' : 'Male'}
+                        </p>
+
+
+                        <p>
+                          <span className="font-bold text-slate-950">
+                            Age:
+                          </span>{' '}
+                          {profile.age}
+                        </p>
+
+
+                        <p>
+                          <span className="font-bold text-slate-950">
+                            City:
+                          </span>{' '}
+                          {profile.city}
+                        </p>
+
+
+                        <p>
+                          <span className="font-bold text-slate-950">
+                            Profession:
+                          </span>{' '}
+                          {profile.profession}
+                        </p>
+
+
+                        <p>
+                          <span className="font-bold text-slate-950">
+                            Education:
+                          </span>{' '}
+                          {profile.education}
+                        </p>
+
+                      </div>
+
+
+                      <div className="mt-4 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                        <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
+                          <Lock className="w-3.5 h-3.5" />
+                          {t.contactHidden}
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+                ))}
+
+              </div>
+
+
+              {remainingCount > 0 && (
+                <div className="mt-4 rounded-2xl bg-green-50 border border-green-100 px-5 py-4">
+
+                  <p className="text-sm font-black text-green-900 text-center">
+                    +{remainingCount} {t.moreMatchesText}
+                  </p>
+
+                </div>
+              )}
+
+            </div>
+
+
+            <div>
+
+              <div className="rounded-[1.5rem] bg-slate-950 text-white p-6">
+
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-black text-green-100">
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  Recommended
+                </div>
+
+
+                <h3 className="font-heading text-2xl font-black mt-4">
+                  Verified Premium
+                </h3>
+
+
+                <p className="text-slate-300 text-sm leading-relaxed mt-3">
+                  Best for serious families who want more visibility, priority support,
+                  and more match recommendations.
+                </p>
+
+
+                <div className="mt-5 flex items-end gap-1">
+                  <p className="text-4xl font-black">
+                    1499 PKR
+                  </p>
+
+                  <p className="text-slate-400">
+                    / month
+                  </p>
+                </div>
+
+
+                <ul className="mt-5 space-y-3 text-sm">
+
+                  {[
+                    'View suitable profiles',
+                    'Verified badge',
+                    'Higher visibility',
+                    'Priority support',
+                    '30 interests per month',
+                  ].map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2 text-slate-200"
+                    >
+                      <CheckCircle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+
+                </ul>
+
+
+                <a
+                  href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                    'Verified Premium'
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-amber-300 px-5 py-4 font-black text-slate-950 hover:bg-amber-200"
+                >
+                  Get Verified Premium
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div className="mt-8 border-t border-slate-100 pt-8">
+
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
+                  Other Options
+                </p>
+
+                <h3 className="font-heading text-2xl font-black text-slate-950 mt-2">
+                  Choose your access level
+                </h3>
+              </div>
+
+
+              <p className="text-sm text-slate-500 max-w-md">
+                Payment gateway integration can be connected next. For now, plan requests
+                open a prepared WhatsApp message.
+              </p>
 
             </div>
 
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-              {previewProfiles.map((profile, index) => (
-                <div
-                  key={`${profile.city}-${index}`}
-                  className="rounded-3xl border border-slate-200 bg-slate-50 overflow-hidden"
-                >
-
-                  <div className="relative h-40 bg-slate-200 overflow-hidden">
-
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 blur-sm scale-110" />
-
-
-                    <div className="absolute inset-0 bg-white/20 backdrop-blur-[6px]" />
-
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-
-                      <div className="w-20 h-20 rounded-full bg-white/80 border border-white shadow-lg flex items-center justify-center">
-                        <Lock className="w-8 h-8 text-slate-500" />
-                      </div>
-
-                    </div>
+              <PlanCard
+                title="Premium Match Access"
+                price="799 PKR"
+                period="/ month"
+                description="For families who want basic premium profile access."
+                features={[
+                  'Suitable profile access',
+                  'Daily suggestions',
+                  'Save favourites',
+                  'WhatsApp notifications',
+                  '10 interests per month',
+                ]}
+                cta={t.activateWhatsapp}
+                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                  'Premium Match Access'
+                )}`}
+              />
 
 
-                    <div className="absolute top-3 left-3">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
-                        <Lock className="w-3 h-3" />
-                        {t.premiumRequired}
-                      </span>
-                    </div>
+              <PlanCard
+                title="Verified Premium"
+                price="1499 PKR"
+                period="/ month"
+                description="For serious families who want more visibility."
+                popularLabel={t.mostPopular}
+                highlighted
+                features={[
+                  'Verified badge',
+                  'Priority support',
+                  'More recommendations',
+                  'Higher visibility',
+                  '30 interests per month',
+                ]}
+                cta={t.activateWhatsapp}
+                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                  'Verified Premium'
+                )}`}
+              />
 
 
-                    <div className="absolute bottom-3 right-3">
-                      <span className="rounded-full bg-green-700 px-3 py-1 text-xs font-black text-white shadow-sm">
-                        {profile.score}
-                      </span>
-                    </div>
-
-                  </div>
-
-
-                  <div className="p-5">
-
-                    <p className="font-heading text-xl font-black text-slate-950">
-                      {t.nameHidden}
-                    </p>
-
-
-                    <div className="mt-4 space-y-2 text-sm text-slate-600">
-
-                      <p>
-                        <span className="font-bold text-slate-950">
-                          Age:
-                        </span>{' '}
-                        {profile.age}
-                      </p>
-
-
-                      <p>
-                        <span className="font-bold text-slate-950">
-                          City:
-                        </span>{' '}
-                        {profile.city}
-                      </p>
-
-
-                      <p>
-                        <span className="font-bold text-slate-950">
-                          Profession:
-                        </span>{' '}
-                        {profile.profession}
-                      </p>
-
-                    </div>
-
-
-                    <div className="mt-4 rounded-2xl bg-white border border-slate-200 p-3">
-                      <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
-                        <Lock className="w-3.5 h-3.5" />
-                        {t.contactHidden}
-                      </p>
-                    </div>
-
-                  </div>
-
-                </div>
-              ))}
+              <PlanCard
+                title="Personal Matchmaking"
+                price="4999 PKR"
+                period=""
+                description="For families who want personal matchmaking support."
+                features={[
+                  'Dedicated matchmaker',
+                  'Manual shortlisting',
+                  'Family coordination',
+                  'Priority matching',
+                  'WhatsApp assistance',
+                ]}
+                cta={t.activateWhatsapp}
+                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                  'Personal Matchmaking Service'
+                )}`}
+              />
 
             </div>
-
-
-            {remainingCount > 0 && (
-              <div className="mt-5 rounded-3xl border border-green-100 bg-green-50 p-5">
-
-                <p className="text-center font-black text-green-900">
-                  +{remainingCount} {t.moreMatchesText}
-                </p>
-
-              </div>
-            )}
-
-          </div>
-
-
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 sticky top-6">
-
-            <p className="text-xs uppercase tracking-[0.18em] text-green-700 font-black">
-              Best next step
-            </p>
-
-
-            <h3 className="font-heading text-2xl font-black text-slate-950 mt-2">
-              Unlock Premium Access
-            </h3>
-
-
-            <p className="text-sm text-slate-600 leading-relaxed mt-3">
-              Choose a plan to request access. Full payment gateway can be connected next; for now, this button opens a prepared WhatsApp request.
-            </p>
-
-
-            <a
-              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                'Verified Premium'
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-700 px-5 py-4 font-black text-white hover:bg-green-800"
-            >
-              <Crown className="w-5 h-5" />
-              Get Verified Premium
-            </a>
-
-
-            <p className="mt-3 text-xs text-slate-500 text-center">
-              No profile details are revealed until access is approved.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div className="mt-10">
-
-          <div className="text-center mb-6">
-            <p className="text-xs uppercase tracking-[0.18em] text-green-700 font-black">
-              Premium Plans
-            </p>
-
-            <h3 className="font-heading text-3xl font-black text-slate-950 mt-2">
-              Select the access level that fits your family
-            </h3>
-          </div>
-
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-            <PlanCard
-              title="Premium Match Access"
-              price="799 PKR"
-              period="/ month"
-              description="For families who want to review suitable profiles themselves."
-              features={[
-                'View suitable profiles',
-                'Daily match suggestions',
-                'Verified profile access',
-                'Save favourite profiles',
-                'WhatsApp notifications',
-                '10 interests per month',
-              ]}
-              cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                'Premium Match Access'
-              )}`}
-            />
-
-
-            <PlanCard
-              title="Verified Premium"
-              price="1499 PKR"
-              period="/ month"
-              description="Recommended for serious families who want more visibility."
-              popularLabel={t.mostPopular}
-              highlighted
-              features={[
-                'Everything in Premium',
-                'Verified badge',
-                'Higher visibility',
-                'Priority support',
-                'More recommendations',
-                '30 interests per month',
-              ]}
-              cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                'Verified Premium'
-              )}`}
-            />
-
-
-            <PlanCard
-              title="Personal Matchmaking"
-              price="4999 PKR"
-              period=""
-              description="For families who want personal support from a matchmaker."
-              features={[
-                'Dedicated matchmaker',
-                'Manual shortlisting',
-                'Family coordination',
-                'Priority matching',
-                'WhatsApp assistance',
-                'Unlimited interests',
-              ]}
-              cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                'Personal Matchmaking Service'
-              )}`}
-            />
 
           </div>
 
@@ -2217,6 +2344,48 @@ function PremiumMatchPreview({
       </div>
 
     </section>
+  );
+}
+
+
+function FemaleBlurredFigure() {
+  return (
+    <div className="relative h-48 w-32">
+
+      <div className="absolute left-1/2 top-3 h-16 w-16 -translate-x-1/2 rounded-full bg-amber-900/80" />
+
+      <div className="absolute left-1/2 top-6 h-20 w-20 -translate-x-1/2 rounded-t-full bg-slate-900/80" />
+
+      <div className="absolute left-1/2 top-20 h-24 w-24 -translate-x-1/2 rounded-t-[3rem] bg-rose-600/85" />
+
+      <div className="absolute left-1/2 top-32 h-28 w-32 -translate-x-1/2 rounded-t-[4rem] bg-pink-700/75" />
+
+      <div className="absolute left-4 top-24 h-16 w-6 rotate-12 rounded-full bg-amber-800/60" />
+
+      <div className="absolute right-4 top-24 h-16 w-6 -rotate-12 rounded-full bg-amber-800/60" />
+
+    </div>
+  );
+}
+
+
+function MaleBlurredFigure() {
+  return (
+    <div className="relative h-48 w-32">
+
+      <div className="absolute left-1/2 top-5 h-16 w-16 -translate-x-1/2 rounded-full bg-amber-800/80" />
+
+      <div className="absolute left-1/2 top-4 h-10 w-20 -translate-x-1/2 rounded-t-full bg-slate-900/80" />
+
+      <div className="absolute left-1/2 top-[5.5rem] h-28 w-28 -translate-x-1/2 rounded-t-[2rem] bg-blue-900/85" />
+
+      <div className="absolute left-1/2 top-[8.5rem] h-24 w-32 -translate-x-1/2 rounded-t-[1.5rem] bg-slate-800/80" />
+
+      <div className="absolute left-3 top-24 h-16 w-7 rotate-12 rounded-full bg-blue-950/70" />
+
+      <div className="absolute right-3 top-24 h-16 w-7 -rotate-12 rounded-full bg-blue-950/70" />
+
+    </div>
   );
 }
 
@@ -2244,27 +2413,27 @@ function PlanCard({
 }) {
   return (
     <div
-      className={`relative rounded-[1.75rem] p-6 border transition ${
+      className={`relative rounded-2xl border p-5 ${
         highlighted
-          ? 'bg-slate-950 text-white border-slate-950 shadow-2xl scale-[1.02]'
-          : 'bg-white text-slate-950 border-slate-200 shadow-sm'
+          ? 'border-slate-950 bg-slate-950 text-white shadow-lg'
+          : 'border-slate-200 bg-white text-slate-950'
       }`}
     >
 
       {popularLabel && (
-        <span className="absolute -top-3 left-6 rounded-full bg-amber-300 px-4 py-1 text-xs font-black text-slate-950 shadow-sm">
+        <span className="absolute -top-3 left-5 rounded-full bg-amber-300 px-3 py-1 text-xs font-black text-slate-950">
           {popularLabel}
         </span>
       )}
 
 
-      <h3 className="font-heading text-2xl font-black">
+      <h4 className="font-heading text-xl font-black">
         {title}
-      </h3>
+      </h4>
 
 
       <p
-        className={`mt-3 text-sm leading-relaxed ${
+        className={`mt-2 text-sm leading-relaxed ${
           highlighted
             ? 'text-slate-300'
             : 'text-slate-500'
@@ -2274,8 +2443,8 @@ function PlanCard({
       </p>
 
 
-      <div className="mt-6 flex items-end gap-1">
-        <p className="text-4xl font-black">
+      <div className="mt-5 flex items-end gap-1">
+        <p className="text-3xl font-black">
           {price}
         </p>
 
@@ -2293,14 +2462,14 @@ function PlanCard({
       </div>
 
 
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-5 space-y-2.5">
         {features.map((feature) => (
           <li
             key={feature}
-            className="flex items-start gap-3 text-sm"
+            className="flex items-start gap-2 text-sm"
           >
             <CheckCircle
-              className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
                 highlighted
                   ? 'text-amber-300'
                   : 'text-green-600'
@@ -2325,13 +2494,12 @@ function PlanCard({
         href={href}
         target="_blank"
         rel="noreferrer"
-        className={`mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-black ${
+        className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 font-black ${
           highlighted
             ? 'bg-amber-300 text-slate-950 hover:bg-amber-200'
             : 'bg-green-700 text-white hover:bg-green-800'
         }`}
       >
-        <MessageCircle className="w-4 h-4" />
         {cta}
       </a>
 
