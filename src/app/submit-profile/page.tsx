@@ -19,6 +19,9 @@ import {
   Upload,
   X,
   Copy,
+  Star,
+  MessageCircle,
+  Crown,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -203,6 +206,20 @@ const content = {
       'Please save this reference number and use it when contacting MBN Pakistan about your submission.',
     copyReference: 'Copy Reference Number',
     copiedReference: 'Reference Copied',
+
+    premiumTitle: 'Premium Match Preview',
+    premiumSubtitle:
+      'Your profile preferences can now be reviewed against the MBN Pakistan network.',
+    matchesAvailable: 'matches available for your profile',
+    previewNote:
+      'Preview profiles are limited for privacy. Activate Premium Access to view full details and send interests.',
+    moreMatchesText: 'more suitable profiles may be unlocked with Premium Access.',
+    premiumRequired: 'Premium Required',
+    nameHidden: 'Name Hidden',
+    contactHidden: 'Contact Hidden',
+    activateWhatsapp: 'Activate on WhatsApp',
+    mostPopular: 'Most Popular',
+
     backHome: 'Back to Homepage',
     submitAnother: 'Submit Another Profile',
   },
@@ -240,6 +257,20 @@ const content = {
       'براہِ کرم یہ ریفرنس نمبر محفوظ رکھیں اور اپنی سبمیشن کے بارے میں MBN Pakistan سے رابطہ کرتے وقت اسے استعمال کریں۔',
     copyReference: 'ریفرنس نمبر کاپی کریں',
     copiedReference: 'ریفرنس کاپی ہو گیا',
+
+    premiumTitle: 'پریمیم میچ پری ویو',
+    premiumSubtitle:
+      'آپ کی پروفائل ترجیحات کو MBN Pakistan نیٹ ورک کے ساتھ ریویو کیا جا سکتا ہے۔',
+    matchesAvailable: 'موزوں رشتے آپ کی پروفائل کے لیے دستیاب ہیں',
+    previewNote:
+      'پرائیویسی کی وجہ سے پری ویو محدود ہے۔ مکمل تفصیلات اور Interests بھیجنے کے لیے Premium Access حاصل کریں۔',
+    moreMatchesText: 'مزید موزوں پروفائلز Premium Access کے ساتھ دیکھی جا سکتی ہیں۔',
+    premiumRequired: 'پریمیم درکار ہے',
+    nameHidden: 'نام مخفی',
+    contactHidden: 'رابطہ مخفی',
+    activateWhatsapp: 'WhatsApp پر ایکٹیویٹ کریں',
+    mostPopular: 'سب سے مقبول',
+
     backHome: 'ہوم پیج پر واپس جائیں',
     submitAnother: 'ایک اور پروفائل جمع کروائیں',
   },
@@ -262,6 +293,11 @@ export default function SubmitProfilePage() {
     referenceCopied,
     setReferenceCopied,
   ] = useState(false);
+
+  const [
+    matchPreviewCount,
+    setMatchPreviewCount,
+  ] = useState(0);
 
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -624,6 +660,10 @@ export default function SubmitProfilePage() {
           : ''
       );
 
+      setMatchPreviewCount(
+        Math.floor(Math.random() * 25) + 25
+      );
+
       window.scrollTo({
         top: 0,
         behavior: 'smooth',
@@ -740,6 +780,15 @@ export default function SubmitProfilePage() {
               </div>
             )}
 
+            {matchPreviewCount > 0 && (
+              <PremiumMatchPreview
+                count={matchPreviewCount}
+                reference={submissionReference}
+                isUrdu={isUrdu}
+                t={t}
+              />
+            )}
+
             <div className="mt-7 rounded-2xl bg-green-50 border border-green-200 p-5">
               <p className="text-sm text-green-800 leading-relaxed">
                 {t.successNote}
@@ -760,6 +809,7 @@ export default function SubmitProfilePage() {
                   setSubmitted(false);
                   setSubmissionReference('');
                   setReferenceCopied(false);
+                  setMatchPreviewCount(0);
                   setErrorMessage('');
                   window.location.reload();
                 }}
@@ -1772,6 +1822,396 @@ export default function SubmitProfilePage() {
 
         </form>
       </main>
+    </div>
+  );
+}
+
+
+
+function PremiumMatchPreview({
+  count,
+  reference,
+  isUrdu,
+  t,
+}: {
+  count: number;
+  reference: string;
+  isUrdu: boolean;
+  t: typeof content.en;
+}) {
+  const previewProfiles = isUrdu
+    ? [
+        {
+          age: '26 سال',
+          city: 'Lahore',
+          profession: 'Doctor',
+          score: '91%',
+        },
+        {
+          age: '29 سال',
+          city: 'Islamabad',
+          profession: 'Software Engineer',
+          score: '87%',
+        },
+        {
+          age: '25 سال',
+          city: 'Multan',
+          profession: 'Teacher',
+          score: '84%',
+        },
+      ]
+    : [
+        {
+          age: '26 years',
+          city: 'Lahore',
+          profession: 'Doctor',
+          score: '91%',
+        },
+        {
+          age: '29 years',
+          city: 'Islamabad',
+          profession: 'Software Engineer',
+          score: '87%',
+        },
+        {
+          age: '25 years',
+          city: 'Multan',
+          profession: 'Teacher',
+          score: '84%',
+        },
+      ];
+
+
+  const remainingCount =
+    count > previewProfiles.length
+      ? count - previewProfiles.length
+      : 0;
+
+
+  const whatsappNumber = '923001234567';
+
+  const whatsappMessage = encodeURIComponent(
+    `Assalamualaikum MBN Pakistan, I want to activate Verified Premium for my profile reference ${reference}.`
+  );
+
+
+  return (
+    <section className="mt-8 rounded-[2rem] bg-slate-950 text-white overflow-hidden text-left">
+
+      <div className="relative p-6 md:p-8">
+
+        <div className="absolute inset-0 opacity-20">
+          <PatternLayer />
+        </div>
+
+
+        <div className="relative">
+
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+
+            <div>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm font-bold">
+                <Crown className="w-4 h-4 text-amber-300" />
+                {t.premiumTitle}
+              </span>
+
+
+              <h2 className="font-heading text-3xl md:text-5xl font-black mt-5 leading-tight">
+                <span className="text-amber-300">
+                  {count}
+                </span>{' '}
+                {t.matchesAvailable}
+              </h2>
+
+
+              <p className="text-slate-300 mt-4 leading-relaxed max-w-2xl">
+                {t.premiumSubtitle}
+              </p>
+
+
+              <p className="text-slate-400 mt-2 text-sm leading-relaxed max-w-2xl">
+                {t.previewNote}
+              </p>
+            </div>
+
+
+            <a
+              href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700"
+            >
+              <MessageCircle className="w-5 h-5" />
+              {t.activateWhatsapp}
+            </a>
+
+          </div>
+
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {previewProfiles.map((profile, index) => (
+              <div
+                key={`${profile.city}-${index}`}
+                className="rounded-2xl bg-white text-slate-900 overflow-hidden border border-white/20"
+              >
+
+                <div className="relative h-44 bg-gradient-to-br from-slate-200 to-slate-400 overflow-hidden">
+
+                  <div className="absolute inset-0 blur-md scale-110 bg-[radial-gradient(circle_at_30%_20%,#f8fafc,transparent_25%),linear-gradient(135deg,#cbd5e1,#64748b)]" />
+
+
+                  <div className="absolute inset-0 bg-slate-900/15" />
+
+
+                  <div className="absolute top-3 left-3">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 text-xs font-bold text-slate-700">
+                      <Lock className="w-3 h-3" />
+                      {t.premiumRequired}
+                    </span>
+                  </div>
+
+
+                  <div className="absolute bottom-3 right-3">
+                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-black">
+                      {profile.score} Match
+                    </span>
+                  </div>
+
+                </div>
+
+
+                <div className="p-5">
+
+                  <p className="font-heading text-xl font-black text-slate-950">
+                    {t.nameHidden}
+                  </p>
+
+
+                  <div className="mt-4 space-y-2 text-sm text-slate-600">
+
+                    <p>
+                      <span className="font-bold text-slate-900">
+                        Age:
+                      </span>{' '}
+                      {profile.age}
+                    </p>
+
+
+                    <p>
+                      <span className="font-bold text-slate-900">
+                        City:
+                      </span>{' '}
+                      {profile.city}
+                    </p>
+
+
+                    <p>
+                      <span className="font-bold text-slate-900">
+                        Profession:
+                      </span>{' '}
+                      {profile.profession}
+                    </p>
+
+
+                    <p className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 rounded-full px-3 py-1 mt-2">
+                      <Lock className="w-3 h-3" />
+                      {t.contactHidden}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+
+
+          {remainingCount > 0 && (
+            <div className="mt-5 rounded-2xl bg-white/10 border border-white/10 p-5 text-center">
+
+              <p className="font-bold text-white">
+                +{remainingCount} {t.moreMatchesText}
+              </p>
+
+            </div>
+          )}
+
+
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            <PlanCard
+              title="Premium Match Access"
+              price="799 PKR"
+              period="/ month"
+              features={[
+                'View suitable profiles',
+                'Daily match suggestions',
+                'Verified profile access',
+                'Save favourite profiles',
+                'WhatsApp notifications',
+                '10 interests per month',
+              ]}
+              cta={t.activateWhatsapp}
+              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                `Assalamualaikum MBN Pakistan, I want to activate Premium Match Access for my profile reference ${reference}.`
+              )}`}
+            />
+
+
+            <PlanCard
+              title="Verified Premium"
+              price="1499 PKR"
+              period="/ month"
+              popularLabel={t.mostPopular}
+              highlighted
+              features={[
+                'Everything in Premium',
+                'Verified badge',
+                'Higher visibility',
+                'Priority support',
+                'More recommendations',
+                '30 interests per month',
+              ]}
+              cta={t.activateWhatsapp}
+              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                `Assalamualaikum MBN Pakistan, I want to activate Verified Premium for my profile reference ${reference}.`
+              )}`}
+            />
+
+
+            <PlanCard
+              title="Personal Matchmaking"
+              price="4999 PKR"
+              period=""
+              features={[
+                'Dedicated matchmaker',
+                'Manual shortlisting',
+                'Family coordination',
+                'Priority matching',
+                'WhatsApp assistance',
+                'Unlimited interests',
+              ]}
+              cta={t.activateWhatsapp}
+              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                `Assalamualaikum MBN Pakistan, I want to activate Personal Matchmaking Service for my profile reference ${reference}.`
+              )}`}
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+  );
+}
+
+
+function PlanCard({
+  title,
+  price,
+  period,
+  features,
+  cta,
+  href,
+  highlighted = false,
+  popularLabel,
+}: {
+  title: string;
+  price: string;
+  period: string;
+  features: string[];
+  cta: string;
+  href: string;
+  highlighted?: boolean;
+  popularLabel?: string;
+}) {
+  return (
+    <div
+      className={`relative rounded-2xl p-5 ${
+        highlighted
+          ? 'bg-white text-slate-950 ring-2 ring-amber-300 shadow-2xl'
+          : 'bg-white/10 text-white border border-white/10'
+      }`}
+    >
+
+      {popularLabel && (
+        <span className="absolute -top-3 left-5 px-3 py-1 rounded-full bg-amber-300 text-slate-950 text-xs font-black">
+          {popularLabel}
+        </span>
+      )}
+
+
+      <h3 className="font-heading text-xl font-black">
+        {title}
+      </h3>
+
+
+      <div className="mt-4 flex items-end gap-1">
+        <p className="text-3xl font-black">
+          {price}
+        </p>
+
+        {period && (
+          <p
+            className={
+              highlighted
+                ? 'text-slate-500'
+                : 'text-slate-300'
+            }
+          >
+            {period}
+          </p>
+        )}
+      </div>
+
+
+      <ul className="mt-5 space-y-3">
+        {features.map((feature) => (
+          <li
+            key={feature}
+            className="flex items-start gap-2 text-sm"
+          >
+            <CheckCircle
+              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                highlighted
+                  ? 'text-green-600'
+                  : 'text-green-300'
+              }`}
+            />
+
+            <span
+              className={
+                highlighted
+                  ? 'text-slate-700'
+                  : 'text-slate-200'
+              }
+            >
+              {feature}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={`mt-6 inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold ${
+          highlighted
+            ? 'bg-green-700 text-white hover:bg-green-800'
+            : 'bg-white text-slate-950 hover:bg-slate-100'
+        }`}
+      >
+        <MessageCircle className="w-4 h-4" />
+        {cta}
+      </a>
+
     </div>
   );
 }
