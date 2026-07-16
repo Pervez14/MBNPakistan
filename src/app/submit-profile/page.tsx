@@ -217,7 +217,7 @@ const content = {
     premiumRequired: 'Premium Required',
     nameHidden: 'Name Hidden',
     contactHidden: 'Contact Hidden',
-    activateWhatsapp: 'Activate on WhatsApp',
+    activateWhatsapp: 'Choose Plan',
     mostPopular: 'Most Popular',
 
     backHome: 'Back to Homepage',
@@ -268,7 +268,7 @@ const content = {
     premiumRequired: 'پریمیم درکار ہے',
     nameHidden: 'نام مخفی',
     contactHidden: 'رابطہ مخفی',
-    activateWhatsapp: 'WhatsApp پر ایکٹیویٹ کریں',
+    activateWhatsapp: 'پلان منتخب کریں',
     mostPopular: 'سب سے مقبول',
 
     backHome: 'ہوم پیج پر واپس جائیں',
@@ -1828,6 +1828,7 @@ export default function SubmitProfilePage() {
 
 
 
+
 function PremiumMatchPreview({
   count,
   reference,
@@ -1846,18 +1847,21 @@ function PremiumMatchPreview({
           city: 'Lahore',
           profession: 'Doctor',
           score: '91%',
+          initials: 'P1',
         },
         {
           age: '29 سال',
           city: 'Islamabad',
           profession: 'Software Engineer',
           score: '87%',
+          initials: 'P2',
         },
         {
           age: '25 سال',
           city: 'Multan',
           profession: 'Teacher',
           score: '84%',
+          initials: 'P3',
         },
       ]
     : [
@@ -1866,18 +1870,21 @@ function PremiumMatchPreview({
           city: 'Lahore',
           profession: 'Doctor',
           score: '91%',
+          initials: 'P1',
         },
         {
           age: '29 years',
           city: 'Islamabad',
           profession: 'Software Engineer',
           score: '87%',
+          initials: 'P2',
         },
         {
           age: '25 years',
           city: 'Multan',
           profession: 'Teacher',
           score: '84%',
+          initials: 'P3',
         },
       ];
 
@@ -1888,164 +1895,265 @@ function PremiumMatchPreview({
       : 0;
 
 
-  const whatsappNumber = '923336612404';
+  const whatsappNumber = '923001234567';
 
-  const whatsappMessage = encodeURIComponent(
-    `Assalamualaikum MBN Pakistan, I want to activate Verified Premium for my profile reference ${reference}.`
-  );
+  const planMessage = (planName: string) =>
+    encodeURIComponent(
+      `Assalamualaikum MBN Pakistan, I want to activate ${planName} for my profile reference ${reference}.`
+    );
 
 
   return (
-    <section className="mt-8 rounded-[2rem] bg-slate-950 text-white overflow-hidden text-left">
+    <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white shadow-xl overflow-hidden text-left">
 
-      <div className="relative p-6 md:p-8">
+      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-green-950 px-6 py-8 md:px-10 md:py-10 text-white">
 
-        <div className="absolute inset-0 opacity-20">
-          <PatternLayer />
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-4 py-2 text-sm font-bold text-green-100">
+              <ShieldCheck className="w-4 h-4" />
+              {t.premiumTitle}
+            </div>
+
+
+            <h2 className="font-heading text-3xl md:text-5xl font-black mt-5 leading-tight">
+              <span className="text-amber-300">
+                {count}
+              </span>{' '}
+              {t.matchesAvailable}
+            </h2>
+
+
+            <p className="mt-4 text-slate-200 leading-relaxed">
+              {t.premiumSubtitle}
+            </p>
+
+
+            <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+              {t.previewNote}
+            </p>
+          </div>
+
+
+          <div className="rounded-3xl bg-white/10 border border-white/15 p-5 min-w-[220px]">
+
+            <p className="text-xs uppercase tracking-[0.18em] text-green-200 font-black">
+              Profile Reference
+            </p>
+
+
+            <p
+              dir="ltr"
+              className="font-mono text-lg font-black text-white mt-3 break-all"
+            >
+              {reference || 'Pending'}
+            </p>
+
+
+            <div className="mt-4 flex items-center gap-2 text-sm text-slate-200">
+              <Lock className="w-4 h-4 text-amber-300" />
+              Private preview mode
+            </div>
+
+          </div>
+
         </div>
 
+      </div>
 
-        <div className="relative">
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+      <div className="p-6 md:p-10">
 
-            <div>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm font-bold">
-                <Crown className="w-4 h-4 text-amber-300" />
-                {t.premiumTitle}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
+
+          <div>
+
+            <div className="flex items-center justify-between gap-4 mb-4">
+
+              <div>
+                <h3 className="font-heading text-2xl font-black text-slate-950">
+                  Limited Match Preview
+                </h3>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Identity and contact details stay hidden until access is approved.
+                </p>
+              </div>
+
+
+              <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 border border-green-100">
+                <Star className="w-3.5 h-3.5" />
+                Recommended
               </span>
 
-
-              <h2 className="font-heading text-3xl md:text-5xl font-black mt-5 leading-tight">
-                <span className="text-amber-300">
-                  {count}
-                </span>{' '}
-                {t.matchesAvailable}
-              </h2>
-
-
-              <p className="text-slate-300 mt-4 leading-relaxed max-w-2xl">
-                {t.premiumSubtitle}
-              </p>
-
-
-              <p className="text-slate-400 mt-2 text-sm leading-relaxed max-w-2xl">
-                {t.previewNote}
-              </p>
             </div>
+
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              {previewProfiles.map((profile, index) => (
+                <div
+                  key={`${profile.city}-${index}`}
+                  className="rounded-3xl border border-slate-200 bg-slate-50 overflow-hidden"
+                >
+
+                  <div className="relative h-40 bg-slate-200 overflow-hidden">
+
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 blur-sm scale-110" />
+
+
+                    <div className="absolute inset-0 bg-white/20 backdrop-blur-[6px]" />
+
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+
+                      <div className="w-20 h-20 rounded-full bg-white/80 border border-white shadow-lg flex items-center justify-center">
+                        <Lock className="w-8 h-8 text-slate-500" />
+                      </div>
+
+                    </div>
+
+
+                    <div className="absolute top-3 left-3">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
+                        <Lock className="w-3 h-3" />
+                        {t.premiumRequired}
+                      </span>
+                    </div>
+
+
+                    <div className="absolute bottom-3 right-3">
+                      <span className="rounded-full bg-green-700 px-3 py-1 text-xs font-black text-white shadow-sm">
+                        {profile.score}
+                      </span>
+                    </div>
+
+                  </div>
+
+
+                  <div className="p-5">
+
+                    <p className="font-heading text-xl font-black text-slate-950">
+                      {t.nameHidden}
+                    </p>
+
+
+                    <div className="mt-4 space-y-2 text-sm text-slate-600">
+
+                      <p>
+                        <span className="font-bold text-slate-950">
+                          Age:
+                        </span>{' '}
+                        {profile.age}
+                      </p>
+
+
+                      <p>
+                        <span className="font-bold text-slate-950">
+                          City:
+                        </span>{' '}
+                        {profile.city}
+                      </p>
+
+
+                      <p>
+                        <span className="font-bold text-slate-950">
+                          Profession:
+                        </span>{' '}
+                        {profile.profession}
+                      </p>
+
+                    </div>
+
+
+                    <div className="mt-4 rounded-2xl bg-white border border-slate-200 p-3">
+                      <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
+                        <Lock className="w-3.5 h-3.5" />
+                        {t.contactHidden}
+                      </p>
+                    </div>
+
+                  </div>
+
+                </div>
+              ))}
+
+            </div>
+
+
+            {remainingCount > 0 && (
+              <div className="mt-5 rounded-3xl border border-green-100 bg-green-50 p-5">
+
+                <p className="text-center font-black text-green-900">
+                  +{remainingCount} {t.moreMatchesText}
+                </p>
+
+              </div>
+            )}
+
+          </div>
+
+
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 sticky top-6">
+
+            <p className="text-xs uppercase tracking-[0.18em] text-green-700 font-black">
+              Best next step
+            </p>
+
+
+            <h3 className="font-heading text-2xl font-black text-slate-950 mt-2">
+              Unlock Premium Access
+            </h3>
+
+
+            <p className="text-sm text-slate-600 leading-relaxed mt-3">
+              Choose a plan to request access. Full payment gateway can be connected next; for now, this button opens a prepared WhatsApp request.
+            </p>
 
 
             <a
-              href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                'Verified Premium'
+              )}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-700 px-5 py-4 font-black text-white hover:bg-green-800"
             >
-              <MessageCircle className="w-5 h-5" />
-              {t.activateWhatsapp}
+              <Crown className="w-5 h-5" />
+              Get Verified Premium
             </a>
 
-          </div>
 
-
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {previewProfiles.map((profile, index) => (
-              <div
-                key={`${profile.city}-${index}`}
-                className="rounded-2xl bg-white text-slate-900 overflow-hidden border border-white/20"
-              >
-
-                <div className="relative h-44 bg-gradient-to-br from-slate-200 to-slate-400 overflow-hidden">
-
-                  <div className="absolute inset-0 blur-md scale-110 bg-[radial-gradient(circle_at_30%_20%,#f8fafc,transparent_25%),linear-gradient(135deg,#cbd5e1,#64748b)]" />
-
-
-                  <div className="absolute inset-0 bg-slate-900/15" />
-
-
-                  <div className="absolute top-3 left-3">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 text-xs font-bold text-slate-700">
-                      <Lock className="w-3 h-3" />
-                      {t.premiumRequired}
-                    </span>
-                  </div>
-
-
-                  <div className="absolute bottom-3 right-3">
-                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-black">
-                      {profile.score} Match
-                    </span>
-                  </div>
-
-                </div>
-
-
-                <div className="p-5">
-
-                  <p className="font-heading text-xl font-black text-slate-950">
-                    {t.nameHidden}
-                  </p>
-
-
-                  <div className="mt-4 space-y-2 text-sm text-slate-600">
-
-                    <p>
-                      <span className="font-bold text-slate-900">
-                        Age:
-                      </span>{' '}
-                      {profile.age}
-                    </p>
-
-
-                    <p>
-                      <span className="font-bold text-slate-900">
-                        City:
-                      </span>{' '}
-                      {profile.city}
-                    </p>
-
-
-                    <p>
-                      <span className="font-bold text-slate-900">
-                        Profession:
-                      </span>{' '}
-                      {profile.profession}
-                    </p>
-
-
-                    <p className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 rounded-full px-3 py-1 mt-2">
-                      <Lock className="w-3 h-3" />
-                      {t.contactHidden}
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-            ))}
+            <p className="mt-3 text-xs text-slate-500 text-center">
+              No profile details are revealed until access is approved.
+            </p>
 
           </div>
 
-
-          {remainingCount > 0 && (
-            <div className="mt-5 rounded-2xl bg-white/10 border border-white/10 p-5 text-center">
-
-              <p className="font-bold text-white">
-                +{remainingCount} {t.moreMatchesText}
-              </p>
-
-            </div>
-          )}
+        </div>
 
 
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="mt-10">
+
+          <div className="text-center mb-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-green-700 font-black">
+              Premium Plans
+            </p>
+
+            <h3 className="font-heading text-3xl font-black text-slate-950 mt-2">
+              Select the access level that fits your family
+            </h3>
+          </div>
+
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
             <PlanCard
               title="Premium Match Access"
               price="799 PKR"
               period="/ month"
+              description="For families who want to review suitable profiles themselves."
               features={[
                 'View suitable profiles',
                 'Daily match suggestions',
@@ -2055,8 +2163,8 @@ function PremiumMatchPreview({
                 '10 interests per month',
               ]}
               cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-                `Assalamualaikum MBN Pakistan, I want to activate Premium Match Access for my profile reference ${reference}.`
+              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                'Premium Match Access'
               )}`}
             />
 
@@ -2065,6 +2173,7 @@ function PremiumMatchPreview({
               title="Verified Premium"
               price="1499 PKR"
               period="/ month"
+              description="Recommended for serious families who want more visibility."
               popularLabel={t.mostPopular}
               highlighted
               features={[
@@ -2076,8 +2185,8 @@ function PremiumMatchPreview({
                 '30 interests per month',
               ]}
               cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-                `Assalamualaikum MBN Pakistan, I want to activate Verified Premium for my profile reference ${reference}.`
+              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                'Verified Premium'
               )}`}
             />
 
@@ -2086,6 +2195,7 @@ function PremiumMatchPreview({
               title="Personal Matchmaking"
               price="4999 PKR"
               period=""
+              description="For families who want personal support from a matchmaker."
               features={[
                 'Dedicated matchmaker',
                 'Manual shortlisting',
@@ -2095,8 +2205,8 @@ function PremiumMatchPreview({
                 'Unlimited interests',
               ]}
               cta={t.activateWhatsapp}
-              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-                `Assalamualaikum MBN Pakistan, I want to activate Personal Matchmaking Service for my profile reference ${reference}.`
+              href={`https://wa.me/${whatsappNumber}?text=${planMessage(
+                'Personal Matchmaking Service'
               )}`}
             />
 
@@ -2115,6 +2225,7 @@ function PlanCard({
   title,
   price,
   period,
+  description,
   features,
   cta,
   href,
@@ -2124,6 +2235,7 @@ function PlanCard({
   title: string;
   price: string;
   period: string;
+  description: string;
   features: string[];
   cta: string;
   href: string;
@@ -2132,27 +2244,38 @@ function PlanCard({
 }) {
   return (
     <div
-      className={`relative rounded-2xl p-5 ${
+      className={`relative rounded-[1.75rem] p-6 border transition ${
         highlighted
-          ? 'bg-white text-slate-950 ring-2 ring-amber-300 shadow-2xl'
-          : 'bg-white/10 text-white border border-white/10'
+          ? 'bg-slate-950 text-white border-slate-950 shadow-2xl scale-[1.02]'
+          : 'bg-white text-slate-950 border-slate-200 shadow-sm'
       }`}
     >
 
       {popularLabel && (
-        <span className="absolute -top-3 left-5 px-3 py-1 rounded-full bg-amber-300 text-slate-950 text-xs font-black">
+        <span className="absolute -top-3 left-6 rounded-full bg-amber-300 px-4 py-1 text-xs font-black text-slate-950 shadow-sm">
           {popularLabel}
         </span>
       )}
 
 
-      <h3 className="font-heading text-xl font-black">
+      <h3 className="font-heading text-2xl font-black">
         {title}
       </h3>
 
 
-      <div className="mt-4 flex items-end gap-1">
-        <p className="text-3xl font-black">
+      <p
+        className={`mt-3 text-sm leading-relaxed ${
+          highlighted
+            ? 'text-slate-300'
+            : 'text-slate-500'
+        }`}
+      >
+        {description}
+      </p>
+
+
+      <div className="mt-6 flex items-end gap-1">
+        <p className="text-4xl font-black">
           {price}
         </p>
 
@@ -2160,8 +2283,8 @@ function PlanCard({
           <p
             className={
               highlighted
-                ? 'text-slate-500'
-                : 'text-slate-300'
+                ? 'text-slate-400'
+                : 'text-slate-500'
             }
           >
             {period}
@@ -2170,25 +2293,25 @@ function PlanCard({
       </div>
 
 
-      <ul className="mt-5 space-y-3">
+      <ul className="mt-6 space-y-3">
         {features.map((feature) => (
           <li
             key={feature}
-            className="flex items-start gap-2 text-sm"
+            className="flex items-start gap-3 text-sm"
           >
             <CheckCircle
-              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+              className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
                 highlighted
-                  ? 'text-green-600'
-                  : 'text-green-300'
+                  ? 'text-amber-300'
+                  : 'text-green-600'
               }`}
             />
 
             <span
               className={
                 highlighted
-                  ? 'text-slate-700'
-                  : 'text-slate-200'
+                  ? 'text-slate-200'
+                  : 'text-slate-700'
               }
             >
               {feature}
@@ -2202,10 +2325,10 @@ function PlanCard({
         href={href}
         target="_blank"
         rel="noreferrer"
-        className={`mt-6 inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold ${
+        className={`mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 font-black ${
           highlighted
-            ? 'bg-green-700 text-white hover:bg-green-800'
-            : 'bg-white text-slate-950 hover:bg-slate-100'
+            ? 'bg-amber-300 text-slate-950 hover:bg-amber-200'
+            : 'bg-green-700 text-white hover:bg-green-800'
         }`}
       >
         <MessageCircle className="w-4 h-4" />
@@ -2215,6 +2338,7 @@ function PlanCard({
     </div>
   );
 }
+
 
 
 function PublicHeader({
