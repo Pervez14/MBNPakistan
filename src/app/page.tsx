@@ -217,9 +217,9 @@ export default function HomePage() {
 
           <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-900 xl:flex">
             <Link href="/" className="border-b-2 border-[#137a4a] pb-2 text-[#073b24]">{t.home}</Link>
-            <Link href="#how-it-works" className="hover:text-[#137a4a]">{t.how}</Link>
-            <Link href="#families" className="hover:text-[#137a4a]">{t.families}</Link>
-            <Link href="#bureaus" className="hover:text-[#137a4a]">{t.bureaus}</Link>
+            <Link href="/how-it-works" className="hover:text-[#137a4a]">{t.how}</Link>
+            <Link href="/for-families" className="hover:text-[#137a4a]">{t.families}</Link>
+            <Link href="/for-bureaus" className="hover:text-[#137a4a]">{t.bureaus}</Link>
             <Link href="/about" className="hover:text-[#137a4a]">{t.about}</Link>
             <Link href="/contact" className="hover:text-[#137a4a]">{t.contact}</Link>
           </nav>
@@ -243,9 +243,9 @@ export default function HomePage() {
 
         <div className="border-t border-slate-100 py-2 xl:hidden">
           <div className="mx-auto flex max-w-[1440px] items-center justify-start gap-5 overflow-x-auto whitespace-nowrap px-4 text-xs font-semibold text-slate-600 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href="#how-it-works">{t.how}</Link>
-            <Link href="#families">{t.families}</Link>
-            <Link href="#bureaus">{t.bureaus}</Link>
+            <Link href="/how-it-works">{t.how}</Link>
+            <Link href="/for-families">{t.families}</Link>
+            <Link href="/for-bureaus">{t.bureaus}</Link>
             <Link href="/about">{t.about}</Link>
             <Link href="/contact">{t.contact}</Link>
           </div>
