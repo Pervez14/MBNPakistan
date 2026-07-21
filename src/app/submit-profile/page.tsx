@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useMemo,
   useState,
   type ChangeEvent,
   type FormEvent,
@@ -289,6 +290,310 @@ type MatchPreviewProfile = {
 };
 
 
+
+const religionOptions = [
+  'Islam',
+  'Christianity',
+  'Hinduism',
+  'Sikhism',
+  'Ahmadiyya',
+  'Other',
+];
+
+const maritalStatusOptions = [
+  'Never Married',
+  'Divorced',
+  'Widow',
+  'Widower',
+  'Separated',
+];
+
+const heightOptions = [
+  '4 ft 8 in',
+  '4 ft 9 in',
+  '4 ft 10 in',
+  '4 ft 11 in',
+  '5 ft 0 in',
+  '5 ft 1 in',
+  '5 ft 2 in',
+  '5 ft 3 in',
+  '5 ft 4 in',
+  '5 ft 5 in',
+  '5 ft 6 in',
+  '5 ft 7 in',
+  '5 ft 8 in',
+  '5 ft 9 in',
+  '5 ft 10 in',
+  '5 ft 11 in',
+  '6 ft 0 in',
+  '6 ft 1 in',
+  '6 ft 2 in',
+  '6 ft 3 in',
+  '6 ft 4 in',
+  'Other',
+];
+
+const complexionOptions = [
+  'Fair',
+  'Wheatish',
+  'Medium',
+  'Dark',
+  'Prefer not to say',
+];
+
+const bodyTypeOptions = [
+  'Slim',
+  'Average',
+  'Athletic',
+  'Healthy',
+  'Prefer not to say',
+];
+
+const languageOptions = [
+  'Urdu',
+  'Punjabi',
+  'English',
+  'Sindhi',
+  'Pashto',
+  'Balochi',
+  'Saraiki',
+  'Arabic',
+  'Other',
+];
+
+const residenceStatusOptions = [
+  'Own House',
+  'Rented House',
+  'Joint Family',
+  'Nuclear Family',
+  'Overseas Resident',
+];
+
+const educationOptions = [
+  'Matric',
+  'Intermediate',
+  'Graduation',
+  "Master's",
+  'MPhil',
+  'PhD',
+  'MBBS',
+  'BDS',
+  'Engineering',
+  'CA / ACCA',
+  'Other',
+];
+
+const employmentStatusOptions = [
+  'Employed',
+  'Self-employed',
+  'Business Owner',
+  'Government Job',
+  'Private Job',
+  'Student',
+  'Unemployed',
+  'Homemaker',
+];
+
+const jobTypeOptions = [
+  'Full-time',
+  'Part-time',
+  'Contract',
+  'Business',
+  'Freelance',
+  'Remote',
+  'Not Applicable',
+  'Other',
+];
+
+const industryOptions = [
+  'Medical / Healthcare',
+  'Engineering',
+  'IT / Software',
+  'Education',
+  'Banking / Finance',
+  'Government',
+  'Business / Trade',
+  'Real Estate',
+  'Legal',
+  'Agriculture',
+  'Armed Forces',
+  'Homemaker',
+  'Student',
+  'Other',
+];
+
+const incomeRangeOptions = [
+  'Under 50,000 PKR',
+  '50,000 - 100,000 PKR',
+  '100,000 - 250,000 PKR',
+  '250,000 - 500,000 PKR',
+  '500,000+ PKR',
+  'Prefer not to say',
+];
+
+const siblingCountOptions = [
+  '0',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8+',
+];
+
+const occupationOptions = [
+  'Government Employee',
+  'Private Employee',
+  'Business Owner',
+  'Retired',
+  'Farmer',
+  'Housewife',
+  'Teacher',
+  'Doctor',
+  'Engineer',
+  'Overseas',
+  'Deceased',
+  'Other',
+];
+
+const preferredAgeOptions = [
+  '20-25',
+  '25-30',
+  '30-35',
+  '35-40',
+  'Custom Range',
+];
+
+const preferredCityOptions = [
+  'Islamabad',
+  'Lahore',
+  'Karachi',
+  'Multan',
+  'Faisalabad',
+  'Peshawar',
+  'Quetta',
+  'Overseas',
+  'Other',
+];
+
+const partnerEducationOptions = [
+  'Matric',
+  'Intermediate',
+  'Graduation',
+  "Master's",
+  'MPhil',
+  'PhD',
+];
+
+type PublicProfileFormData = {
+  submitterFullName: string;
+  submitterEmail: string;
+  submitterMobile: string;
+  submitterWhatsApp: string;
+  relationshipToCandidate: string;
+
+  candidateName: string;
+  gender: string;
+  dateOfBirth: string;
+  maritalStatus: string;
+  height: string;
+
+  religion: string;
+  sect: string;
+  caste: string;
+
+  province: string;
+  city: string;
+  country: string;
+  nationality: string;
+  residenceStatus: string;
+
+  education: string;
+  profession: string;
+  employmentStatus: string;
+  jobType: string;
+  industry: string;
+  incomeRange: string;
+
+  complexion: string;
+  bodyType: string;
+  languages: string;
+
+  totalSiblings: string;
+  brothersCount: string;
+  sistersCount: string;
+  fatherOccupation: string;
+  motherOccupation: string;
+  familyDetails: string;
+
+  expectedPartnerAge: string;
+  expectedPartnerLocation: string;
+  expectedPartnerEducation: string;
+  requirements: string;
+
+  additionalNotes: string;
+
+  photoVisibility: string;
+
+  consentToStore: boolean;
+  consentToShare: boolean;
+};
+
+function calculateAgeFromDob(dateOfBirth: string) {
+  if (!dateOfBirth) return '';
+
+  const dob = new Date(dateOfBirth);
+
+  if (Number.isNaN(dob.getTime())) {
+    return '';
+  }
+
+  const today = new Date();
+
+  let age =
+    today.getFullYear() -
+    dob.getFullYear();
+
+  const monthDifference =
+    today.getMonth() -
+    dob.getMonth();
+
+  const dayDifference =
+    today.getDate() -
+    dob.getDate();
+
+  if (
+    monthDifference < 0 ||
+    (
+      monthDifference === 0 &&
+      dayDifference < 0
+    )
+  ) {
+    age -= 1;
+  }
+
+  if (age < 0 || age > 100) {
+    return '';
+  }
+
+  return String(age);
+}
+
+function normalizeCount(value: string) {
+  if (!value) return null;
+
+  if (value === '8+') return 8;
+
+  const numericValue = Number(value);
+
+  return Number.isFinite(numericValue)
+    ? numericValue
+    : null;
+}
+
+
 export default function SubmitProfilePage() {
   const { language, setLanguage, isUrdu } = useLanguage();
   const t = content[language];
@@ -318,61 +623,73 @@ export default function SubmitProfilePage() {
 
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState('');
+  const [selectedPhotos, setSelectedPhotos] =
+    useState<File[]>([]);
+
+  const [photoPreviews, setPhotoPreviews] =
+    useState<string[]>([]);
 
 
-  const [formData, setFormData] = useState({
-    submitterFullName: '',
-    submitterEmail: '',
-    submitterMobile: '',
-    submitterWhatsApp: '',
-    relationshipToCandidate: 'Self',
+  const [formData, setFormData] =
+    useState<PublicProfileFormData>({
+      submitterFullName: '',
+      submitterEmail: '',
+      submitterMobile: '',
+      submitterWhatsApp: '',
+      relationshipToCandidate: 'Self',
 
-    candidateName: '',
-    gender: '',
-    age: '',
-    dateOfBirth: '',
-    maritalStatus: '',
-    height: '',
+      candidateName: '',
+      gender: '',
+      dateOfBirth: '',
+      maritalStatus: '',
+      height: '',
 
-    religion: 'Islam',
-    sect: '',
-    caste: '',
+      religion: 'Islam',
+      sect: '',
+      caste: '',
 
-    province: '',
-    city: '',
-    country: 'Pakistan',
-    nationality: 'Pakistani',
-    residenceStatus: '',
+      province: '',
+      city: '',
+      country: 'Pakistan',
+      nationality: 'Pakistani',
+      residenceStatus: '',
 
-    education: '',
-    profession: '',
-    employmentStatus: '',
-    jobType: '',
-    incomeRange: '',
+      education: '',
+      profession: '',
+      employmentStatus: '',
+      jobType: '',
+      industry: '',
+      incomeRange: '',
 
-    complexion: '',
-    bodyType: '',
-    languages: '',
+      complexion: '',
+      bodyType: '',
+      languages: '',
 
-    siblings: '',
-    fatherOccupation: '',
-    motherOccupation: '',
-    familyDetails: '',
+      totalSiblings: '',
+      brothersCount: '',
+      sistersCount: '',
+      fatherOccupation: '',
+      motherOccupation: '',
+      familyDetails: '',
 
-    expectedPartnerAge: '',
-    expectedPartnerLocation: '',
-    expectedPartnerEducation: '',
-    requirements: '',
+      expectedPartnerAge: '',
+      expectedPartnerLocation: '',
+      expectedPartnerEducation: '',
+      requirements: '',
 
-    additionalNotes: '',
+      additionalNotes: '',
 
-    photoVisibility: 'public',
+      photoVisibility: 'public',
 
-    consentToStore: false,
-    consentToShare: false,
-  });
+      consentToStore: false,
+      consentToShare: false,
+    });
+
+
+  const calculatedAge = useMemo(
+    () => calculateAgeFromDob(formData.dateOfBirth),
+    [formData.dateOfBirth]
+  );
 
 
   const updateField = (
@@ -383,7 +700,10 @@ export default function SubmitProfilePage() {
     const target = e.target;
     const { name } = target;
 
-    if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+    if (
+      target instanceof HTMLInputElement &&
+      target.type === 'checkbox'
+    ) {
       setFormData((prev) => ({
         ...prev,
         [name]: target.checked,
@@ -405,9 +725,9 @@ export default function SubmitProfilePage() {
   const handlePhotoChange = (
     e: ChangeEvent<HTMLInputElement>
   ) => {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files || []);
 
-    if (!file) return;
+    if (files.length === 0) return;
 
     const allowedTypes = [
       'image/jpeg',
@@ -415,70 +735,301 @@ export default function SubmitProfilePage() {
       'image/webp',
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    const maxSize =
+      5 * 1024 * 1024;
+
+    const remainingSlots =
+      2 - selectedPhotos.length;
+
+    if (remainingSlots <= 0) {
+      setErrorMessage('Maximum 2 photos are allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    const acceptedFiles: File[] = [];
+
+    for (const file of files.slice(0, remainingSlots)) {
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage(
+          'Please upload JPG, PNG, or WEBP images only.'
+        );
+        e.target.value = '';
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setErrorMessage(
+          'Each photo must be smaller than 5MB.'
+        );
+        e.target.value = '';
+        return;
+      }
+
+      acceptedFiles.push(file);
+    }
+
+    if (files.length > remainingSlots) {
       setErrorMessage(
-        'Please upload JPG, PNG, or WEBP image only.'
+        'Only 2 photos are allowed. Extra files were ignored.'
       );
-      return;
+    } else {
+      setErrorMessage('');
     }
 
-    const maxSize = 5 * 1024 * 1024;
+    setSelectedPhotos((prev) => [
+      ...prev,
+      ...acceptedFiles,
+    ]);
 
-    if (file.size > maxSize) {
-      setErrorMessage('Photo must be smaller than 5MB.');
-      return;
-    }
+    setPhotoPreviews((prev) => [
+      ...prev,
+      ...acceptedFiles.map((file) =>
+        URL.createObjectURL(file)
+      ),
+    ]);
 
-    setErrorMessage('');
-    setSelectedPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    e.target.value = '';
   };
 
 
-  const removePhoto = () => {
-    setSelectedPhoto(null);
-    setPhotoPreview('');
+  const removePhoto = (index: number) => {
+    setSelectedPhotos((prev) =>
+      prev.filter((_, itemIndex) => itemIndex !== index)
+    );
+
+    setPhotoPreviews((prev) =>
+      prev.filter((_, itemIndex) => itemIndex !== index)
+    );
   };
 
 
-  const uploadPhoto = async () => {
-    if (!selectedPhoto) return null;
+  const uploadPhotos = async () => {
+    if (selectedPhotos.length === 0) return [];
 
-    const watermarkedPhoto =
-      await createWatermarkedImageFile(
-        selectedPhoto,
-        'MBNPakistan.com'
-      );
+    const uploadedUrls: string[] = [];
 
-    const safeFileName = watermarkedPhoto.name
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9.-]/g, '')
-      .toLowerCase();
+    for (const photo of selectedPhotos) {
+      const watermarkedPhoto =
+        await createWatermarkedImageFile(
+          photo,
+          'MBNPakistan.com'
+        );
 
-    const randomFolder =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const safeFileName =
+        watermarkedPhoto.name
+          .replace(/\s+/g, '-')
+          .replace(/[^a-zA-Z0-9.-]/g, '')
+          .toLowerCase();
 
-    const filePath = `${randomFolder}/${Date.now()}-${safeFileName}`;
+      const randomFolder =
+        typeof crypto !== 'undefined' &&
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2)}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('public-submission-photos')
-      .upload(filePath, watermarkedPhoto, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: 'image/jpeg',
-      });
+      const filePath =
+        `${randomFolder}/${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}-${safeFileName}`;
 
-    if (uploadError) {
-      throw uploadError;
+      const { error: uploadError } =
+        await supabase.storage
+          .from('public-submission-photos')
+          .upload(filePath, watermarkedPhoto, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: 'image/jpeg',
+          });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('public-submission-photos')
+        .getPublicUrl(filePath);
+
+      uploadedUrls.push(data.publicUrl);
     }
 
-    const { data } = supabase.storage
-      .from('public-submission-photos')
-      .getPublicUrl(filePath);
+    return uploadedUrls;
+  };
 
-    return data.publicUrl;
+
+  const validateRequiredFields = () => {
+    const requiredFields:
+      Array<[keyof PublicProfileFormData, string]> = [
+        [
+          'submitterFullName',
+          'Please enter the submitter full name.',
+        ],
+        [
+          'submitterMobile',
+          'Please enter a mobile number.',
+        ],
+        [
+          'candidateName',
+          'Candidate Name is required.',
+        ],
+        [
+          'gender',
+          'Please select candidate gender.',
+        ],
+        [
+          'dateOfBirth',
+          'Date of Birth is required.',
+        ],
+        [
+          'maritalStatus',
+          'Please select marital status.',
+        ],
+        [
+          'height',
+          'Please select height.',
+        ],
+        [
+          'complexion',
+          'Please select complexion.',
+        ],
+        [
+          'bodyType',
+          'Please select body type.',
+        ],
+        [
+          'languages',
+          'Please select language.',
+        ],
+
+        [
+          'religion',
+          'Please select religion.',
+        ],
+        [
+          'sect',
+          'Please select sect.',
+        ],
+        [
+          'caste',
+          'Please select caste.',
+        ],
+
+        [
+          'province',
+          'Please select province / region.',
+        ],
+        [
+          'city',
+          'Please select city.',
+        ],
+        [
+          'country',
+          'Country is required.',
+        ],
+        [
+          'nationality',
+          'Nationality is required.',
+        ],
+        [
+          'residenceStatus',
+          'Please select residence status.',
+        ],
+
+        [
+          'education',
+          'Please select education.',
+        ],
+        [
+          'profession',
+          'Profession is required.',
+        ],
+        [
+          'employmentStatus',
+          'Please select employment status.',
+        ],
+        [
+          'jobType',
+          'Please select job type.',
+        ],
+        [
+          'industry',
+          'Please select industry.',
+        ],
+        [
+          'incomeRange',
+          'Please select income range.',
+        ],
+
+        [
+          'totalSiblings',
+          'Please select total siblings.',
+        ],
+        [
+          'brothersCount',
+          'Please select number of brothers.',
+        ],
+        [
+          'sistersCount',
+          'Please select number of sisters.',
+        ],
+        [
+          'fatherOccupation',
+          'Please select father occupation.',
+        ],
+        [
+          'motherOccupation',
+          'Please select mother occupation.',
+        ],
+      ];
+
+    for (const [fieldName, message] of requiredFields) {
+      const value = formData[fieldName];
+
+      if (
+        typeof value !== 'string' ||
+        !value.trim()
+      ) {
+        throw new Error(message);
+      }
+    }
+
+    if (!calculatedAge) {
+      throw new Error(
+        'Please enter a valid Date of Birth.'
+      );
+    }
+
+    if (Number(calculatedAge) < 18) {
+      throw new Error(
+        'Candidate age must be at least 18 years.'
+      );
+    }
+
+    if (selectedPhotos.length < 1) {
+      throw new Error(
+        'Candidate Photo is required. Please upload at least 1 photo.'
+      );
+    }
+
+    if (selectedPhotos.length > 2) {
+      throw new Error(
+        'Maximum 2 photos are allowed.'
+      );
+    }
+
+    if (!formData.consentToStore) {
+      throw new Error(
+        'You must agree to secure storage of your profile information.'
+      );
+    }
+
+    if (!formData.consentToShare) {
+      throw new Error(
+        'You must agree to matchmaking sharing with authorized bureaus or matchmakers.'
+      );
+    }
   };
 
 
@@ -489,36 +1040,21 @@ export default function SubmitProfilePage() {
       setIsSubmitting(true);
       setErrorMessage('');
 
-      if (!formData.submitterFullName.trim()) {
-        throw new Error('Please enter the submitter full name.');
-      }
+      validateRequiredFields();
 
-      if (!formData.submitterMobile.trim()) {
-        throw new Error('Please enter a mobile number.');
-      }
+      const photoUrls =
+        await uploadPhotos();
 
-      if (!formData.gender) {
-        throw new Error('Please select candidate gender.');
-      }
-
-      if (!formData.consentToStore) {
-        throw new Error(
-          'You must agree to secure storage of your profile information.'
-        );
-      }
-
-      if (!formData.consentToShare) {
-        throw new Error(
-          'You must agree to matchmaking sharing with authorized bureaus or matchmakers.'
-        );
-      }
-
-      const photoUrl = await uploadPhoto();
+      const siblingsSummary =
+        `${formData.totalSiblings} total siblings, ${formData.brothersCount} brothers, ${formData.sistersCount} sisters`;
 
       const submissionId =
-        typeof crypto !== 'undefined' && crypto.randomUUID
+        typeof crypto !== 'undefined' &&
+        crypto.randomUUID
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+          : `${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2)}-${Math.random()
               .toString(36)
               .slice(2)}`;
 
@@ -544,38 +1080,35 @@ export default function SubmitProfilePage() {
             formData.relationshipToCandidate || 'Self',
 
           candidate_name:
-            formData.candidateName.trim() || null,
+            formData.candidateName.trim(),
 
           gender: formData.gender,
 
-          age:
-            formData.age
-              ? Number(formData.age)
-              : null,
+          age: Number(calculatedAge),
 
           date_of_birth:
-            formData.dateOfBirth || null,
+            formData.dateOfBirth,
 
           marital_status:
-            formData.maritalStatus || null,
+            formData.maritalStatus,
 
           height:
-            formData.height || null,
+            formData.height,
 
           religion:
             formData.religion || 'Islam',
 
           sect:
-            formData.sect || null,
+            formData.sect,
 
           caste:
-            formData.caste || null,
+            formData.caste,
 
           province:
-            formData.province || null,
+            formData.province,
 
           city:
-            formData.city || null,
+            formData.city,
 
           country:
             formData.country || 'Pakistan',
@@ -584,40 +1117,52 @@ export default function SubmitProfilePage() {
             formData.nationality || 'Pakistani',
 
           residence_status:
-            formData.residenceStatus || null,
+            formData.residenceStatus,
 
           education:
-            formData.education || null,
+            formData.education,
 
           profession:
-            formData.profession || null,
+            formData.profession.trim(),
 
           employment_status:
-            formData.employmentStatus || null,
+            formData.employmentStatus,
 
           job_type:
-            formData.jobType || null,
+            formData.jobType,
+
+          industry:
+            formData.industry,
 
           income_range:
-            formData.incomeRange || null,
+            formData.incomeRange,
 
           complexion:
-            formData.complexion || null,
+            formData.complexion,
 
           body_type:
-            formData.bodyType || null,
+            formData.bodyType,
 
           languages:
-            formData.languages || null,
+            formData.languages,
 
           siblings:
-            formData.siblings || null,
+            siblingsSummary,
+
+          total_siblings:
+            normalizeCount(formData.totalSiblings),
+
+          brothers_count:
+            normalizeCount(formData.brothersCount),
+
+          sisters_count:
+            normalizeCount(formData.sistersCount),
 
           father_occupation:
-            formData.fatherOccupation || null,
+            formData.fatherOccupation,
 
           mother_occupation:
-            formData.motherOccupation || null,
+            formData.motherOccupation,
 
           family_details:
             formData.familyDetails || null,
@@ -637,7 +1182,10 @@ export default function SubmitProfilePage() {
           additional_notes:
             formData.additionalNotes || null,
 
-          photo_url: photoUrl,
+          photo_url: photoUrls[0],
+
+          photo_url_2:
+            photoUrls[1] || null,
 
           photo_visibility:
             formData.photoVisibility || 'public',
@@ -948,407 +1496,228 @@ export default function SubmitProfilePage() {
           className="bg-white border border-slate-200 rounded-[2rem] p-6 md:p-10 space-y-10 shadow-sm"
         >
 
-          {/* Submitter Details */}
           <FormSection title={t.submitter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field>
-                <label className="label">
-                  Full Name *
-                </label>
+              <TextField
+                label="Full Name *"
+                name="submitterFullName"
+                value={formData.submitterFullName}
+                onChange={updateField}
+                placeholder="Your full name"
+                required
+              />
 
-                <input
-                  name="submitterFullName"
-                  value={formData.submitterFullName}
-                  onChange={updateField}
-                  required
-                  className="input-field"
-                  placeholder="Your full name"
-                />
-              </Field>
+              <SelectField
+                label="Relationship to Candidate *"
+                name="relationshipToCandidate"
+                value={formData.relationshipToCandidate}
+                onChange={updateField}
+                options={[
+                  'Self',
+                  'Father',
+                  'Mother',
+                  'Brother',
+                  'Sister',
+                  'Relative',
+                  'Family Friend',
+                  'Other',
+                ]}
+                placeholder="Select Relationship"
+                required
+              />
 
+              <TextField
+                label="Mobile Number *"
+                name="submitterMobile"
+                value={formData.submitterMobile}
+                onChange={updateField}
+                placeholder="+92 300 1234567"
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Relationship to Candidate *
-                </label>
+              <TextField
+                label="WhatsApp Number"
+                name="submitterWhatsApp"
+                value={formData.submitterWhatsApp}
+                onChange={updateField}
+                placeholder="+92 300 1234567"
+              />
 
-                <select
-                  name="relationshipToCandidate"
-                  value={formData.relationshipToCandidate}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="Self">Self</option>
-                  <option value="Father">Father</option>
-                  <option value="Mother">Mother</option>
-                  <option value="Brother">Brother</option>
-                  <option value="Sister">Sister</option>
-                  <option value="Relative">Relative</option>
-                  <option value="Family Friend">
-                    Family Friend
-                  </option>
-                  <option value="Other">Other</option>
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Mobile Number *
-                </label>
-
-                <input
-                  name="submitterMobile"
-                  value={formData.submitterMobile}
-                  onChange={updateField}
-                  required
-                  className="input-field"
-                  placeholder="+92 300 1234567"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  WhatsApp Number
-                </label>
-
-                <input
-                  name="submitterWhatsApp"
-                  value={formData.submitterWhatsApp}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="+92 300 1234567"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Email Address
-                </label>
-
-                <input
-                  type="email"
-                  name="submitterEmail"
-                  value={formData.submitterEmail}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="you@example.com"
-                />
-              </Field>
+              <TextField
+                label="Email Address"
+                name="submitterEmail"
+                type="email"
+                value={formData.submitterEmail}
+                onChange={updateField}
+                placeholder="you@example.com"
+              />
             </div>
           </FormSection>
 
 
-          {/* Candidate */}
           <FormSection title={t.candidate}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Candidate Name
-                </label>
+              <TextField
+                label="Candidate Name *"
+                name="candidateName"
+                value={formData.candidateName}
+                onChange={updateField}
+                placeholder="Candidate full name"
+                required
+              />
 
-                <input
-                  name="candidateName"
-                  value={formData.candidateName}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="Full name"
-                />
-              </Field>
+              <SelectField
+                label="Gender *"
+                name="gender"
+                value={formData.gender}
+                onChange={updateField}
+                options={[
+                  'Male',
+                  'Female',
+                ]}
+                optionLabels={{
+                  Male: 'Male / Groom',
+                  Female: 'Female / Bride',
+                }}
+                placeholder="Select Gender"
+                required
+              />
 
+              <TextField
+                label="Date of Birth *"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={updateField}
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Gender *
-                </label>
-
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={updateField}
-                  required
-                  className="input-field"
-                >
-                  <option value="">
-                    Select Gender
-                  </option>
-
-                  <option value="Male">
-                    Male / Groom
-                  </option>
-
-                  <option value="Female">
-                    Female / Bride
-                  </option>
-                </select>
-              </Field>
-
-
-              <Field>
+              <div>
                 <label className="label">Age</label>
 
                 <input
-                  type="number"
-                  min="18"
-                  max="80"
-                  name="age"
-                  value={formData.age}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="28"
+                  value={calculatedAge ? `${calculatedAge} years` : ''}
+                  readOnly
+                  className="input-field bg-slate-100 text-slate-600"
+                  placeholder="Auto calculated from Date of Birth"
                 />
-              </Field>
 
+                <p className="text-xs text-slate-400 mt-1">
+                  Age is automatically calculated in completed years.
+                </p>
+              </div>
 
-              <Field>
-                <label className="label">
-                  Date of Birth
-                </label>
+              <SelectField
+                label="Marital Status *"
+                name="maritalStatus"
+                value={formData.maritalStatus}
+                onChange={updateField}
+                options={maritalStatusOptions}
+                placeholder="Select Marital Status"
+                required
+              />
 
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
+              <SelectField
+                label="Height *"
+                name="height"
+                value={formData.height}
+                onChange={updateField}
+                options={heightOptions}
+                placeholder="Select Height"
+                required
+              />
 
+              <SelectField
+                label="Complexion *"
+                name="complexion"
+                value={formData.complexion}
+                onChange={updateField}
+                options={complexionOptions}
+                placeholder="Select Complexion"
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Marital Status
-                </label>
+              <SelectField
+                label="Body Type *"
+                name="bodyType"
+                value={formData.bodyType}
+                onChange={updateField}
+                options={bodyTypeOptions}
+                placeholder="Select Body Type"
+                required
+              />
 
-                <select
-                  name="maritalStatus"
-                  value={formData.maritalStatus}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">Select</option>
-                  <option value="Never Married">
-                    Never Married
-                  </option>
-                  <option value="Divorced">
-                    Divorced
-                  </option>
-                  <option value="Widow">
-                    Widow
-                  </option>
-                  <option value="Widower">
-                    Widower
-                  </option>
-                  <option value="Separated">
-                    Separated
-                  </option>
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">Height</label>
-
-                <input
-                  name="height"
-                  value={formData.height}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="5 ft 8 in"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Complexion
-                </label>
-
-                <select
-                  name="complexion"
-                  value={formData.complexion}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">Select</option>
-                  <option value="Fair">Fair</option>
-                  <option value="Wheatish">
-                    Wheatish
-                  </option>
-                  <option value="Medium">Medium</option>
-                  <option value="Dark">Dark</option>
-                  <option value="Prefer not to say">
-                    Prefer not to say
-                  </option>
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Body Type
-                </label>
-
-                <select
-                  name="bodyType"
-                  value={formData.bodyType}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">Select</option>
-                  <option value="Slim">Slim</option>
-                  <option value="Average">
-                    Average
-                  </option>
-                  <option value="Athletic">
-                    Athletic
-                  </option>
-                  <option value="Healthy">
-                    Healthy
-                  </option>
-                  <option value="Prefer not to say">
-                    Prefer not to say
-                  </option>
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Languages
-                </label>
-
-                <input
-                  name="languages"
-                  value={formData.languages}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="Urdu, Punjabi, English"
-                />
-              </Field>
+              <SelectField
+                label="Languages *"
+                name="languages"
+                value={formData.languages}
+                onChange={updateField}
+                options={languageOptions}
+                placeholder="Select Main Language"
+                required
+              />
             </div>
           </FormSection>
 
 
-          {/* Religion */}
           <FormSection title={t.religion}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Religion
-                </label>
+              <SelectField
+                label="Religion *"
+                name="religion"
+                value={formData.religion}
+                onChange={updateField}
+                options={religionOptions}
+                placeholder="Select Religion"
+                required
+              />
 
-                <input
-                  name="religion"
-                  value={formData.religion}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
+              <SelectField
+                label="Sect *"
+                name="sect"
+                value={formData.sect}
+                onChange={updateField}
+                options={sectOptions}
+                placeholder="Select Sect"
+                required
+              />
 
-
-              <Field>
-                <label className="label">
-                  Sect
-                </label>
-
-                <select
-                  name="sect"
-                  value={formData.sect}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">
-                    Select Sect
-                  </option>
-
-                  {sectOptions.map((sect) => (
-                    <option
-                      key={sect}
-                      value={sect}
-                    >
-                      {sect}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Caste / Community
-                </label>
-
-                <select
-                  name="caste"
-                  value={formData.caste}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">
-                    Select Caste
-                  </option>
-
-                  {pakistaniCastes.map((caste) => (
-                    <option
-                      key={caste}
-                      value={caste}
-                    >
-                      {caste}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <SelectField
+                label="Caste / Community *"
+                name="caste"
+                value={formData.caste}
+                onChange={updateField}
+                options={pakistaniCastes}
+                placeholder="Select Caste"
+                required
+              />
             </div>
           </FormSection>
 
 
-          {/* Location */}
           <FormSection title={t.location}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Province / Region
-                </label>
+              <SelectField
+                label="Province / Region *"
+                name="province"
+                value={formData.province}
+                onChange={updateField}
+                options={Object.keys(citiesByProvince)}
+                placeholder="Select Province"
+                required
+              />
 
-                <select
-                  name="province"
-                  value={formData.province}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">
-                    Select Province
-                  </option>
-
-                  {Object.keys(citiesByProvince).map(
-                    (province) => (
-                      <option
-                        key={province}
-                        value={province}
-                      >
-                        {province}
-                      </option>
-                    )
-                  )}
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  City
-                </label>
+              <div>
+                <label className="label">City *</label>
 
                 <select
                   name="city"
                   value={formData.city}
                   onChange={updateField}
+                  required
                   disabled={!formData.province}
                   className="input-field disabled:bg-slate-100"
                 >
@@ -1367,246 +1736,156 @@ export default function SubmitProfilePage() {
                     </option>
                   ))}
                 </select>
-              </Field>
+              </div>
 
+              <TextField
+                label="Country *"
+                name="country"
+                value={formData.country}
+                onChange={updateField}
+                placeholder="Pakistan"
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Country
-                </label>
+              <TextField
+                label="Nationality *"
+                name="nationality"
+                value={formData.nationality}
+                onChange={updateField}
+                placeholder="Pakistani"
+                required
+              />
 
-                <input
-                  name="country"
-                  value={formData.country}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Nationality
-                </label>
-
-                <input
-                  name="nationality"
-                  value={formData.nationality}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Residence Status
-                </label>
-
-                <select
-                  name="residenceStatus"
-                  value={formData.residenceStatus}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">Select</option>
-                  <option value="Own House">
-                    Own House
-                  </option>
-                  <option value="Rented House">
-                    Rented House
-                  </option>
-                  <option value="Joint Family">
-                    Joint Family
-                  </option>
-                  <option value="Nuclear Family">
-                    Nuclear Family
-                  </option>
-                  <option value="Overseas Resident">
-                    Overseas Resident
-                  </option>
-                </select>
-              </Field>
+              <SelectField
+                label="Residence Status *"
+                name="residenceStatus"
+                value={formData.residenceStatus}
+                onChange={updateField}
+                options={residenceStatusOptions}
+                placeholder="Select Residence Status"
+                required
+              />
             </div>
           </FormSection>
 
 
-          {/* Career */}
           <FormSection title={t.career}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Education
-                </label>
+              <SelectField
+                label="Education *"
+                name="education"
+                value={formData.education}
+                onChange={updateField}
+                options={educationOptions}
+                placeholder="Select Education"
+                required
+              />
 
-                <input
-                  name="education"
-                  value={formData.education}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="MBA, MBBS, BS Computer Science"
-                />
-              </Field>
+              <TextField
+                label="Profession *"
+                name="profession"
+                value={formData.profession}
+                onChange={updateField}
+                placeholder="Doctor, Engineer, Business Owner"
+                required
+              />
 
+              <SelectField
+                label="Employment Status *"
+                name="employmentStatus"
+                value={formData.employmentStatus}
+                onChange={updateField}
+                options={employmentStatusOptions}
+                placeholder="Select Employment Status"
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Profession
-                </label>
+              <SelectField
+                label="Job Type *"
+                name="jobType"
+                value={formData.jobType}
+                onChange={updateField}
+                options={jobTypeOptions}
+                placeholder="Select Job Type"
+                required
+              />
 
-                <input
-                  name="profession"
-                  value={formData.profession}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="Doctor, Engineer, Business Owner"
-                />
-              </Field>
+              <SelectField
+                label="Industry *"
+                name="industry"
+                value={formData.industry}
+                onChange={updateField}
+                options={industryOptions}
+                placeholder="Select Industry"
+                required
+              />
 
-
-              <Field>
-                <label className="label">
-                  Employment Status
-                </label>
-
-                <select
-                  name="employmentStatus"
-                  value={formData.employmentStatus}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">Select</option>
-                  <option value="Employed">
-                    Employed
-                  </option>
-                  <option value="Self-employed">
-                    Self-employed
-                  </option>
-                  <option value="Business Owner">
-                    Business Owner
-                  </option>
-                  <option value="Government Job">
-                    Government Job
-                  </option>
-                  <option value="Private Job">
-                    Private Job
-                  </option>
-                  <option value="Student">
-                    Student
-                  </option>
-                  <option value="Unemployed">
-                    Unemployed
-                  </option>
-                </select>
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Job Type / Industry
-                </label>
-
-                <input
-                  name="jobType"
-                  value={formData.jobType}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="IT, Medical, Education, Business"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Income Range
-                </label>
-
-                <select
-                  name="incomeRange"
-                  value={formData.incomeRange}
-                  onChange={updateField}
-                  className="input-field"
-                >
-                  <option value="">
-                    Select Income Range
-                  </option>
-
-                  <option value="Under 50,000 PKR">
-                    Under 50,000 PKR
-                  </option>
-
-                  <option value="50,000 - 100,000 PKR">
-                    50,000 - 100,000 PKR
-                  </option>
-
-                  <option value="100,000 - 250,000 PKR">
-                    100,000 - 250,000 PKR
-                  </option>
-
-                  <option value="250,000 - 500,000 PKR">
-                    250,000 - 500,000 PKR
-                  </option>
-
-                  <option value="500,000+ PKR">
-                    500,000+ PKR
-                  </option>
-
-                  <option value="Prefer not to say">
-                    Prefer not to say
-                  </option>
-                </select>
-              </Field>
+              <SelectField
+                label="Income Range *"
+                name="incomeRange"
+                value={formData.incomeRange}
+                onChange={updateField}
+                options={incomeRangeOptions}
+                placeholder="Select Income Range"
+                required
+              />
             </div>
           </FormSection>
 
 
-          {/* Family */}
           <FormSection title={t.family}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Siblings
-                </label>
+              <SelectField
+                label="Total Siblings *"
+                name="totalSiblings"
+                value={formData.totalSiblings}
+                onChange={updateField}
+                options={siblingCountOptions}
+                placeholder="Select Total Siblings"
+                required
+              />
 
-                <input
-                  name="siblings"
-                  value={formData.siblings}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="2 brothers, 1 sister"
-                />
-              </Field>
+              <SelectField
+                label="Brothers *"
+                name="brothersCount"
+                value={formData.brothersCount}
+                onChange={updateField}
+                options={siblingCountOptions}
+                placeholder="Select Brothers"
+                required
+              />
 
+              <SelectField
+                label="Sisters *"
+                name="sistersCount"
+                value={formData.sistersCount}
+                onChange={updateField}
+                options={siblingCountOptions}
+                placeholder="Select Sisters"
+                required
+              />
 
-              <Field>
-                <label className="label">
-                  Father Occupation
-                </label>
+              <SelectField
+                label="Father Occupation *"
+                name="fatherOccupation"
+                value={formData.fatherOccupation}
+                onChange={updateField}
+                options={occupationOptions}
+                placeholder="Select Father Occupation"
+                required
+              />
 
-                <input
-                  name="fatherOccupation"
-                  value={formData.fatherOccupation}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Mother Occupation
-                </label>
-
-                <input
-                  name="motherOccupation"
-                  value={formData.motherOccupation}
-                  onChange={updateField}
-                  className="input-field"
-                />
-              </Field>
-
+              <SelectField
+                label="Mother Occupation *"
+                name="motherOccupation"
+                value={formData.motherOccupation}
+                onChange={updateField}
+                options={occupationOptions}
+                placeholder="Select Mother Occupation"
+                required
+              />
 
               <div className="md:col-span-2">
                 <label className="label">
@@ -1619,61 +1898,42 @@ export default function SubmitProfilePage() {
                   onChange={updateField}
                   rows={4}
                   className="input-field resize-none"
-                  placeholder="Tell us about family background, values and family structure..."
+                  placeholder="Optional: tell us about family background, values and family structure..."
                 />
               </div>
             </div>
           </FormSection>
 
 
-          {/* Requirements */}
-          <FormSection title={t.requirements}>
+          <FormSection title={`${t.requirements} ${isUrdu ? '(اختیاری)' : '(Optional)'}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <Field>
-                <label className="label">
-                  Expected Partner Age
-                </label>
+              <SelectField
+                label="Preferred Age Range"
+                name="expectedPartnerAge"
+                value={formData.expectedPartnerAge}
+                onChange={updateField}
+                options={preferredAgeOptions}
+                placeholder="Select Preferred Age Range"
+              />
 
-                <input
-                  name="expectedPartnerAge"
-                  value={formData.expectedPartnerAge}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="24 - 30"
-                />
-              </Field>
+              <SelectField
+                label="Preferred City"
+                name="expectedPartnerLocation"
+                value={formData.expectedPartnerLocation}
+                onChange={updateField}
+                options={preferredCityOptions}
+                placeholder="Select Preferred City"
+              />
 
-
-              <Field>
-                <label className="label">
-                  Expected Partner Location
-                </label>
-
-                <input
-                  name="expectedPartnerLocation"
-                  value={formData.expectedPartnerLocation}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="Lahore, Islamabad, Overseas"
-                />
-              </Field>
-
-
-              <Field>
-                <label className="label">
-                  Expected Partner Education
-                </label>
-
-                <input
-                  name="expectedPartnerEducation"
-                  value={formData.expectedPartnerEducation}
-                  onChange={updateField}
-                  className="input-field"
-                  placeholder="Graduate, Masters, Doctor, Engineer"
-                />
-              </Field>
-
+              <SelectField
+                label="Expected Partner Education"
+                name="expectedPartnerEducation"
+                value={formData.expectedPartnerEducation}
+                onChange={updateField}
+                options={partnerEducationOptions}
+                placeholder="Select Education"
+              />
 
               <div className="md:col-span-2">
                 <label className="label">
@@ -1686,14 +1946,13 @@ export default function SubmitProfilePage() {
                   onChange={updateField}
                   rows={4}
                   className="input-field resize-none"
-                  placeholder="Preferred age, city, caste, education, family background and lifestyle..."
+                  placeholder="Optional: preferred caste, family background, lifestyle, etc."
                 />
               </div>
             </div>
           </FormSection>
 
 
-          {/* Additional */}
           <FormSection title={t.additional}>
             <textarea
               name="additionalNotes"
@@ -1706,29 +1965,53 @@ export default function SubmitProfilePage() {
           </FormSection>
 
 
-          {/* Photo */}
           <FormSection title={t.photo}>
-            <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
 
-              <div>
-                {photoPreview ? (
-                  <div className="relative overflow-hidden rounded-2xl">
+              <div className="grid grid-cols-2 gap-3">
+                {photoPreviews.map((preview, index) => (
+                  <div
+                    key={preview}
+                    className="relative overflow-hidden rounded-2xl"
+                  >
                     <img
-                      src={photoPreview}
-                      alt="Candidate preview"
-                      className="w-full h-72 object-cover object-top border border-slate-200"
+                      src={preview}
+                      alt={`Candidate preview ${index + 1}`}
+                      className={`w-full h-48 object-cover object-top border border-slate-200 ${
+                        formData.photoVisibility === 'blurred'
+                          ? 'blur-md scale-105'
+                          : ''
+                      }`}
                     />
+
+                    {formData.photoVisibility === 'blurred' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="px-3 py-2 rounded-full bg-white/90 text-slate-700 text-xs font-semibold shadow">
+                          Blurred Preview
+                        </span>
+                      </div>
+                    )}
+
+                    {formData.photoVisibility === 'hidden' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                        <span className="px-3 py-2 rounded-full bg-white text-slate-700 text-xs font-semibold shadow">
+                          Hidden Photo
+                        </span>
+                      </div>
+                    )}
 
                     <button
                       type="button"
-                      onClick={removePhoto}
-                      className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full shadow flex items-center justify-center"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                ) : (
-                  <div className="w-full h-72 rounded-2xl bg-slate-50 border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
+                ))}
+
+                {photoPreviews.length === 0 && (
+                  <div className="col-span-2 w-full h-72 rounded-2xl bg-slate-50 border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
                     <ImageIcon className="w-10 h-10" />
                     <p className="text-sm mt-2">
                       No photo selected
@@ -1739,6 +2022,13 @@ export default function SubmitProfilePage() {
 
 
               <div>
+                <label className="label">
+                  Candidate Photo *{' '}
+                  <span className="text-slate-400">
+                    (1 to 2 photos)
+                  </span>
+                </label>
+
                 <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#137a4a] text-white font-bold cursor-pointer hover:bg-[#0b5f38]">
                   <Upload className="w-4 h-4" />
 
@@ -1747,13 +2037,15 @@ export default function SubmitProfilePage() {
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
+                    multiple
                     onChange={handlePhotoChange}
                     className="hidden"
                   />
                 </label>
 
                 <p className="text-sm text-slate-500 mt-3">
-                  JPG, PNG, or WEBP. Maximum 5MB.
+                  Upload at least 1 and maximum 2 photos. JPG, PNG,
+                  or WEBP. Maximum 5MB per photo.
                 </p>
 
                 <p className="text-sm text-slate-500 mt-2">
@@ -1791,7 +2083,6 @@ export default function SubmitProfilePage() {
           </FormSection>
 
 
-          {/* Consent */}
           <FormSection title={t.consent}>
             <div className="rounded-2xl bg-green-50 border border-green-200 p-5 mb-5">
               <div className="flex items-start gap-3">
@@ -1880,9 +2171,99 @@ export default function SubmitProfilePage() {
 }
 
 
+function TextField({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    e: ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <Field>
+      <label className="label">
+        {label}
+      </label>
+
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="input-field"
+      />
+    </Field>
+  );
+}
 
 
+function SelectField({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required = false,
+  optionLabels = {},
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    e: ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  options: string[];
+  placeholder: string;
+  required?: boolean;
+  optionLabels?: Record<string, string>;
+}) {
+  return (
+    <Field>
+      <label className="label">
+        {label}
+      </label>
 
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="input-field"
+      >
+        <option value="">
+          {placeholder}
+        </option>
+
+        {options.map((option) => (
+          <option
+            key={option}
+            value={option}
+          >
+            {optionLabels[option] || option}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
 
 
 
