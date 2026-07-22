@@ -19,13 +19,41 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'Marriage Bureau Network Pakistan',
-  description: 'Pakistan\'s largest B2B network for Marriage Bureau operators, Rishta Consultants, and Matchmakers.',
-  keywords: 'marriage bureau, rishta, Pakistan, matchmaking, nikah, shaadi',
+  description:
+    "Pakistan's professional network for Marriage Bureau operators, Rishta Consultants, Matchmakers, individuals, and families.",
+  keywords:
+    'marriage bureau, rishta, Pakistan, matchmaking, nikah, shaadi, MBN Pakistan, marriage bureau network',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      {
+        url: '/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+      {
+        url: '/favicon-16x16.png',
+        sizes: '16x16',
+        type: 'image/png',
+      },
+    ],
+    apple: '/apple-icon.png',
+  },
   openGraph: {
     title: 'Marriage Bureau Network Pakistan',
-    description: 'Connect with 10,000+ verified marriage bureaus across Pakistan.',
+    description:
+      'Connect with verified marriage bureaus across Pakistan and submit your profile privately for professional matchmaking review.',
     siteName: 'MBN Pakistan',
     type: 'website',
+    url: 'https://mbnpakistan.com',
+    images: [
+      {
+        url: '/icon.png',
+        width: 512,
+        height: 512,
+        alt: 'MBN Pakistan',
+      },
+    ],
   },
 };
 
