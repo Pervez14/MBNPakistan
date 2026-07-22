@@ -31,6 +31,12 @@ import {
   ClipboardList,
   Copy,
   TriangleAlert,
+  Flag,
+  CreditCard,
+  Download,
+  Trash2,
+  PlusCircle,
+  TrendingUp,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -241,6 +247,40 @@ type ContactLog = {
 };
 
 
+type BureauControl = {
+  id: string | null;
+  bureau_email: string;
+  business_name: string | null;
+  is_flagged: boolean | null;
+  warning_note: string | null;
+  contact_reveal_suspended: boolean | null;
+  daily_contact_view_limit: number | null;
+  updated_at: string | null;
+};
+
+
+type PremiumOrder = {
+  id: string;
+  profile_reference: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  user_type: string | null;
+  bureau_email: string | null;
+  plan_type: string | null;
+  amount_pkr: number | null;
+  payment_method: string | null;
+  payment_status: string | null;
+  payment_screenshot_url: string | null;
+  transaction_id: string | null;
+  start_date: string | null;
+  expiry_date: string | null;
+  admin_notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+
 type Stats = {
   totalApplications: number;
   pendingApplications: number;
@@ -267,6 +307,9 @@ type TabKey =
   | 'applications'
   | 'public-submissions'
   | 'profiles'
+  | 'bureau-control'
+  | 'premium-payments'
+  | 'reports'
   | 'messages'
   | 'logs';
 
@@ -276,6 +319,9 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: 'applications', label: 'Bureau Requests' },
   { key: 'public-submissions', label: 'Public Submissions' },
   { key: 'profiles', label: 'Profiles Control' },
+  { key: 'bureau-control', label: 'Bureau Control' },
+  { key: 'premium-payments', label: 'Premium Payments' },
+  { key: 'reports', label: 'Reports & Export' },
   { key: 'messages', label: 'Contact Messages' },
   { key: 'logs', label: 'Contact View Logs' },
 ];
@@ -609,6 +655,34 @@ export default function SuperAdminPage() {
     setAssignedProfileFollowUps,
   ] =
     useState<AssignedProfileFollowUp[]>([]);
+
+
+  const [
+    bureauControls,
+    setBureauControls,
+  ] =
+    useState<BureauControl[]>([]);
+
+
+  const [
+    premiumOrders,
+    setPremiumOrders,
+  ] =
+    useState<PremiumOrder[]>([]);
+
+
+  const [
+    bureauWarningDraft,
+    setBureauWarningDraft,
+  ] =
+    useState<Record<string, string>>({});
+
+
+  const [
+    bureauLimitDraft,
+    setBureauLimitDraft,
+  ] =
+    useState<Record<string, string>>({});
 
 
   const [adminNotesDraft, setAdminNotesDraft] =
@@ -1137,6 +1211,70 @@ export default function SuperAdminPage() {
       }
 
 
+      const {
+        data: bureauControlData,
+        error: bureauControlError,
+      } = await supabase
+        .from('bureau_admin_controls')
+        .select(`
+          id,
+          bureau_email,
+          business_name,
+          is_flagged,
+          warning_note,
+          contact_reveal_suspended,
+          daily_contact_view_limit,
+          updated_at
+        `)
+        .order(
+          'updated_at',
+          { ascending: false }
+        )
+        .limit(1000);
+
+
+      if (bureauControlError) {
+        throw bureauControlError;
+      }
+
+
+      const {
+        data: premiumOrderData,
+        error: premiumOrderError,
+      } = await supabase
+        .from('premium_orders')
+        .select(`
+          id,
+          profile_reference,
+          customer_name,
+          customer_phone,
+          customer_email,
+          user_type,
+          bureau_email,
+          plan_type,
+          amount_pkr,
+          payment_method,
+          payment_status,
+          payment_screenshot_url,
+          transaction_id,
+          start_date,
+          expiry_date,
+          admin_notes,
+          created_at,
+          updated_at
+        `)
+        .order(
+          'created_at',
+          { ascending: false }
+        )
+        .limit(1000);
+
+
+      if (premiumOrderError) {
+        throw premiumOrderError;
+      }
+
+
       const loadedApplications =
         (applicationData || []) as BureauApplication[];
 
@@ -1266,6 +1404,51 @@ export default function SuperAdminPage() {
 
       setAssignedProfileFollowUps(
         (followUpData || []) as AssignedProfileFollowUp[]
+      );
+
+
+      const loadedBureauControls =
+        (bureauControlData || []) as BureauControl[];
+
+
+      setBureauControls(
+        loadedBureauControls
+      );
+
+
+      const warningDraft:
+        Record<string, string> = {};
+
+
+      const limitDraft:
+        Record<string, string> = {};
+
+
+      loadedBureauControls.forEach(
+        (control) => {
+          warningDraft[control.bureau_email] =
+            control.warning_note || '';
+
+          limitDraft[control.bureau_email] =
+            control.daily_contact_view_limit
+              ? String(control.daily_contact_view_limit)
+              : '';
+        }
+      );
+
+
+      setBureauWarningDraft(
+        warningDraft
+      );
+
+
+      setBureauLimitDraft(
+        limitDraft
+      );
+
+
+      setPremiumOrders(
+        (premiumOrderData || []) as PremiumOrder[]
       );
 
     } catch (err: unknown) {
@@ -2271,6 +2454,473 @@ export default function SuperAdminPage() {
   };
 
 
+
+  const getBureauControl = (
+    email: string | null
+  ) => {
+    if (!email) return null;
+
+    return (
+      bureauControls.find(
+        (control) =>
+          control.bureau_email === email
+      ) || null
+    );
+  };
+
+
+  const getContactViewsToday = (
+    email: string | null
+  ) => {
+    if (!email) return 0;
+
+    const todayStart =
+      new Date();
+
+    todayStart.setHours(0, 0, 0, 0);
+
+    return logs.filter((log) => {
+      if (
+        log.viewer_email !== email ||
+        !log.viewed_at
+      ) {
+        return false;
+      }
+
+      return new Date(log.viewed_at) >= todayStart;
+    }).length;
+  };
+
+
+  const getBureauWarningSignals = (
+    email: string | null
+  ) => {
+    if (!email) return [];
+
+    const signals: string[] = [];
+
+    const control =
+      getBureauControl(email);
+
+    const todayViews =
+      getContactViewsToday(email);
+
+    const limit =
+      control?.daily_contact_view_limit || 20;
+
+    if (todayViews > limit) {
+      signals.push(
+        `Viewed ${todayViews} contacts today. Daily limit is ${limit}.`
+      );
+    }
+
+    const assignedCases =
+      assignedProfileWork.filter(
+        (work) =>
+          work.bureau_email === email
+      );
+
+    const casesWithoutFollowUp =
+      assignedCases.filter(
+        (work) =>
+          !work.last_follow_up_at
+      ).length;
+
+    if (
+      assignedCases.length > 0 &&
+      casesWithoutFollowUp > 0
+    ) {
+      signals.push(
+        `${casesWithoutFollowUp} assigned cases have no follow-up.`
+      );
+    }
+
+    const genderViews: Record<string, number> = {};
+
+    logs
+      .filter(
+        (log) =>
+          log.viewer_email === email
+      )
+      .forEach((log) => {
+        const gender =
+          log.profile_gender || 'Unknown';
+
+        genderViews[gender] =
+          (genderViews[gender] || 0) + 1;
+      });
+
+    Object.entries(genderViews).forEach(
+      ([gender, count]) => {
+        if (count >= 10) {
+          signals.push(
+            `Repeatedly viewed ${gender} profiles (${count} views).`
+          );
+        }
+      }
+    );
+
+    return signals;
+  };
+
+
+  const saveBureauControl = async (
+    bureau: BureauApplication,
+    updates: Partial<BureauControl>
+  ) => {
+    if (!bureau.email) {
+      setErrorMessage(
+        'Bureau email is missing.'
+      );
+      return;
+    }
+
+    try {
+      setActionLoading(bureau.email);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const existingControl =
+        getBureauControl(bureau.email);
+
+      const payload = {
+        bureau_email: bureau.email,
+        business_name:
+          bureau.business_name ||
+          bureau.full_name ||
+          bureau.email,
+        is_flagged:
+          updates.is_flagged ??
+          existingControl?.is_flagged ??
+          false,
+        warning_note:
+          updates.warning_note ??
+          bureauWarningDraft[bureau.email] ??
+          existingControl?.warning_note ??
+          null,
+        contact_reveal_suspended:
+          updates.contact_reveal_suspended ??
+          existingControl?.contact_reveal_suspended ??
+          false,
+        daily_contact_view_limit:
+          updates.daily_contact_view_limit ??
+          (
+            bureauLimitDraft[bureau.email]
+              ? Number(bureauLimitDraft[bureau.email])
+              : existingControl?.daily_contact_view_limit || 20
+          ),
+        updated_by_email: currentEmail,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('bureau_admin_controls')
+        .upsert(payload, {
+          onConflict: 'bureau_email',
+        });
+
+      if (error) throw error;
+
+      setSuccessMessage(
+        'Bureau control settings saved.'
+      );
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Bureau control settings could not be saved.'
+      );
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+  const updatePremiumOrder = async (
+    orderId: string,
+    updates: Partial<PremiumOrder>
+  ) => {
+    try {
+      setActionLoading(orderId);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const { error } = await supabase
+        .from('premium_orders')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setSuccessMessage(
+        'Premium order updated.'
+      );
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Premium order could not be updated.'
+      );
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+  const addManualPayment = async () => {
+    const customerName =
+      window.prompt('Customer name?');
+
+    if (!customerName) return;
+
+    const customerPhone =
+      window.prompt('Customer phone / WhatsApp?') || '';
+
+    const profileReference =
+      window.prompt('Profile reference? Example: MBN-MTN-G-10001') || '';
+
+    const planType =
+      window.prompt('Plan type? Example: Verified Premium') ||
+      'Manual Premium';
+
+    const amountValue =
+      window.prompt('Amount PKR?') || '0';
+
+    const transactionId =
+      window.prompt('Transaction ID / notes?') || '';
+
+    const startDate =
+      new Date();
+
+    const expiryDate =
+      new Date();
+
+    expiryDate.setMonth(
+      expiryDate.getMonth() + 1
+    );
+
+    try {
+      setActionLoading('manual-payment');
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const { error } = await supabase
+        .from('premium_orders')
+        .insert({
+          customer_name: customerName,
+          customer_phone: customerPhone || null,
+          profile_reference:
+            profileReference || null,
+          plan_type: planType,
+          amount_pkr:
+            Number(amountValue) || 0,
+          payment_method: 'Manual',
+          payment_status: 'approved',
+          transaction_id:
+            transactionId || null,
+          start_date:
+            startDate.toISOString().slice(0, 10),
+          expiry_date:
+            expiryDate.toISOString().slice(0, 10),
+          admin_notes:
+            `Manual payment added by ${currentEmail}`,
+          created_by_email: currentEmail,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      setSuccessMessage(
+        'Manual premium payment added.'
+      );
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Manual payment could not be added.'
+      );
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+
+  const deleteNetworkProfile = async (
+    profile: MarriageProfile
+  ) => {
+    const confirmed =
+      window.confirm(
+        `Delete profile ${profile.profile_code || profile.candidate_name || profile.id} permanently from database? This cannot be undone.`
+      );
+
+    if (!confirmed) return;
+
+    const reason =
+      window.prompt(
+        'Reason for deleting this profile?'
+      ) || 'Deleted by super admin';
+
+    try {
+      setActionLoading(profile.id);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const { error } = await supabase.rpc(
+        'admin_delete_marriage_profile',
+        {
+          p_profile_id: profile.id,
+          p_reason: reason,
+        }
+      );
+
+      if (error) throw error;
+
+      setSuccessMessage(
+        'Profile deleted from database.'
+      );
+
+      await loadAdminData();
+
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Profile could not be deleted.'
+      );
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+
+  const csvCell = (
+    value: unknown
+  ) => {
+    const textValue =
+      value === null ||
+      value === undefined
+        ? ''
+        : String(value);
+
+    return `"${textValue.replace(/"/g, '""')}"`;
+  };
+
+
+  const downloadCsv = (
+    fileName: string,
+    rows: Record<string, unknown>[]
+  ) => {
+    if (rows.length === 0) {
+      setErrorMessage(
+        'No data available for export.'
+      );
+      return;
+    }
+
+    const headers =
+      Object.keys(rows[0]);
+
+    const csv = [
+      headers.map(csvCell).join(','),
+      ...rows.map((row) =>
+        headers
+          .map((header) =>
+            csvCell(row[header])
+          )
+          .join(',')
+      ),
+    ].join('\n');
+
+    const blob =
+      new Blob([csv], {
+        type: 'text/csv;charset=utf-8;',
+      });
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement('a');
+
+    link.href = url;
+    link.download = fileName;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+
+  const exportMonthlyReport = () => {
+    const now =
+      new Date();
+
+    const monthStart =
+      new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const isThisMonth = (
+      value: string | null
+    ) =>
+      value
+        ? new Date(value) >= monthStart
+        : false;
+
+    const report = [{
+      month: now.toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+      }),
+      new_bureaus: applications.filter((app) =>
+        isThisMonth(app.created_at)
+      ).length,
+      new_profiles: profiles.filter((profile) =>
+        isThisMonth(profile.created_at)
+      ).length,
+      new_public_submissions: publicSubmissions.filter((submission) =>
+        isThisMonth(submission.submitted_at)
+      ).length,
+      converted_profiles: publicSubmissions.filter((submission) =>
+        submission.converted_to_profile &&
+        isThisMonth(submission.converted_at)
+      ).length,
+      contact_views: logs.filter((log) =>
+        isThisMonth(log.viewed_at)
+      ).length,
+      matched_cases: publicSubmissions.filter((submission) =>
+        submission.review_status === 'matched' &&
+        isThisMonth(submission.updated_at)
+      ).length,
+      premium_revenue_pkr: premiumOrders
+        .filter((order) =>
+          order.payment_status === 'approved' &&
+          isThisMonth(order.created_at)
+        )
+        .reduce(
+          (sum, order) =>
+            sum + (order.amount_pkr || 0),
+          0
+        ),
+    }];
+
+    downloadCsv(
+      'mbn-monthly-report.csv',
+      report
+    );
+  };
+
+
   const recentPendingApplications =
     applications
       .filter(
@@ -2463,6 +3113,62 @@ export default function SuperAdminPage() {
           bg="bg-red-50"
         />
 
+      </div>
+
+
+
+      {/* Smart Alerts */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 className="font-heading text-xl font-bold text-slate-900">
+              Smart Alerts
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Priority items that need super admin attention.
+            </p>
+          </div>
+
+          <TriangleAlert className="w-7 h-7 text-amber-600" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <SmartAlertCard title="Bureau applications pending" value={stats.pendingApplications} action="Review applications" danger={stats.pendingApplications > 0} />
+
+          <SmartAlertCard title="Public profiles need review" value={stats.newPublicSubmissions} action="Open public submissions" danger={stats.newPublicSubmissions > 0} />
+
+          <SmartAlertCard
+            title="Possible duplicates found"
+            value={publicSubmissions.filter((submission) => submission.possible_duplicate || submission.duplicate_review_status === 'needs_review').length}
+            action="Review duplicate cases"
+            danger
+          />
+
+          <SmartAlertCard
+            title="Bureaus with high contact views"
+            value={applications.filter((app) => getContactViewsToday(app.email) > (getBureauControl(app.email)?.daily_contact_view_limit || 20)).length}
+            action="Review bureau control"
+            danger
+          />
+
+          <SmartAlertCard
+            title="Payments need approval"
+            value={premiumOrders.filter((order) => order.payment_status === 'pending').length}
+            action="Review payments"
+            danger
+          />
+
+          <SmartAlertCard
+            title="Assigned cases without follow-up"
+            value={assignedProfileWork.filter((work) => !work.last_follow_up_at).length}
+            action="Check assigned work"
+            danger
+          />
+
+          <SmartAlertCard title="Flagged bureaus" value={bureauControls.filter((control) => control.is_flagged).length} action="Review flags" danger />
+
+          <SmartAlertCard title="Contact reveal suspended" value={bureauControls.filter((control) => control.contact_reveal_suspended).length} action="Review suspensions" danger />
+        </div>
       </div>
 
 
@@ -5235,6 +5941,23 @@ export default function SuperAdminPage() {
                         </div>
                       </div>
 
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          deleteNetworkProfile(profile)
+                        }
+                        disabled={
+                          actionLoading ===
+                          profile.id
+                        }
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-700 text-white text-sm font-semibold hover:bg-red-800 disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete from Database
+                      </button>
+
+
                     </div>
                   </div>
                 </div>
@@ -5431,6 +6154,239 @@ export default function SuperAdminPage() {
       )}
 
 
+
+      {/* Bureau Control */}
+      {activeTab === 'bureau-control' && (
+        <div className="space-y-6">
+
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <SectionHeader
+              title="Bureau Control & Safety"
+              count={applications.filter((app) => app.status === 'approved').length}
+              subtitle="Flag bureaus, add warning notes, suspend contact reveal, and set daily contact view limits"
+            />
+
+            <div className="divide-y divide-slate-100">
+              {applications
+                .filter((app) => app.status === 'approved')
+                .map((bureau) => {
+                  const control = getBureauControl(bureau.email);
+                  const signals = getBureauWarningSignals(bureau.email);
+                  const todayViews = getContactViewsToday(bureau.email);
+
+                  return (
+                    <div key={bureau.id} className="p-6">
+                      <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-heading text-lg font-bold text-slate-900">
+                              {bureau.business_name || bureau.full_name || bureau.email}
+                            </h3>
+
+                            {control?.is_flagged && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
+                                <Flag className="w-3.5 h-3.5" />
+                                Flagged
+                              </span>
+                            )}
+
+                            {control?.contact_reveal_suspended && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                                <Ban className="w-3.5 h-3.5" />
+                                Contact Reveal Suspended
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-slate-600">
+                            <p>Email: <span className="font-semibold text-slate-900">{bureau.email || 'N/A'}</span></p>
+                            <p>City: <span className="font-semibold text-slate-900">{bureau.city || 'N/A'}</span></p>
+                            <p>Views today: <span className="font-semibold text-slate-900">{todayViews}</span></p>
+                          </div>
+
+                          {signals.length > 0 && (
+                            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                              <p className="font-bold text-amber-900 text-sm">Warning Signals</p>
+                              <ul className="mt-2 space-y-1 text-sm text-amber-800 list-disc pl-5">
+                                {signals.map((signal) => (
+                                  <li key={signal}>{signal}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="xl:w-[460px] space-y-3">
+                          <textarea
+                            value={bureauWarningDraft[bureau.email || ''] ?? control?.warning_note ?? ''}
+                            onChange={(e) => setBureauWarningDraft((prev) => ({ ...prev, [bureau.email || '']: e.target.value }))}
+                            rows={3}
+                            placeholder="Add warning note for this bureau..."
+                            className="input-field resize-none"
+                          />
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input
+                              type="number"
+                              min="1"
+                              value={bureauLimitDraft[bureau.email || ''] ?? control?.daily_contact_view_limit ?? ''}
+                              onChange={(e) => setBureauLimitDraft((prev) => ({ ...prev, [bureau.email || '']: e.target.value }))}
+                              placeholder="Daily contact view limit"
+                              className="input-field"
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => saveBureauControl(bureau, {
+                                warning_note: bureauWarningDraft[bureau.email || ''] || null,
+                                daily_contact_view_limit: bureauLimitDraft[bureau.email || ''] ? Number(bureauLimitDraft[bureau.email || '']) : 20,
+                              })}
+                              disabled={actionLoading === bureau.email}
+                              className="px-4 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 disabled:opacity-50"
+                            >
+                              Save Note / Limit
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => saveBureauControl(bureau, { is_flagged: !control?.is_flagged })}
+                              disabled={actionLoading === bureau.email}
+                              className={`px-4 py-3 rounded-lg font-semibold disabled:opacity-50 ${control?.is_flagged ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}
+                            >
+                              {control?.is_flagged ? 'Remove Flag' : 'Flag Bureau'}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => saveBureauControl(bureau, { contact_reveal_suspended: !control?.contact_reveal_suspended })}
+                              disabled={actionLoading === bureau.email}
+                              className={`px-4 py-3 rounded-lg font-semibold disabled:opacity-50 ${control?.contact_reveal_suspended ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
+                            >
+                              {control?.contact_reveal_suspended ? 'Resume Contact Reveal' : 'Suspend Contact Reveal'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {applications.filter((app) => app.status === 'approved').length === 0 && (
+                <EmptyState text="No approved bureaus found." />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Premium Payments */}
+      {activeTab === 'premium-payments' && (
+        <div className="space-y-6">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+            <StatCard title="Premium Orders" value={premiumOrders.length} subtitle="All orders" icon={<CreditCard className="w-6 h-6 text-green-700" />} bg="bg-green-50" />
+            <StatCard title="Pending Payments" value={premiumOrders.filter((order) => order.payment_status === 'pending').length} subtitle="Need approval" icon={<Clock className="w-6 h-6 text-amber-700" />} bg="bg-amber-50" />
+            <StatCard title="Approved Payments" value={premiumOrders.filter((order) => order.payment_status === 'approved').length} subtitle="Paid" icon={<CheckCircle className="w-6 h-6 text-blue-700" />} bg="bg-blue-50" />
+            <StatCard title="Rejected Payments" value={premiumOrders.filter((order) => order.payment_status === 'rejected').length} subtitle="Declined" icon={<Ban className="w-6 h-6 text-red-700" />} bg="bg-red-50" />
+            <StatCard title="Revenue PKR" value={premiumOrders.filter((order) => order.payment_status === 'approved').reduce((sum, order) => sum + (order.amount_pkr || 0), 0)} subtitle="Approved only" icon={<TrendingUp className="w-6 h-6 text-purple-700" />} bg="bg-purple-50" />
+          </div>
+
+          <div className="flex justify-end">
+            <button type="button" onClick={addManualPayment} disabled={actionLoading === 'manual-payment'} className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800 disabled:opacity-50">
+              <PlusCircle className="w-4 h-4" />
+              Add Manual Payment
+            </button>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <SectionHeader title="Premium Orders" count={premiumOrders.length} subtitle="Pending, approved, rejected, expired, and active premium users" />
+
+            <div className="divide-y divide-slate-100">
+              {premiumOrders.map((order) => {
+                const isExpired = order.expiry_date ? new Date(order.expiry_date) < new Date() : false;
+
+                return (
+                  <div key={order.id} className="p-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-heading text-lg font-bold text-slate-900">
+                            {order.customer_name || order.profile_reference || 'Premium Order'}
+                          </h3>
+                          <StatusBadge status={isExpired ? 'expired' : order.payment_status || 'pending'} />
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 text-sm text-slate-600">
+                          <p>Plan: <span className="font-semibold text-slate-900">{order.plan_type || 'N/A'}</span></p>
+                          <p>Amount: <span className="font-semibold text-slate-900">{order.amount_pkr || 0} PKR</span></p>
+                          <p>Method: <span className="font-semibold text-slate-900">{order.payment_method || 'N/A'}</span></p>
+                          <p>Transaction: <span className="font-semibold text-slate-900">{order.transaction_id || 'N/A'}</span></p>
+                          <p>Start: <span className="font-semibold text-slate-900">{formatDate(order.start_date)}</span></p>
+                          <p>Expiry: <span className="font-semibold text-slate-900">{formatDate(order.expiry_date)}</span></p>
+                          <p>Phone: <span className="font-semibold text-slate-900">{order.customer_phone || 'N/A'}</span></p>
+                          <p>Reference: <span className="font-semibold text-slate-900">{order.profile_reference || 'N/A'}</span></p>
+                        </div>
+
+                        {order.payment_screenshot_url && (
+                          <a href={order.payment_screenshot_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-semibold text-green-700 hover:underline">
+                            View payment screenshot
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <button type="button" onClick={() => updatePremiumOrder(order.id, { payment_status: 'approved', start_date: order.start_date || new Date().toISOString().slice(0, 10) })} disabled={actionLoading === order.id} className="px-4 py-3 rounded-lg bg-green-50 text-green-700 font-semibold hover:bg-green-100 disabled:opacity-50">Approve</button>
+                        <button type="button" onClick={() => updatePremiumOrder(order.id, { payment_status: 'rejected' })} disabled={actionLoading === order.id} className="px-4 py-3 rounded-lg bg-red-50 text-red-700 font-semibold hover:bg-red-100 disabled:opacity-50">Reject</button>
+                        <button type="button" onClick={() => {
+                          const days = Number(window.prompt('Extend by how many days?', '30') || '30');
+                          const expiry = order.expiry_date ? new Date(order.expiry_date) : new Date();
+                          expiry.setDate(expiry.getDate() + days);
+                          updatePremiumOrder(order.id, { payment_status: 'approved', expiry_date: expiry.toISOString().slice(0, 10) });
+                        }} disabled={actionLoading === order.id} className="px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 disabled:opacity-50">Extend Plan</button>
+                        <button type="button" onClick={() => updatePremiumOrder(order.id, { payment_status: 'cancelled' })} disabled={actionLoading === order.id} className="px-4 py-3 rounded-lg bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 disabled:opacity-50">Cancel</button>
+                        <button type="button" onClick={() => {
+                          const newPlan = window.prompt('Upgrade to plan?', order.plan_type || 'Verified Premium');
+                          if (!newPlan) return;
+                          updatePremiumOrder(order.id, { plan_type: newPlan, payment_status: 'approved' });
+                        }} disabled={actionLoading === order.id} className="col-span-2 px-4 py-3 rounded-lg bg-purple-50 text-purple-700 font-semibold hover:bg-purple-100 disabled:opacity-50">Upgrade Plan</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {premiumOrders.length === 0 && (
+                <EmptyState text="No premium orders found." />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Reports & Export */}
+      {activeTab === 'reports' && (
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h2 className="font-heading text-xl font-bold text-slate-900">Reports & CSV Export</h2>
+            <p className="text-sm text-slate-500 mt-1">Download operational reports for bureaus, profiles, submissions, contact logs, premium payments, and monthly performance.</p>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <ExportButton label="Export Bureaus" onClick={() => downloadCsv('mbn-bureaus.csv', applications.map((app) => ({ business_name: app.business_name, full_name: app.full_name, email: app.email, mobile: app.mobile_number, whatsapp: app.whatsapp_number, city: app.city, province: app.province, status: app.status, created_at: app.created_at })))} />
+              <ExportButton label="Export Profiles" onClick={() => downloadCsv('mbn-profiles.csv', profiles.map((profile) => ({ profile_code: profile.profile_code, candidate_name: profile.candidate_name, gender: profile.gender, age: profile.age, city: profile.city, province: profile.province, caste: profile.caste, sect: profile.sect, education: profile.education, profession: profile.profession, bureau_email: profile.bureau_email, status: profile.status, created_at: profile.created_at })))} />
+              <ExportButton label="Export Public Submissions" onClick={() => downloadCsv('mbn-public-submissions.csv', publicSubmissions.map((submission) => ({ reference: submission.submission_reference, submitter: submission.submitter_full_name, mobile: submission.submitter_mobile, candidate_name: submission.candidate_name, gender: submission.gender, age: submission.age, city: submission.city, province: submission.province, status: submission.review_status, assigned_bureau: submission.assigned_bureau_email, converted: submission.converted_to_profile, submitted_at: submission.submitted_at })))} />
+              <ExportButton label="Export Contact Logs" onClick={() => downloadCsv('mbn-contact-logs.csv', logs.map((log) => ({ viewer_email: log.viewer_email, viewer_business_name: log.viewer_business_name, profile_code: log.profile_code, candidate_name: log.profile_candidate_name, gender: log.profile_gender, uploader_email: log.uploader_email, uploader_business_name: log.uploader_business_name, viewed_at: log.viewed_at })))} />
+              <ExportButton label="Export Premium Payments" onClick={() => downloadCsv('mbn-premium-payments.csv', premiumOrders.map((order) => ({ customer_name: order.customer_name, phone: order.customer_phone, profile_reference: order.profile_reference, plan_type: order.plan_type, amount_pkr: order.amount_pkr, method: order.payment_method, status: order.payment_status, transaction_id: order.transaction_id, start_date: order.start_date, expiry_date: order.expiry_date, created_at: order.created_at })))} />
+              <ExportButton label="Export Monthly Report" onClick={exportMonthlyReport} />
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Logs */}
       {activeTab === 'logs' && (
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -5552,3 +6508,64 @@ export default function SuperAdminPage() {
     </div>
   );
 }
+
+function SmartAlertCard({
+  title,
+  value,
+  action,
+  danger = false,
+}: {
+  title: string;
+  value: number;
+  action: string;
+  danger?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${
+        danger && value > 0
+          ? 'border-amber-200 bg-amber-50'
+          : 'border-slate-200 bg-slate-50'
+      }`}
+    >
+      <p className="text-3xl font-black text-slate-900">
+        {value}
+      </p>
+
+      <p className="text-sm font-bold text-slate-800 mt-1">
+        {title}
+      </p>
+
+      <p
+        className={`text-xs mt-2 ${
+          danger && value > 0
+            ? 'text-amber-700'
+            : 'text-slate-500'
+        }`}
+      >
+        {value > 0 ? action : 'No urgent action'}
+      </p>
+    </div>
+  );
+}
+
+
+function ExportButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 hover:bg-slate-100"
+    >
+      <Download className="w-4 h-4" />
+      {label}
+    </button>
+  );
+}
+
