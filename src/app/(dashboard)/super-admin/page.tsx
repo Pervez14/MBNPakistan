@@ -37,6 +37,7 @@ import {
   Trash2,
   PlusCircle,
   TrendingUp,
+  ArrowRight,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
