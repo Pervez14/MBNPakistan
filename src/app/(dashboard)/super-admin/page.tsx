@@ -3125,7 +3125,7 @@ export default function SuperAdminPage() {
               Smart Alerts
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              Priority items that need super admin attention.
+              Priority items that need super admin attention. Click any alert to open the related section.
             </p>
           </div>
 
@@ -3133,15 +3133,40 @@ export default function SuperAdminPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <SmartAlertCard title="Bureau applications pending" value={stats.pendingApplications} action="Review applications" danger={stats.pendingApplications > 0} />
+          <SmartAlertCard
+            title="Bureau applications pending"
+            value={stats.pendingApplications}
+            action="Review applications"
+            danger={stats.pendingApplications > 0}
+            onClick={() => {
+              setActiveTab('applications');
+              setStatusFilter('pending');
+              setSearchTerm('');
+            }}
+          />
 
-          <SmartAlertCard title="Public profiles need review" value={stats.newPublicSubmissions} action="Open public submissions" danger={stats.newPublicSubmissions > 0} />
+          <SmartAlertCard
+            title="Public profiles need review"
+            value={stats.newPublicSubmissions}
+            action="Open public submissions"
+            danger={stats.newPublicSubmissions > 0}
+            onClick={() => {
+              setActiveTab('public-submissions');
+              setStatusFilter('new');
+              setSearchTerm('');
+            }}
+          />
 
           <SmartAlertCard
             title="Possible duplicates found"
             value={publicSubmissions.filter((submission) => submission.possible_duplicate || submission.duplicate_review_status === 'needs_review').length}
             action="Review duplicate cases"
             danger
+            onClick={() => {
+              setActiveTab('public-submissions');
+              setStatusFilter('');
+              setSearchTerm('duplicate');
+            }}
           />
 
           <SmartAlertCard
@@ -3149,6 +3174,11 @@ export default function SuperAdminPage() {
             value={applications.filter((app) => getContactViewsToday(app.email) > (getBureauControl(app.email)?.daily_contact_view_limit || 20)).length}
             action="Review bureau control"
             danger
+            onClick={() => {
+              setActiveTab('bureau-control');
+              setStatusFilter('');
+              setSearchTerm('');
+            }}
           />
 
           <SmartAlertCard
@@ -3156,6 +3186,11 @@ export default function SuperAdminPage() {
             value={premiumOrders.filter((order) => order.payment_status === 'pending').length}
             action="Review payments"
             danger
+            onClick={() => {
+              setActiveTab('premium-payments');
+              setStatusFilter('');
+              setSearchTerm('');
+            }}
           />
 
           <SmartAlertCard
@@ -3163,11 +3198,36 @@ export default function SuperAdminPage() {
             value={assignedProfileWork.filter((work) => !work.last_follow_up_at).length}
             action="Check assigned work"
             danger
+            onClick={() => {
+              setActiveTab('public-submissions');
+              setStatusFilter('assigned');
+              setSearchTerm('');
+            }}
           />
 
-          <SmartAlertCard title="Flagged bureaus" value={bureauControls.filter((control) => control.is_flagged).length} action="Review flags" danger />
+          <SmartAlertCard
+            title="Flagged bureaus"
+            value={bureauControls.filter((control) => control.is_flagged).length}
+            action="Review flags"
+            danger
+            onClick={() => {
+              setActiveTab('bureau-control');
+              setStatusFilter('');
+              setSearchTerm('');
+            }}
+          />
 
-          <SmartAlertCard title="Contact reveal suspended" value={bureauControls.filter((control) => control.contact_reveal_suspended).length} action="Review suspensions" danger />
+          <SmartAlertCard
+            title="Contact reveal suspended"
+            value={bureauControls.filter((control) => control.contact_reveal_suspended).length}
+            action="Review suspensions"
+            danger
+            onClick={() => {
+              setActiveTab('bureau-control');
+              setStatusFilter('');
+              setSearchTerm('');
+            }}
+          />
         </div>
       </div>
 
@@ -6514,41 +6574,58 @@ function SmartAlertCard({
   value,
   action,
   danger = false,
+  onClick,
 }: {
   title: string;
   value: number;
   action: string;
   danger?: boolean;
+  onClick: () => void;
 }) {
+  const hasUrgentItems = value > 0;
+
   return (
-    <div
-      className={`rounded-2xl border p-4 ${
-        danger && value > 0
-          ? 'border-amber-200 bg-amber-50'
-          : 'border-slate-200 bg-slate-50'
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-600 ${
+        danger && hasUrgentItems
+          ? 'border-amber-200 bg-amber-50 hover:bg-amber-100'
+          : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
       }`}
     >
-      <p className="text-3xl font-black text-slate-900">
-        {value}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-3xl font-black text-slate-900">
+            {value}
+          </p>
 
-      <p className="text-sm font-bold text-slate-800 mt-1">
-        {title}
-      </p>
+          <p className="text-sm font-bold text-slate-800 mt-1">
+            {title}
+          </p>
 
-      <p
-        className={`text-xs mt-2 ${
-          danger && value > 0
-            ? 'text-amber-700'
-            : 'text-slate-500'
-        }`}
-      >
-        {value > 0 ? action : 'No urgent action'}
-      </p>
-    </div>
+          <p
+            className={`text-xs mt-2 ${
+              danger && hasUrgentItems
+                ? 'text-amber-700'
+                : 'text-slate-500'
+            }`}
+          >
+            {hasUrgentItems ? action : 'Open section'}
+          </p>
+        </div>
+
+        <ArrowRight
+          className={`w-4 h-4 mt-1 ${
+            danger && hasUrgentItems
+              ? 'text-amber-700'
+              : 'text-slate-400'
+          }`}
+        />
+      </div>
+    </button>
   );
 }
-
 
 function ExportButton({
   label,
