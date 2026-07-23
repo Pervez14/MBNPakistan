@@ -19,11 +19,15 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://mbnpakistan.com'),
   title: 'Marriage Bureau Network Pakistan',
   description:
     "Pakistan's professional network for Marriage Bureau operators, Rishta Consultants, Matchmakers, individuals, and families.",
   keywords:
     'marriage bureau, rishta, Pakistan, matchmaking, nikah, shaadi, MBN Pakistan, marriage bureau network',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },
