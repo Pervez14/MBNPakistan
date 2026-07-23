@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { Providers } from './providers';
@@ -57,14 +58,33 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="bg-slate-50 text-slate-900 antialiased">
-  <Providers>
-    {children}
-  </Providers>
-  <Toaster
+        <Script
+          id="microsoft-clarity"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "xr4k78z13b");
+            `,
+          }}
+        />
+
+        <Providers>
+          {children}
+        </Providers>
+
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -75,10 +95,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               fontSize: '14px',
             },
             success: {
-              iconTheme: { primary: '#2fa86a', secondary: '#fff' },
+              iconTheme: {
+                primary: '#2fa86a',
+                secondary: '#fff',
+              },
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
             },
           }}
         />
