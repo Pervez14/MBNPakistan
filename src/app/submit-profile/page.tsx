@@ -2448,12 +2448,11 @@ function PremiumMatchPreview({
       : 0;
 
 
-  const whatsappNumber = '923336612404';
-
-  const planMessage = (planName: string) =>
-    encodeURIComponent(
-      `Assalamualaikum MBN Pakistan, I want to activate ${planName} for my profile reference ${reference}.`
-    );
+  const paymentLink = (
+    planName: string,
+    amount: number
+  ) =>
+    `/payment/manual?plan=${encodeURIComponent(planName)}&amount=${amount}&reference=${encodeURIComponent(reference)}`;
 
 
   const matchGenderLabel =
@@ -2695,11 +2694,10 @@ function PremiumMatchPreview({
 
 
                 <a
-                  href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                    'Verified Premium'
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={paymentLink(
+                    'Verified Premium',
+                    1499
+                  )}
                   className="inline-flex items-center justify-center rounded-2xl bg-green-700 px-6 py-4 font-black text-white hover:bg-green-800"
                 >
                   Get Verified Premium
@@ -2728,8 +2726,7 @@ function PremiumMatchPreview({
 
 
               <p className="text-sm text-slate-500 max-w-md">
-                Payment gateway integration can be connected next. For now, plan requests
-                open a prepared WhatsApp message.
+                Pay with JazzCash or Easypaisa, upload payment proof, and wait for admin approval.
               </p>
 
             </div>
@@ -2749,10 +2746,11 @@ function PremiumMatchPreview({
                   'WhatsApp notifications',
                   '10 interests per month',
                 ]}
-                cta={t.activateWhatsapp}
-                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                  'Premium Match Access'
-                )}`}
+                cta="Choose Plan"
+                href={paymentLink(
+                  'Premium Match Access',
+                  799
+                )}
               />
 
 
@@ -2770,10 +2768,11 @@ function PremiumMatchPreview({
                   'Higher visibility',
                   '30 interests per month',
                 ]}
-                cta={t.activateWhatsapp}
-                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                  'Verified Premium'
-                )}`}
+                cta="Choose Plan"
+                href={paymentLink(
+                  'Verified Premium',
+                  1499
+                )}
               />
 
 
@@ -2789,10 +2788,11 @@ function PremiumMatchPreview({
                   'Priority matching',
                   'WhatsApp assistance',
                 ]}
-                cta={t.activateWhatsapp}
-                href={`https://wa.me/${whatsappNumber}?text=${planMessage(
-                  'Personal Matchmaking Service'
-                )}`}
+                cta="Choose Plan"
+                href={paymentLink(
+                  'Personal Matchmaking',
+                  4999
+                )}
               />
 
             </div>
