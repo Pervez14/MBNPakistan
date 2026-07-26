@@ -135,52 +135,191 @@ const feeModels = [
 ];
 const refundOptions = ['Yes — written policy', 'Handled case by case', 'No refund policy', 'Not applicable'];
 
+
+const optionUrdu: Record<string, string> = {
+  Owner: 'مالک',
+  'Co-owner / Partner': 'شریک مالک / کاروباری شراکت دار',
+  Manager: 'منتظمِ دفتر',
+  'Senior Matchmaker': 'سینئر رشتہ مشیر',
+  'Authorised Representative': 'مجاز نمائندہ',
+  CNIC: 'قومی شناختی کارڈ',
+  NICOP: 'بیرونِ ملک پاکستانیوں کا قومی شناختی کارڈ',
+  Passport: 'پاسپورٹ',
+  'Registered company / organisation': 'رجسٹرڈ کمپنی / ادارہ',
+  'Sole proprietor': 'انفرادی ملکیت کا کاروبار',
+  Partnership: 'شراکتی کاروبار',
+  'Independent professional bureau': 'آزاد پیشہ ور میرج بیورو',
+  'Home-based bureau': 'گھر سے چلایا جانے والا میرج بیورو',
+  'Less than 1 year': 'ایک سال سے کم',
+  '1–3 years': '1 سے 3 سال',
+  '3–5 years': '3 سے 5 سال',
+  '5–10 years': '5 سے 10 سال',
+  '10+ years': '10 سال یا اس سے زیادہ',
+  'Under 50': '50 سے کم',
+  '50–200': '50 سے 200',
+  '200–500': '200 سے 500',
+  '500–1,000': '500 سے 1,000',
+  '1,000+': '1,000 سے زیادہ',
+  'Only me': 'صرف میں',
+  '2–3 people': '2 سے 3 افراد',
+  '4–10 people': '4 سے 10 افراد',
+  '11–25 people': '11 سے 25 افراد',
+  '25+ people': '25 سے زیادہ افراد',
+  'Under 10': '10 سے کم',
+  '10–30': '10 سے 30',
+  '31–75': '31 سے 75',
+  '76–150': '76 سے 150',
+  '150+': '150 سے زیادہ',
+  'In-person': 'بالمشافہ',
+  Online: 'آن لائن',
+  'Hybrid — online and in-person': 'ہائبرڈ — آن لائن اور بالمشافہ',
+  'Registered with SECP / government authority': 'SECP یا سرکاری ادارے کے ساتھ رجسٹرڈ',
+  'Registered as a sole proprietor / tax filer': 'انفرادی کاروبار / ٹیکس فائلر کے طور پر رجسٹرڈ',
+  'Registration in progress': 'رجسٹریشن کا عمل جاری ہے',
+  'Not formally registered': 'باضابطہ رجسٹرڈ نہیں',
+  'Yes — dedicated office': 'جی ہاں — مخصوص دفتر موجود ہے',
+  'Home-based workspace': 'گھر سے قائم ورک اسپیس',
+  'No physical office': 'کوئی فزیکل دفتر نہیں',
+  Punjab: 'پنجاب',
+  Sindh: 'سندھ',
+  KPK: 'خیبر پختونخوا',
+  Balochistan: 'بلوچستان',
+  Islamabad: 'اسلام آباد',
+  AJK: 'آزاد جموں و کشمیر',
+  'Gilgit-Baltistan': 'گلگت بلتستان',
+  Overseas: 'بیرونِ ملک',
+  Pakistan: 'پاکستان',
+  'United Kingdom': 'برطانیہ',
+  'United Arab Emirates': 'متحدہ عرب امارات',
+  'Saudi Arabia': 'سعودی عرب',
+  'United States': 'امریکہ',
+  Canada: 'کینیڈا',
+  Australia: 'آسٹریلیا',
+  Qatar: 'قطر',
+  Oman: 'عمان',
+  Germany: 'جرمنی',
+  Other: 'دیگر',
+  Urdu: 'اردو',
+  English: 'انگریزی',
+  Punjabi: 'پنجابی',
+  Saraiki: 'سرائیکی',
+  Sindhi: 'سندھی',
+  Pashto: 'پشتو',
+  Balochi: 'بلوچی',
+  Arabic: 'عربی',
+  'Local Pakistan matches': 'پاکستان کے اندر رشتے',
+  'Overseas Pakistani matches': 'بیرونِ ملک پاکستانیوں کے رشتے',
+  'Educated professionals': 'تعلیم یافتہ پیشہ ور افراد',
+  'Business families': 'کاروباری خاندان',
+  'Second marriage': 'دوسری شادی',
+  'Divorcee / widow / widower': 'طلاق یافتہ / بیوہ / رنڈوا',
+  'Religious families': 'دینی رجحان رکھنے والے خاندان',
+  'Elite / premium families': 'پریمیم / ممتاز خاندان',
+  'People with disabilities': 'خصوصی ضروریات رکھنے والے افراد',
+  'General matchmaking': 'عمومی رشتہ سروس',
+  'Direct family registrations': 'خاندانوں کی براہِ راست رجسٹریشن',
+  'Existing client referrals': 'موجودہ کلائنٹس کی سفارشات',
+  'Community referrals': 'برادری / کمیونٹی کی سفارشات',
+  'Social media enquiries': 'سوشل میڈیا سے موصول ہونے والی درخواستیں',
+  'Partner marriage bureaus': 'شراکت دار میرج بیوروز',
+  'Professional / alumni networks': 'پیشہ ورانہ / سابق طلبہ نیٹ ورکس',
+  'CNIC / NICOP / passport review': 'CNIC / NICOP / پاسپورٹ کی جانچ',
+  'Phone or WhatsApp confirmation': 'فون یا واٹس ایپ کے ذریعے تصدیق',
+  'Candidate consent confirmation': 'امیدوار کی رضامندی کی تصدیق',
+  'Family reference check': 'خاندانی حوالہ کی جانچ',
+  'Video call': 'ویڈیو کال',
+  'In-person meeting': 'بالمشافہ ملاقات',
+  'Education / employment document review': 'تعلیمی / ملازمت کے دستاویزات کی جانچ',
+  'Written or digitally recorded consent': 'تحریری یا ڈیجیٹل طور پر محفوظ رضامندی',
+  'WhatsApp / email confirmation retained': 'واٹس ایپ / ای میل کی تصدیق محفوظ کی جاتی ہے',
+  'Verbal consent with internal record': 'زبانی رضامندی کے ساتھ اندرونی ریکارڈ',
+  'No formal consent process yet': 'ابھی باقاعدہ رضامندی کا طریقہ موجود نہیں',
+  'One-time registration fee': 'ایک مرتبہ رجسٹریشن فیس',
+  'Monthly / quarterly membership': 'ماہانہ / سہ ماہی رکنیت',
+  'Successful-match service fee': 'کامیاب رشتے پر سروس فیس',
+  'Custom package by client': 'کلائنٹ کے مطابق خصوصی پیکیج',
+  'Free and paid service options': 'مفت اور بامعاوضہ دونوں آپشنز',
+  'Yes — written policy': 'جی ہاں — تحریری پالیسی موجود ہے',
+  'Handled case by case': 'ہر کیس کے مطابق فیصلہ کیا جاتا ہے',
+  'No refund policy': 'رقم واپسی کی پالیسی موجود نہیں',
+  'Not applicable': 'لاگو نہیں',
+};
+
+function bilingualOption(value: string) {
+  const urdu = optionUrdu[value];
+  return urdu ? `${value} — ${urdu}` : value;
+}
+
 const stepDefinitions: Array<{
   title: string;
+  urduTitle: string;
   shortTitle: string;
+  urduShortTitle: string;
   description: string;
+  urduDescription: string;
   icon: LucideIcon;
 }> = [
   {
     title: 'Applicant identity',
+    urduTitle: 'درخواست دہندہ کی شناخت',
     shortTitle: 'Identity',
+    urduShortTitle: 'شناخت',
     description: 'Tell us who is responsible for this bureau application.',
+    urduDescription: 'اس درخواست کے ذمہ دار اور مجاز نمائندے کی تفصیلات فراہم کریں۔',
     icon: CircleUserRound,
   },
   {
     title: 'Bureau profile',
+    urduTitle: 'بیورو کا تعارف',
     shortTitle: 'Bureau',
+    urduShortTitle: 'بیورو',
     description: 'Help us understand the scale and structure of your work.',
+    urduDescription: 'اپنے کام کی نوعیت، وسعت اور تنظیمی ڈھانچے سے آگاہ کریں۔',
     icon: Building2,
   },
   {
     title: 'Location & reach',
+    urduTitle: 'مقام اور دائرۂ کار',
     shortTitle: 'Reach',
+    urduShortTitle: 'دائرۂ کار',
     description: 'Where you operate and the communities you serve.',
+    urduDescription: 'آپ کہاں خدمات فراہم کرتے ہیں اور کن علاقوں یا کمیونٹیز تک رسائی رکھتے ہیں۔',
     icon: MapPin,
   },
   {
     title: 'Professional standards',
+    urduTitle: 'پیشہ ورانہ معیارات',
     shortTitle: 'Standards',
+    urduShortTitle: 'معیارات',
     description: 'Your approach to consent, verification, privacy and complaints.',
+    urduDescription: 'رضامندی، تصدیق، رازداری اور شکایات سے متعلق اپنے طریقۂ کار کی وضاحت کریں۔',
     icon: ShieldCheck,
   },
   {
     title: 'Presence & references',
+    urduTitle: 'آن لائن موجودگی اور حوالہ جات',
     shortTitle: 'Trust',
+    urduShortTitle: 'اعتماد',
     description: 'Online presence and professional references for manual review.',
+    urduDescription: 'دستی جانچ کے لیے اپنی آن لائن موجودگی اور پیشہ ورانہ حوالہ جات فراہم کریں۔',
     icon: Handshake,
   },
   {
     title: 'Verification documents',
+    urduTitle: 'تصدیقی دستاویزات',
     shortTitle: 'Documents',
+    urduShortTitle: 'دستاویزات',
     description: 'Securely upload identity and business evidence.',
+    urduDescription: 'شناخت اور کاروبار سے متعلق ثبوت محفوظ طریقے سے اپ لوڈ کریں۔',
     icon: FileCheck2,
   },
   {
     title: 'Review & declaration',
+    urduTitle: 'جائزہ اور اقرار',
     shortTitle: 'Review',
+    urduShortTitle: 'جائزہ',
     description: 'Review everything before submitting your application.',
+    urduDescription: 'درخواست جمع کروانے سے پہلے تمام معلومات کا دوبارہ جائزہ لیں۔',
     icon: ClipboardCheck,
   },
 ];
@@ -379,6 +518,36 @@ function inputClass(hasError?: boolean) {
   }`;
 }
 
+function QuestionLabel({
+  english,
+  urdu,
+  required = false,
+}: {
+  english: string;
+  urdu: string;
+  required?: boolean;
+}) {
+  return (
+    <div className="mb-2">
+      <p className="text-sm font-bold leading-5 text-slate-800">
+        {english}{required ? ' *' : ''}
+      </p>
+      <p dir="rtl" lang="ur" className="mt-1 text-right text-[13px] font-semibold leading-6 text-emerald-800">
+        {urdu}{required ? ' *' : ''}
+      </p>
+    </div>
+  );
+}
+
+function BilingualHelper({ english, urdu }: { english: string; urdu: string }) {
+  return (
+    <div className="mt-1.5 space-y-0.5 text-xs leading-5 text-slate-500">
+      <p>{english}</p>
+      <p dir="rtl" lang="ur" className="text-right text-emerald-800/75">{urdu}</p>
+    </div>
+  );
+}
+
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
 
@@ -392,27 +561,43 @@ function FieldError({ message }: { message?: string }) {
 
 function SectionIntro({
   eyebrow,
+  urduEyebrow,
   title,
+  urduTitle,
   description,
+  urduDescription,
 }: {
   eyebrow: string;
+  urduEyebrow: string;
   title: string;
+  urduTitle: string;
   description: string;
+  urduDescription: string;
 }) {
   return (
     <div className="mb-7">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{eyebrow}</p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{eyebrow}</p>
+        <span className="hidden h-1 w-1 rounded-full bg-emerald-300 sm:block" />
+        <p dir="rtl" lang="ur" className="text-right text-sm font-bold text-emerald-800">{urduEyebrow}</p>
+      </div>
       <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight text-[#093f2c] md:text-4xl">
         {title}
       </h2>
-      <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">{description}</p>
+      <p dir="rtl" lang="ur" className="mt-2 max-w-2xl text-right text-xl font-semibold leading-9 text-emerald-800 md:text-2xl">
+        {urduTitle}
+      </p>
+      <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">{description}</p>
+      <p dir="rtl" lang="ur" className="mt-1.5 max-w-2xl text-right text-sm leading-7 text-slate-600 md:text-base">{urduDescription}</p>
     </div>
   );
 }
 
 function ChoiceGrid({
   label,
+  urduLabel,
   helper,
+  urduHelper,
   options,
   value,
   onChange,
@@ -420,7 +605,9 @@ function ChoiceGrid({
   error,
 }: {
   label: string;
+  urduLabel: string;
   helper?: string;
+  urduHelper?: string;
   options: string[];
   value: string;
   onChange: (value: string) => void;
@@ -431,7 +618,9 @@ function ChoiceGrid({
     <div>
       <div className="mb-3">
         <p className="text-sm font-bold text-slate-800">{label}</p>
-        {helper ? <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p> : null}
+        <p dir="rtl" lang="ur" className="mt-1 text-right text-[13px] font-semibold leading-6 text-emerald-800">{urduLabel}</p>
+        {helper ? <p className="mt-1.5 text-xs leading-5 text-slate-500">{helper}</p> : null}
+        {urduHelper ? <p dir="rtl" lang="ur" className="mt-0.5 text-right text-xs leading-5 text-emerald-800/75">{urduHelper}</p> : null}
       </div>
       <div className={`grid gap-3 ${columns === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         {options.map((option) => {
@@ -448,7 +637,14 @@ function ChoiceGrid({
                   : 'border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/60'
               }`}
             >
-              <span className="text-sm font-semibold leading-5">{option}</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold leading-5">{option}</span>
+                {optionUrdu[option] ? (
+                  <span dir="rtl" lang="ur" className={`mt-1 block text-right text-xs leading-5 ${selected ? 'text-emerald-100' : 'text-emerald-800/75'}`}>
+                    {optionUrdu[option]}
+                  </span>
+                ) : null}
+              </span>
               <span
                 className={`ml-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                   selected
@@ -469,14 +665,18 @@ function ChoiceGrid({
 
 function MultiChoiceGrid({
   label,
+  urduLabel,
   helper,
+  urduHelper,
   options,
   values,
   onToggle,
   error,
 }: {
   label: string;
+  urduLabel: string;
   helper?: string;
+  urduHelper?: string;
   options: string[];
   values: string[];
   onToggle: (value: string) => void;
@@ -486,7 +686,9 @@ function MultiChoiceGrid({
     <div>
       <div className="mb-3">
         <p className="text-sm font-bold text-slate-800">{label}</p>
-        {helper ? <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p> : null}
+        <p dir="rtl" lang="ur" className="mt-1 text-right text-[13px] font-semibold leading-6 text-emerald-800">{urduLabel}</p>
+        {helper ? <p className="mt-1.5 text-xs leading-5 text-slate-500">{helper}</p> : null}
+        {urduHelper ? <p dir="rtl" lang="ur" className="mt-0.5 text-right text-xs leading-5 text-emerald-800/75">{urduHelper}</p> : null}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {options.map((option) => {
@@ -510,7 +712,14 @@ function MultiChoiceGrid({
               >
                 {selected ? <Check className="h-3.5 w-3.5" /> : null}
               </span>
-              <span className="text-sm font-semibold leading-5">{option}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold leading-5">{option}</span>
+                {optionUrdu[option] ? (
+                  <span dir="rtl" lang="ur" className="mt-1 block text-right text-xs leading-5 text-emerald-800/75">
+                    {optionUrdu[option]}
+                  </span>
+                ) : null}
+              </span>
             </button>
           );
         })}
@@ -523,7 +732,9 @@ function MultiChoiceGrid({
 function DocumentUploader({
   id,
   title,
+  urduTitle,
   description,
+  urduDescription,
   required,
   document,
   onSelect,
@@ -532,7 +743,9 @@ function DocumentUploader({
 }: {
   id: string;
   title: string;
+  urduTitle: string;
   description: string;
+  urduDescription: string;
   required?: boolean;
   document: SelectedDocument | null;
   onSelect: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -549,18 +762,22 @@ function DocumentUploader({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-bold text-slate-900">{title}</p>
+              <div>
+                <p className="font-bold text-slate-900">{title}</p>
+                <p dir="rtl" lang="ur" className="mt-1 text-right text-sm font-semibold text-emerald-800">{urduTitle}</p>
+              </div>
               {required ? (
                 <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-rose-700">
-                  Required
+                  Required · لازمی
                 </span>
               ) : (
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  Optional
+                  Optional · اختیاری
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-500">{description}</p>
+            <p dir="rtl" lang="ur" className="mt-0.5 text-right text-xs leading-5 text-emerald-800/75">{urduDescription}</p>
           </div>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
             <FileText className="h-5 w-5" />
@@ -601,7 +818,7 @@ function DocumentUploader({
             className="mt-4 flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50/50 px-4 py-5 text-sm font-bold text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-50"
           >
             <UploadCloud className="h-5 w-5" />
-            Choose image or PDF
+            Choose image or PDF · تصویر یا PDF منتخب کریں
           </label>
         )}
 
@@ -618,12 +835,23 @@ function DocumentUploader({
   );
 }
 
-function ReviewItem({ label, value }: { label: string; value: string | string[] | null | undefined }) {
+function ReviewItem({
+  label,
+  urduLabel,
+  value,
+}: {
+  label: string;
+  urduLabel?: string;
+  value: string | string[] | null | undefined;
+}) {
   const displayValue = Array.isArray(value) ? value.join(', ') : value;
 
   return (
     <div className="border-b border-slate-100 py-3 last:border-0">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
+        {urduLabel ? <p dir="rtl" lang="ur" className="text-right text-xs font-semibold text-emerald-700">{urduLabel}</p> : null}
+      </div>
       <p className="mt-1 text-sm font-semibold leading-6 text-slate-800">{displayValue || 'Not provided'}</p>
     </div>
   );
@@ -631,11 +859,13 @@ function ReviewItem({ label, value }: { label: string; value: string | string[] 
 
 function ReviewCard({
   title,
+  urduTitle,
   icon: Icon,
   onEdit,
   children,
 }: {
   title: string;
+  urduTitle?: string;
   icon: LucideIcon;
   onEdit: () => void;
   children: React.ReactNode;
@@ -647,14 +877,17 @@ function ReviewCard({
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
             <Icon className="h-5 w-5" />
           </span>
-          <h3 className="font-heading text-xl font-semibold text-[#0a4933]">{title}</h3>
+          <div>
+            <h3 className="font-heading text-xl font-semibold text-[#0a4933]">{title}</h3>
+            {urduTitle ? <p dir="rtl" lang="ur" className="mt-0.5 text-right text-sm font-semibold text-emerald-700">{urduTitle}</p> : null}
+          </div>
         </div>
         <button
           type="button"
           onClick={onEdit}
           className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-800"
         >
-          Edit
+          Edit · ترمیم
         </button>
       </div>
       <div className="pt-2">{children}</div>
@@ -1193,13 +1426,16 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 1 · Applicant"
+            urduEyebrow="مرحلہ 1 · درخواست دہندہ"
             title="Who is applying on behalf of the bureau?"
+            urduTitle="بیورو کی جانب سے درخواست کون دے رہا ہے؟"
             description="Use the legal details of the person MBN can contact and verify. This person should be authorised to represent the bureau."
+            urduDescription="اس شخص کی قانونی معلومات درج کریں جس سے MBN رابطہ اور تصدیق کر سکے۔ یہ شخص بیورو کی نمائندگی کے لیے مجاز ہونا چاہیے۔"
           />
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Full legal name *</label>
+              <QuestionLabel english="Full legal name" urdu="درخواست دہندہ کا مکمل قانونی نام" required />
               <input
                 value={formData.fullName}
                 onChange={(event) => updateField('fullName', event.target.value)}
@@ -1211,7 +1447,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Father / guardian name *</label>
+              <QuestionLabel english="Father / guardian name" urdu="والد / سرپرست کا نام" required />
               <input
                 value={formData.fatherName}
                 onChange={(event) => updateField('fatherName', event.target.value)}
@@ -1222,7 +1458,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Date of birth *</label>
+              <QuestionLabel english="Date of birth" urdu="تاریخِ پیدائش" required />
               <input
                 type="date"
                 value={formData.dateOfBirth}
@@ -1230,28 +1466,31 @@ export default function RegisterPage() {
                 className={inputClass(Boolean(fieldErrors.dateOfBirth))}
               />
               {applicantAge !== null && applicantAge >= 0 ? (
-                <p className="mt-1.5 text-xs font-semibold text-emerald-700">Calculated age: {applicantAge} years</p>
+                <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-emerald-700">
+                  <span>Calculated age: {applicantAge} years</span>
+                  <span dir="rtl" lang="ur">حساب شدہ عمر: {applicantAge} سال</span>
+                </div>
               ) : null}
               <FieldError message={fieldErrors.dateOfBirth} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Role in bureau *</label>
+              <QuestionLabel english="Role in bureau" urdu="بیورو میں آپ کی ذمہ داری / عہدہ" required />
               <select
                 value={formData.roleInBureau}
                 onChange={(event) => updateField('roleInBureau', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.roleInBureau))}
               >
-                <option value="">Select your role</option>
+                <option value="">Select your role — اپنا عہدہ منتخب کریں</option>
                 {roles.map((role) => (
-                  <option key={role} value={role}>{role}</option>
+                  <option key={role} value={role}>{bilingualOption(role)}</option>
                 ))}
               </select>
               <FieldError message={fieldErrors.roleInBureau} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Mobile number *</label>
+              <QuestionLabel english="Mobile number" urdu="موبائل نمبر" required />
               <input
                 type="tel"
                 dir="ltr"
@@ -1266,14 +1505,14 @@ export default function RegisterPage() {
 
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
-                <label className="block text-sm font-bold text-slate-800">WhatsApp number *</label>
+                <QuestionLabel english="WhatsApp number" urdu="واٹس ایپ نمبر" required />
                 {formData.mobileNumber ? (
                   <button
                     type="button"
                     onClick={() => updateField('whatsappNumber', formData.mobileNumber)}
                     className="text-xs font-bold text-emerald-700 hover:underline"
                   >
-                    Same as mobile
+                    Same as mobile · موبائل نمبر کے مطابق
                   </button>
                 ) : null}
               </div>
@@ -1289,7 +1528,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">Professional email *</label>
+              <QuestionLabel english="Professional email" urdu="پیشہ ورانہ ای میل" required />
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -1301,9 +1540,10 @@ export default function RegisterPage() {
                   className={`${inputClass(Boolean(fieldErrors.email))} pl-11`}
                 />
               </div>
-              <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                Approval and secure account-activation instructions will be sent to this address.
-              </p>
+              <BilingualHelper
+                english="Approval and secure account-activation instructions will be sent to this address."
+                urdu="منظوری اور محفوظ اکاؤنٹ ایکٹیویشن کی ہدایات اسی ای میل پتے پر بھیجی جائیں گی۔"
+              />
               <FieldError message={fieldErrors.email} />
             </div>
           </div>
@@ -1313,26 +1553,30 @@ export default function RegisterPage() {
               <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-emerald-700" />
               <div>
                 <p className="font-bold text-emerald-950">Government-issued identity</p>
-                <p className="mt-1 text-sm leading-6 text-emerald-900/70">
+                <p dir="rtl" lang="ur" className="mt-1 text-right text-sm font-semibold text-emerald-800">سرکاری شناختی دستاویز</p>
+                <p className="mt-2 text-sm leading-6 text-emerald-900/70">
                   Identity information is used for manual bureau verification. It will not appear on your public profile.
+                </p>
+                <p dir="rtl" lang="ur" className="mt-1 text-right text-sm leading-7 text-emerald-900/70">
+                  شناختی معلومات صرف بیورو کی دستی تصدیق کے لیے استعمال ہوں گی اور آپ کے عوامی پروفائل پر ظاہر نہیں کی جائیں گی۔
                 </p>
               </div>
             </div>
 
             <div className="mt-5 grid gap-5 md:grid-cols-3">
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Document type *</label>
+                <QuestionLabel english="Document type" urdu="شناختی دستاویز کی قسم" required />
                 <select
                   value={formData.identityType}
                   onChange={(event) => updateField('identityType', event.target.value)}
                   className={inputClass(Boolean(fieldErrors.identityType))}
                 >
-                  {identityTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                  {identityTypes.map((type) => <option key={type} value={type}>{bilingualOption(type)}</option>)}
                 </select>
                 <FieldError message={fieldErrors.identityType} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Document number *</label>
+                <QuestionLabel english="Document number" urdu="شناختی دستاویز کا نمبر" required />
                 <input
                   dir="ltr"
                   value={formData.identityNumber}
@@ -1343,7 +1587,7 @@ export default function RegisterPage() {
                 <FieldError message={fieldErrors.identityNumber} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Expiry date</label>
+                <QuestionLabel english="Expiry date" urdu="میعاد ختم ہونے کی تاریخ" />
                 <input
                   type="date"
                   value={formData.identityExpiryDate}
@@ -1362,13 +1606,16 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 2 · Bureau"
+            urduEyebrow="مرحلہ 2 · بیورو"
             title="Build a credible bureau profile"
+            urduTitle="اپنے بیورو کا قابلِ اعتماد تعارف تیار کریں"
             description="These questions help MBN distinguish established professionals from casual or unverified operators. Approximate ranges are acceptable."
+            urduDescription="یہ سوالات MBN کو باقاعدہ پیشہ ور بیوروز اور غیر تصدیق شدہ آپریٹرز میں فرق کرنے میں مدد دیتے ہیں۔ اندازاً درست حدود قابلِ قبول ہیں۔"
           />
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">Marriage bureau / business name *</label>
+              <QuestionLabel english="Marriage bureau / business name" urdu="میرج بیورو / کاروبار کا نام" required />
               <div className="relative">
                 <Store className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
@@ -1382,53 +1629,53 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Years in business *</label>
+              <QuestionLabel english="Years in business" urdu="بیورو چلانے کا تجربہ" required />
               <select
                 value={formData.yearsInBusiness}
                 onChange={(event) => updateField('yearsInBusiness', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.yearsInBusiness))}
               >
-                <option value="">Select experience</option>
-                {yearsOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                <option value="">Select experience — تجربہ منتخب کریں</option>
+                {yearsOptions.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.yearsInBusiness} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Approximate active profiles *</label>
+              <QuestionLabel english="Approximate active profiles" urdu="تقریباً فعال پروفائلز کی تعداد" required />
               <select
                 value={formData.activeProfiles}
                 onChange={(event) => updateField('activeProfiles', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.activeProfiles))}
               >
-                <option value="">Select a range</option>
-                {activeProfileOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                <option value="">Select a range — مناسب حد منتخب کریں</option>
+                {activeProfileOptions.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.activeProfiles} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">New profiles added per month *</label>
+              <QuestionLabel english="New profiles added per month" urdu="ہر ماہ شامل کیے جانے والے نئے پروفائلز" required />
               <select
                 value={formData.monthlyNewProfiles}
                 onChange={(event) => updateField('monthlyNewProfiles', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.monthlyNewProfiles))}
               >
-                <option value="">Select a range</option>
-                {monthlyProfileOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                <option value="">Select a range — مناسب حد منتخب کریں</option>
+                {monthlyProfileOptions.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.monthlyNewProfiles} />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Team size *</label>
+              <QuestionLabel english="Team size" urdu="آپ کی ٹیم میں افراد کی تعداد" required />
               <select
                 value={formData.teamSize}
                 onChange={(event) => updateField('teamSize', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.teamSize))}
               >
-                <option value="">Select team size</option>
-                {teamSizeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                <option value="">Select team size — ٹیم کا حجم منتخب کریں</option>
+                {teamSizeOptions.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.teamSize} />
             </div>
@@ -1437,6 +1684,7 @@ export default function RegisterPage() {
           <div className="mt-7 space-y-7">
             <ChoiceGrid
               label="How is your bureau structured? *"
+              urduLabel="آپ کے بیورو کا قانونی یا انتظامی ڈھانچہ کیا ہے؟ *"
               options={bureauTypes}
               value={formData.bureauType}
               onChange={(value) => updateField('bureauType', value)}
@@ -1445,6 +1693,7 @@ export default function RegisterPage() {
 
             <ChoiceGrid
               label="How do you normally serve families? *"
+              urduLabel="آپ عموماً خاندانوں کو کس طریقے سے خدمات فراہم کرتے ہیں؟ *"
               options={serviceModels}
               value={formData.serviceModel}
               onChange={(value) => updateField('serviceModel', value)}
@@ -1454,7 +1703,9 @@ export default function RegisterPage() {
 
             <ChoiceGrid
               label="Business registration status *"
+              urduLabel="کاروباری رجسٹریشن کی موجودہ حیثیت کیا ہے؟ *"
               helper="Formal registration is not the only approval factor, but all declarations must be accurate."
+              urduHelper="باضابطہ رجسٹریشن منظوری کا واحد معیار نہیں، تاہم دی گئی ہر معلومات درست ہونا ضروری ہے۔"
               options={registrationStatuses}
               value={formData.businessRegistrationStatus}
               onChange={(value) => updateField('businessRegistrationStatus', value)}
@@ -1464,7 +1715,7 @@ export default function RegisterPage() {
 
           <div className="mt-7 grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Registration number / reference</label>
+              <QuestionLabel english="Registration number / reference" urdu="رجسٹریشن نمبر / حوالہ" />
               <input
                 value={formData.businessRegistrationNumber}
                 onChange={(event) => updateField('businessRegistrationNumber', event.target.value)}
@@ -1474,7 +1725,7 @@ export default function RegisterPage() {
               <FieldError message={fieldErrors.businessRegistrationNumber} />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">NTN / tax number</label>
+              <QuestionLabel english="NTN / tax number" urdu="این ٹی این / ٹیکس نمبر" />
               <input
                 value={formData.ntnNumber}
                 onChange={(event) => updateField('ntnNumber', event.target.value)}
@@ -1483,7 +1734,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">Professional memberships or awards</label>
+              <QuestionLabel english="Professional memberships or awards" urdu="پیشہ ورانہ رکنیتیں یا اعزازات" />
               <textarea
                 rows={3}
                 value={formData.professionalMemberships}
@@ -1502,12 +1753,16 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 3 · Reach"
+            urduEyebrow="مرحلہ 3 · دائرۂ کار"
             title="Where do you meet and support families?"
+            urduTitle="آپ خاندانوں سے کہاں ملاقات اور معاونت کرتے ہیں؟"
             description="Clear location and service-area information helps MBN route suitable enquiries and verify your professional presence."
+            urduDescription="مقام اور خدمات کے علاقوں کی واضح معلومات MBN کو مناسب درخواستیں آپ تک پہنچانے اور آپ کی پیشہ ورانہ موجودگی کی تصدیق میں مدد دیتی ہیں۔"
           />
 
           <ChoiceGrid
             label="Do you operate from a physical office? *"
+            urduLabel="کیا آپ باقاعدہ فزیکل دفتر سے کام کرتے ہیں؟ *"
             options={officeOptions}
             value={formData.hasPhysicalOffice}
             onChange={(value) => updateField('hasPhysicalOffice', value)}
@@ -1517,7 +1772,7 @@ export default function RegisterPage() {
 
           <div className="mt-7 grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Office phone / landline</label>
+              <QuestionLabel english="Office phone / landline" urdu="دفتر کا فون / لینڈ لائن" />
               <input
                 dir="ltr"
                 value={formData.officePhone}
@@ -1527,7 +1782,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">City *</label>
+              <QuestionLabel english="City" urdu="شہر" required />
               <input
                 value={formData.city}
                 onChange={(event) => updateField('city', event.target.value)}
@@ -1537,34 +1792,34 @@ export default function RegisterPage() {
               <FieldError message={fieldErrors.city} />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Province / region *</label>
+              <QuestionLabel english="Province / region" urdu="صوبہ / خطہ" required />
               <select
                 value={formData.province}
                 onChange={(event) => updateField('province', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.province))}
               >
-                <option value="">Select province / region</option>
-                {provinces.map((option) => <option key={option} value={option}>{option}</option>)}
+                <option value="">Select province / region — صوبہ / خطہ منتخب کریں</option>
+                {provinces.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.province} />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Country *</label>
+              <QuestionLabel english="Country" urdu="ملک" required />
               <select
                 value={formData.country}
                 onChange={(event) => updateField('country', event.target.value)}
                 className={inputClass(Boolean(fieldErrors.country))}
               >
-                {countries.map((option) => <option key={option} value={option}>{option}</option>)}
+                {countries.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.country} />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">
-                {formData.hasPhysicalOffice === 'Home-based workspace'
-                  ? 'Workspace locality / area'
-                  : 'Office address'}
-              </label>
+              <QuestionLabel
+                english={formData.hasPhysicalOffice === 'Home-based workspace' ? 'Workspace locality / area' : 'Office address'}
+                urdu={formData.hasPhysicalOffice === 'Home-based workspace' ? 'گھر پر قائم ورک اسپیس کا علاقہ / مقام' : 'دفتر کا مکمل پتہ'}
+                required={formData.hasPhysicalOffice !== 'No physical office'}
+              />
               <textarea
                 rows={3}
                 value={formData.officeAddress}
@@ -1579,7 +1834,7 @@ export default function RegisterPage() {
               <FieldError message={fieldErrors.officeAddress} />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">Cities, communities or regions mainly served *</label>
+              <QuestionLabel english="Cities, communities or regions mainly served" urdu="وہ شہر، کمیونٹیز یا علاقے جہاں آپ زیادہ تر خدمات دیتے ہیں" required />
               <textarea
                 rows={3}
                 value={formData.areasServed}
@@ -1594,6 +1849,7 @@ export default function RegisterPage() {
           <div className="mt-7 space-y-7">
             <MultiChoiceGrid
               label="Countries your bureau currently serves *"
+              urduLabel="آپ کا بیورو اس وقت کن ممالک میں خدمات فراہم کرتا ہے؟ *"
               options={countries}
               values={formData.countriesServed}
               onToggle={(value) => toggleArrayValue('countriesServed', value)}
@@ -1601,6 +1857,7 @@ export default function RegisterPage() {
             />
             <MultiChoiceGrid
               label="Languages your team can use with families *"
+              urduLabel="آپ کی ٹیم خاندانوں سے کن زبانوں میں رابطہ کر سکتی ہے؟ *"
               options={spokenLanguages}
               values={formData.languagesSpoken}
               onToggle={(value) => toggleArrayValue('languagesSpoken', value)}
@@ -1616,14 +1873,19 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 4 · Standards"
+            urduEyebrow="مرحلہ 4 · معیارات"
             title="Show how you protect families and profiles"
+            urduTitle="واضح کریں کہ آپ خاندانوں اور پروفائلز کا تحفظ کیسے کرتے ہیں"
             description="Strong matrimonial platforms make consent, identity checks, privacy and complaint handling visible—not just promises in marketing copy."
+            urduDescription="قابلِ اعتماد میرج پلیٹ فارمز رضامندی، شناختی جانچ، رازداری اور شکایات کے طریقۂ کار کو واضح بناتے ہیں، محض تشہیری دعوے نہیں کرتے۔"
           />
 
           <div className="space-y-8">
             <MultiChoiceGrid
               label="Main match types handled by your bureau *"
+              urduLabel="آپ کا بیورو زیادہ تر کن اقسام کے رشتوں پر کام کرتا ہے؟ *"
               helper="Select all that genuinely represent your current service."
+              urduHelper="صرف وہ آپشنز منتخب کریں جو واقعی آپ کی موجودہ خدمات کی نمائندگی کرتے ہوں۔"
               options={specialisationOptions}
               values={formData.specializations}
               onToggle={(value) => toggleArrayValue('specializations', value)}
@@ -1632,7 +1894,9 @@ export default function RegisterPage() {
 
             <MultiChoiceGrid
               label="Where do your profiles normally come from? *"
+              urduLabel="آپ کے پاس پروفائلز عموماً کن ذرائع سے آتے ہیں؟ *"
               helper="MBN may ask for evidence that candidates or their families have authorised profile use."
+              urduHelper="MBN یہ ثبوت طلب کر سکتا ہے کہ امیدوار یا اس کے خاندان نے پروفائل استعمال کرنے کی اجازت دی ہے۔"
               options={profileSourceOptions}
               values={formData.profileSources}
               onToggle={(value) => toggleArrayValue('profileSources', value)}
@@ -1641,6 +1905,7 @@ export default function RegisterPage() {
 
             <MultiChoiceGrid
               label="Which checks do you currently perform? *"
+              urduLabel="آپ اس وقت پروفائلز کی کون کون سی تصدیق کرتے ہیں؟ *"
               options={verificationMethodOptions}
               values={formData.verificationMethods}
               onToggle={(value) => toggleArrayValue('verificationMethods', value)}
@@ -1649,6 +1914,7 @@ export default function RegisterPage() {
 
             <ChoiceGrid
               label="How do you record permission to use a client profile? *"
+              urduLabel="آپ کلائنٹ کا پروفائل استعمال کرنے کی اجازت کس طرح ریکارڈ کرتے ہیں؟ *"
               options={consentProcessOptions}
               value={formData.clientConsentProcess}
               onChange={(value) => updateField('clientConsentProcess', value)}
@@ -1657,12 +1923,12 @@ export default function RegisterPage() {
 
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">How do you protect client data and photos? *</label>
+                <QuestionLabel english="How do you protect client data and photos?" urdu="آپ کلائنٹس کے ڈیٹا اور تصاویر کا تحفظ کیسے کرتے ہیں؟" required />
                 <textarea
                   rows={6}
                   value={formData.dataPrivacyPractice}
                   onChange={(event) => updateField('dataPrivacyPractice', event.target.value)}
-                  placeholder="For example: restricted staff access, hidden photos, contact sharing only after approval, secure files and profile deletion requests."
+                  placeholder="For example: restricted staff access, hidden photos, contact sharing only after approval... / مثال: محدود اسٹاف رسائی، پوشیدہ تصاویر، منظوری کے بعد رابطہ شیئر کرنا..."
                   className={`${inputClass(Boolean(fieldErrors.dataPrivacyPractice))} resize-none`}
                 />
                 <p className="mt-1.5 text-right text-xs text-slate-400">{formData.dataPrivacyPractice.length} characters</p>
@@ -1670,12 +1936,12 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">How do you handle complaints or suspected misuse? *</label>
+                <QuestionLabel english="How do you handle complaints or suspected misuse?" urdu="آپ شکایات یا مشتبہ غلط استعمال سے کیسے نمٹتے ہیں؟" required />
                 <textarea
                   rows={6}
                   value={formData.complaintHandlingProcess}
                   onChange={(event) => updateField('complaintHandlingProcess', event.target.value)}
-                  placeholder="Explain who receives complaints, how access is paused, what records are checked and how families are informed."
+                  placeholder="Explain who receives complaints, how access is paused... / وضاحت کریں کہ شکایت کون وصول کرتا ہے، رسائی کیسے روکی جاتی ہے..."
                   className={`${inputClass(Boolean(fieldErrors.complaintHandlingProcess))} resize-none`}
                 />
                 <p className="mt-1.5 text-right text-xs text-slate-400">{formData.complaintHandlingProcess.length} characters</p>
@@ -1685,26 +1951,26 @@ export default function RegisterPage() {
 
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Primary fee structure *</label>
+                <QuestionLabel english="Primary fee structure" urdu="بنیادی فیس کا طریقۂ کار" required />
                 <select
                   value={formData.feeStructure}
                   onChange={(event) => updateField('feeStructure', event.target.value)}
                   className={inputClass(Boolean(fieldErrors.feeStructure))}
                 >
-                  <option value="">Select fee model</option>
-                  {feeModels.map((option) => <option key={option} value={option}>{option}</option>)}
+                  <option value="">Select fee model — فیس کا طریقہ منتخب کریں</option>
+                  {feeModels.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
                 </select>
                 <FieldError message={fieldErrors.feeStructure} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Refund / cancellation policy *</label>
+                <QuestionLabel english="Refund / cancellation policy" urdu="رقم واپسی / منسوخی کی پالیسی" required />
                 <select
                   value={formData.refundPolicyAvailable}
                   onChange={(event) => updateField('refundPolicyAvailable', event.target.value)}
                   className={inputClass(Boolean(fieldErrors.refundPolicyAvailable))}
                 >
-                  <option value="">Select policy status</option>
-                  {refundOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  <option value="">Select policy status — پالیسی کی حیثیت منتخب کریں</option>
+                  {refundOptions.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
                 </select>
                 <FieldError message={fieldErrors.refundPolicyAvailable} />
               </div>
@@ -1719,13 +1985,16 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 5 · Trust"
+            urduEyebrow="مرحلہ 5 · اعتماد"
             title="Add your professional footprint and references"
+            urduTitle="اپنی پیشہ ورانہ موجودگی اور حوالہ جات شامل کریں"
             description="A website is not compulsory. Genuine office listings, active social pages and references can help the review team understand your bureau history."
+            urduDescription="ویب سائٹ لازمی نہیں۔ حقیقی دفتر کی لسٹنگ، فعال سوشل صفحات اور معتبر حوالہ جات جائزہ ٹیم کو آپ کے بیورو کی سابقہ سرگرمی سمجھنے میں مدد دیتے ہیں۔"
           />
 
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Website</label>
+              <QuestionLabel english="Website" urdu="ویب سائٹ" />
               <div className="relative">
                 <Globe2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -1740,7 +2009,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-800">Facebook / Instagram / LinkedIn</label>
+              <QuestionLabel english="Facebook / Instagram / LinkedIn" urdu="فیس بک / انسٹاگرام / لنکڈ اِن" />
               <div className="relative">
                 <Link2 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -1755,7 +2024,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-800">Google Business / Maps link</label>
+              <QuestionLabel english="Google Business / Maps link" urdu="گوگل بزنس / میپس لنک" />
               <div className="relative">
                 <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -1775,15 +2044,19 @@ export default function RegisterPage() {
               <Handshake className="mt-0.5 h-6 w-6 shrink-0 text-emerald-700" />
               <div>
                 <h3 className="font-heading text-2xl font-semibold text-[#0a4933]">Professional references</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p dir="rtl" lang="ur" className="mt-1 text-right text-lg font-semibold text-emerald-800">پیشہ ورانہ حوالہ جات</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
                   Provide at least one person who can confirm your bureau work. Do not list a close family member unless they are a genuine professional partner.
+                </p>
+                <p dir="rtl" lang="ur" className="mt-1 text-right text-sm leading-7 text-slate-600">
+                  کم از کم ایک ایسے شخص کا حوالہ دیں جو آپ کے بیورو کے کام کی تصدیق کر سکے۔ قریبی رشتہ دار کو صرف اسی صورت درج کریں جب وہ واقعی آپ کا پیشہ ورانہ شراکت دار ہو۔
                 </p>
               </div>
             </div>
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Reference 1 — name / organisation *</label>
+                <QuestionLabel english="Reference 1 — name / organisation" urdu="حوالہ نمبر 1 — نام / ادارہ" required />
                 <input
                   value={formData.referenceName1}
                   onChange={(event) => updateField('referenceName1', event.target.value)}
@@ -1793,7 +2066,7 @@ export default function RegisterPage() {
                 <FieldError message={fieldErrors.referenceName1} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Relationship to your work *</label>
+                <QuestionLabel english="Relationship to your work" urdu="آپ کے کام سے تعلق کی نوعیت" required />
                 <input
                   value={formData.referenceRelationship1}
                   onChange={(event) => updateField('referenceRelationship1', event.target.value)}
@@ -1803,7 +2076,7 @@ export default function RegisterPage() {
                 <FieldError message={fieldErrors.referenceRelationship1} />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-bold text-slate-800">Reference 1 — contact number *</label>
+                <QuestionLabel english="Reference 1 — contact number" urdu="حوالہ نمبر 1 — رابطہ نمبر" required />
                 <input
                   dir="ltr"
                   value={formData.referencePhone1}
@@ -1817,7 +2090,7 @@ export default function RegisterPage() {
               <div className="md:col-span-2 my-1 h-px bg-slate-200" />
 
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Reference 2 — name / organisation</label>
+                <QuestionLabel english="Reference 2 — name / organisation" urdu="حوالہ نمبر 2 — نام / ادارہ" />
                 <input
                   value={formData.referenceName2}
                   onChange={(event) => updateField('referenceName2', event.target.value)}
@@ -1826,7 +2099,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-800">Relationship to your work</label>
+                <QuestionLabel english="Relationship to your work" urdu="آپ کے کام سے تعلق کی نوعیت" />
                 <input
                   value={formData.referenceRelationship2}
                   onChange={(event) => updateField('referenceRelationship2', event.target.value)}
@@ -1835,7 +2108,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-bold text-slate-800">Reference 2 — contact number</label>
+                <QuestionLabel english="Reference 2 — contact number" urdu="حوالہ نمبر 2 — رابطہ نمبر" />
                 <input
                   dir="ltr"
                   value={formData.referencePhone2}
@@ -1858,22 +2131,27 @@ export default function RegisterPage() {
         <div>
           <SectionIntro
             eyebrow="Step 6 · Documents"
+            urduEyebrow="مرحلہ 6 · دستاویزات"
             title="Secure verification, without public exposure"
+            urduTitle="عوامی نمائش کے بغیر محفوظ تصدیق"
             description="Uploads are used only for MBN’s manual review. Identity documents are never intended for the public bureau directory or profile search."
+            urduDescription="اپ لوڈ شدہ دستاویزات صرف MBN کی دستی جانچ کے لیے استعمال ہوں گی۔ شناختی دستاویزات عوامی بیورو ڈائریکٹری یا پروفائل سرچ میں ظاہر نہیں کی جائیں گی۔"
           />
 
           <div className="mb-7 grid gap-3 md:grid-cols-3">
             {[
-              [LockKeyhole, 'Private storage', 'No public document URL'],
-              [ShieldCheck, 'Manual access', 'For authorised review only'],
-              [FileCheck2, 'Accepted formats', 'JPG, PNG, WebP or PDF'],
-            ].map(([Icon, title, description]) => {
+              [LockKeyhole, 'Private storage', 'نجی اسٹوریج', 'No public document URL', 'کوئی عوامی دستاویزی لنک نہیں'],
+              [ShieldCheck, 'Manual access', 'محدود دستی رسائی', 'For authorised review only', 'صرف مجاز جانچ کے لیے'],
+              [FileCheck2, 'Accepted formats', 'قابلِ قبول فارمیٹس', 'JPG, PNG, WebP or PDF', 'JPG، PNG، WebP یا PDF'],
+            ].map(([Icon, title, urduTitle, description, urduDescription]) => {
               const TypedIcon = Icon as LucideIcon;
               return (
                 <div key={title as string} className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
                   <TypedIcon className="h-5 w-5 text-emerald-700" />
                   <p className="mt-3 text-sm font-bold text-emerald-950">{title as string}</p>
-                  <p className="mt-1 text-xs text-emerald-900/65">{description as string}</p>
+                  <p dir="rtl" lang="ur" className="mt-1 text-right text-xs font-semibold text-emerald-800">{urduTitle as string}</p>
+                  <p className="mt-2 text-xs text-emerald-900/65">{description as string}</p>
+                  <p dir="rtl" lang="ur" className="mt-0.5 text-right text-xs text-emerald-900/65">{urduDescription as string}</p>
                 </div>
               );
             })}
@@ -1883,7 +2161,9 @@ export default function RegisterPage() {
             <DocumentUploader
               id="identity-front"
               title={`${formData.identityType} front / main page`}
+              urduTitle={`${optionUrdu[formData.identityType] ?? formData.identityType} کا سامنے والا حصہ / مرکزی صفحہ`}
               description="Clear, uncropped image showing the applicant’s name and document number."
+              urduDescription="درخواست دہندہ کا نام اور دستاویز نمبر واضح دکھانے والی مکمل اور غیر کٹی ہوئی تصویر اپ لوڈ کریں۔"
               required
               document={documents.identityFront}
               onSelect={(event) => handleDocumentSelect('identityFront', event)}
@@ -1893,7 +2173,9 @@ export default function RegisterPage() {
             <DocumentUploader
               id="identity-back"
               title={`${formData.identityType} back / supporting page`}
+              urduTitle={`${optionUrdu[formData.identityType] ?? formData.identityType} کا پچھلا حصہ / معاون صفحہ`}
               description="For a passport, upload the relevant supporting or residence page."
+              urduDescription="پاسپورٹ کی صورت میں متعلقہ معاون یا رہائشی صفحہ اپ لوڈ کریں۔"
               required
               document={documents.identityBack}
               onSelect={(event) => handleDocumentSelect('identityBack', event)}
@@ -1903,7 +2185,9 @@ export default function RegisterPage() {
             <DocumentUploader
               id="business-proof"
               title="Business registration / tax proof"
+              urduTitle="کاروباری رجسٹریشن / ٹیکس کا ثبوت"
               description="SECP certificate, trade licence, NTN evidence or another official document."
+              urduDescription="SECP سرٹیفکیٹ، تجارتی لائسنس، NTN ثبوت یا کوئی دوسری سرکاری دستاویز اپ لوڈ کریں۔"
               required={businessProofRequired}
               document={documents.businessProof}
               onSelect={(event) => handleDocumentSelect('businessProof', event)}
@@ -1913,7 +2197,9 @@ export default function RegisterPage() {
             <DocumentUploader
               id="office-photo"
               title="Office photograph"
+              urduTitle="دفتر کی تصویر"
               description="A recent exterior or reception/workspace photo; avoid showing client documents."
+              urduDescription="دفتر کے بیرونی حصے، استقبالیہ یا ورک اسپیس کی حالیہ تصویر دیں؛ کلائنٹس کی دستاویزات تصویر میں نہ آئیں۔"
               required={officePhotoRequired}
               document={documents.officePhoto}
               onSelect={(event) => handleDocumentSelect('officePhoto', event)}
@@ -1924,7 +2210,9 @@ export default function RegisterPage() {
               <DocumentUploader
                 id="business-card"
                 title="Business card or bureau letterhead"
+                urduTitle="بزنس کارڈ یا بیورو لیٹر ہیڈ"
                 description="Optional supporting evidence showing the bureau name and professional contact details."
+                urduDescription="اختیاری ثبوت جس پر بیورو کا نام اور پیشہ ورانہ رابطہ معلومات واضح ہوں۔"
                 document={documents.businessCard}
                 onSelect={(event) => handleDocumentSelect('businessCard', event)}
                 onRemove={() => removeDocument('businessCard')}
@@ -1935,9 +2223,14 @@ export default function RegisterPage() {
 
           <div className="mt-6 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-            <p>
-              Your text draft is saved automatically in this browser. For privacy, selected identity files are <strong>not</strong> saved in the browser and must be selected again after a refresh.
-            </p>
+            <div>
+              <p>
+                Your text draft is saved automatically in this browser. For privacy, selected identity files are <strong>not</strong> saved in the browser and must be selected again after a refresh.
+              </p>
+              <p dir="rtl" lang="ur" className="mt-1 text-right">
+                آپ کے تحریری جوابات اس براؤزر میں خودکار طور پر محفوظ ہوتے ہیں۔ رازداری کے لیے منتخب شناختی فائلیں براؤزر میں محفوظ <strong>نہیں</strong> ہوتیں اور صفحہ ریفریش ہونے کے بعد دوبارہ منتخب کرنا ضروری ہوگا۔
+              </p>
+            </div>
           </div>
         </div>
       );
@@ -1947,56 +2240,59 @@ export default function RegisterPage() {
       <form onSubmit={submitApplication}>
         <SectionIntro
           eyebrow="Step 7 · Final review"
+          urduEyebrow="مرحلہ 7 · حتمی جائزہ"
           title="Review before you submit"
+          urduTitle="درخواست جمع کرنے سے پہلے مکمل جائزہ لیں"
           description="Accuracy matters. MBN may reject or suspend applications containing false identities, copied business claims, unauthorised profiles or misleading verification statements."
+          urduDescription="درست معلومات نہایت اہم ہیں۔ جعلی شناخت، نقل شدہ کاروباری دعووں، غیر مجاز پروفائلز یا گمراہ کن تصدیقی بیانات والی درخواست مسترد یا معطل کی جا سکتی ہے۔"
         />
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <ReviewCard title="Applicant" icon={CircleUserRound} onEdit={() => jumpToStep(0)}>
-            <ReviewItem label="Name" value={formData.fullName} />
-            <ReviewItem label="Role" value={formData.roleInBureau} />
-            <ReviewItem label="Mobile" value={formData.mobileNumber} />
-            <ReviewItem label="Email" value={formData.email} />
-            <ReviewItem label="Identity" value={`${formData.identityType}: ${formData.identityNumber}`} />
+          <ReviewCard title="Applicant" urduTitle="درخواست دہندہ" icon={CircleUserRound} onEdit={() => jumpToStep(0)}>
+            <ReviewItem label="Name" urduLabel="نام" value={formData.fullName} />
+            <ReviewItem label="Role" urduLabel="عہدہ" value={formData.roleInBureau} />
+            <ReviewItem label="Mobile" urduLabel="موبائل" value={formData.mobileNumber} />
+            <ReviewItem label="Email" urduLabel="ای میل" value={formData.email} />
+            <ReviewItem label="Identity" urduLabel="شناخت" value={`${formData.identityType}: ${formData.identityNumber}`} />
           </ReviewCard>
 
-          <ReviewCard title="Bureau profile" icon={Building2} onEdit={() => jumpToStep(1)}>
-            <ReviewItem label="Bureau" value={formData.businessName} />
-            <ReviewItem label="Structure" value={formData.bureauType} />
-            <ReviewItem label="Experience" value={formData.yearsInBusiness} />
-            <ReviewItem label="Active profiles" value={formData.activeProfiles} />
-            <ReviewItem label="Registration" value={formData.businessRegistrationStatus} />
+          <ReviewCard title="Bureau profile" urduTitle="بیورو کا تعارف" icon={Building2} onEdit={() => jumpToStep(1)}>
+            <ReviewItem label="Bureau" urduLabel="بیورو" value={formData.businessName} />
+            <ReviewItem label="Structure" urduLabel="ڈھانچہ" value={formData.bureauType} />
+            <ReviewItem label="Experience" urduLabel="تجربہ" value={formData.yearsInBusiness} />
+            <ReviewItem label="Active profiles" urduLabel="فعال پروفائلز" value={formData.activeProfiles} />
+            <ReviewItem label="Registration" urduLabel="رجسٹریشن" value={formData.businessRegistrationStatus} />
           </ReviewCard>
 
-          <ReviewCard title="Reach" icon={MapPin} onEdit={() => jumpToStep(2)}>
-            <ReviewItem label="Office" value={formData.hasPhysicalOffice} />
-            <ReviewItem label="Location" value={`${formData.city}, ${formData.province}, ${formData.country}`} />
-            <ReviewItem label="Areas served" value={formData.areasServed} />
-            <ReviewItem label="Countries" value={formData.countriesServed} />
-            <ReviewItem label="Languages" value={formData.languagesSpoken} />
+          <ReviewCard title="Reach" urduTitle="دائرۂ کار" icon={MapPin} onEdit={() => jumpToStep(2)}>
+            <ReviewItem label="Office" urduLabel="دفتر" value={formData.hasPhysicalOffice} />
+            <ReviewItem label="Location" urduLabel="مقام" value={`${formData.city}, ${formData.province}, ${formData.country}`} />
+            <ReviewItem label="Areas served" urduLabel="خدمات کے علاقے" value={formData.areasServed} />
+            <ReviewItem label="Countries" urduLabel="ممالک" value={formData.countriesServed} />
+            <ReviewItem label="Languages" urduLabel="زبانیں" value={formData.languagesSpoken} />
           </ReviewCard>
 
-          <ReviewCard title="Professional standards" icon={ShieldCheck} onEdit={() => jumpToStep(3)}>
-            <ReviewItem label="Specialisations" value={formData.specializations} />
-            <ReviewItem label="Profile sources" value={formData.profileSources} />
-            <ReviewItem label="Verification" value={formData.verificationMethods} />
-            <ReviewItem label="Consent process" value={formData.clientConsentProcess} />
-            <ReviewItem label="Refund policy" value={formData.refundPolicyAvailable} />
+          <ReviewCard title="Professional standards" urduTitle="پیشہ ورانہ معیارات" icon={ShieldCheck} onEdit={() => jumpToStep(3)}>
+            <ReviewItem label="Specialisations" urduLabel="خصوصی خدمات" value={formData.specializations} />
+            <ReviewItem label="Profile sources" urduLabel="پروفائل کے ذرائع" value={formData.profileSources} />
+            <ReviewItem label="Verification" urduLabel="تصدیق" value={formData.verificationMethods} />
+            <ReviewItem label="Consent process" urduLabel="رضامندی کا طریقہ" value={formData.clientConsentProcess} />
+            <ReviewItem label="Refund policy" urduLabel="رقم واپسی کی پالیسی" value={formData.refundPolicyAvailable} />
           </ReviewCard>
 
-          <ReviewCard title="References" icon={Handshake} onEdit={() => jumpToStep(4)}>
-            <ReviewItem label="Reference 1" value={formData.referenceName1} />
-            <ReviewItem label="Relationship" value={formData.referenceRelationship1} />
-            <ReviewItem label="Contact" value={formData.referencePhone1} />
-            <ReviewItem label="Reference 2" value={formData.referenceName2} />
+          <ReviewCard title="References" urduTitle="حوالہ جات" icon={Handshake} onEdit={() => jumpToStep(4)}>
+            <ReviewItem label="Reference 1" urduLabel="حوالہ 1" value={formData.referenceName1} />
+            <ReviewItem label="Relationship" urduLabel="تعلق" value={formData.referenceRelationship1} />
+            <ReviewItem label="Contact" urduLabel="رابطہ" value={formData.referencePhone1} />
+            <ReviewItem label="Reference 2" urduLabel="حوالہ 2" value={formData.referenceName2} />
           </ReviewCard>
 
-          <ReviewCard title="Documents" icon={FileCheck2} onEdit={() => jumpToStep(5)}>
-            <ReviewItem label="Identity front" value={documents.identityFront?.file.name} />
-            <ReviewItem label="Identity back" value={documents.identityBack?.file.name} />
-            <ReviewItem label="Business proof" value={documents.businessProof?.file.name} />
-            <ReviewItem label="Office photo" value={documents.officePhoto?.file.name} />
-            <ReviewItem label="Business card" value={documents.businessCard?.file.name} />
+          <ReviewCard title="Documents" urduTitle="دستاویزات" icon={FileCheck2} onEdit={() => jumpToStep(5)}>
+            <ReviewItem label="Identity front" urduLabel="شناختی دستاویز کا سامنے والا حصہ" value={documents.identityFront?.file.name} />
+            <ReviewItem label="Identity back" urduLabel="شناختی دستاویز کا پچھلا حصہ" value={documents.identityBack?.file.name} />
+            <ReviewItem label="Business proof" urduLabel="کاروباری ثبوت" value={documents.businessProof?.file.name} />
+            <ReviewItem label="Office photo" urduLabel="دفتر کی تصویر" value={documents.officePhoto?.file.name} />
+            <ReviewItem label="Business card" urduLabel="بزنس کارڈ" value={documents.businessCard?.file.name} />
           </ReviewCard>
         </div>
 
@@ -2005,8 +2301,12 @@ export default function RegisterPage() {
             <BadgeCheck className="mt-0.5 h-6 w-6 shrink-0 text-emerald-700" />
             <div>
               <h3 className="font-heading text-2xl font-semibold text-[#0a4933]">Professional declaration</h3>
-              <p className="mt-1 text-sm leading-6 text-emerald-900/70">
+              <p dir="rtl" lang="ur" className="mt-1 text-right text-lg font-semibold text-emerald-800">پیشہ ورانہ اقرار</p>
+              <p className="mt-2 text-sm leading-6 text-emerald-900/70">
                 These confirmations support a safer network for families and professional bureaus.
+              </p>
+              <p dir="rtl" lang="ur" className="mt-1 text-right text-sm leading-7 text-emerald-900/70">
+                یہ تصدیقات خاندانوں اور پیشہ ور میرج بیوروز کے لیے زیادہ محفوظ نیٹ ورک قائم کرنے میں مدد دیتی ہیں۔
               </p>
             </div>
           </div>
@@ -2016,18 +2316,22 @@ export default function RegisterPage() {
               {
                 field: 'confirmProfessional' as const,
                 label: 'I confirm that I am an authorised professional marriage bureau operator or representative.',
+                urduLabel: 'میں تصدیق کرتا/کرتی ہوں کہ میں ایک مجاز پیشہ ور میرج بیورو آپریٹر یا نمائندہ ہوں۔',
               },
               {
                 field: 'confirmAccurate' as const,
                 label: 'I confirm that the application, references and uploaded documents are genuine and accurate.',
+                urduLabel: 'میں تصدیق کرتا/کرتی ہوں کہ درخواست، حوالہ جات اور اپ لوڈ شدہ دستاویزات اصلی اور درست ہیں۔',
               },
               {
                 field: 'confirmConsent' as const,
                 label: 'I will not upload or share a candidate profile without the candidate or authorised family’s consent.',
+                urduLabel: 'میں امیدوار یا مجاز خاندان کی رضامندی کے بغیر کوئی پروفائل اپ لوڈ یا شیئر نہیں کروں گا/گی۔',
               },
               {
                 field: 'agreeTerms' as const,
                 label: 'I agree to use MBN only for lawful matrimonial purposes and to follow MBN Pakistan’s Terms of Service, privacy rules and professional code of conduct.',
+                urduLabel: 'میں MBN کو صرف قانونی ازدواجی مقاصد کے لیے استعمال کرنے اور MBN Pakistan کی شرائط، رازداری کے اصولوں اور پیشہ ورانہ ضابطۂ اخلاق کی پابندی سے اتفاق کرتا/کرتی ہوں۔',
               },
             ].map((item) => (
               <div key={item.field}>
@@ -2038,7 +2342,10 @@ export default function RegisterPage() {
                     onChange={(event) => updateField(item.field, event.target.checked)}
                     className="mt-1 h-4 w-4 accent-emerald-700"
                   />
-                  <span className="text-sm font-medium leading-6 text-slate-700">{item.label}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium leading-6 text-slate-700">{item.label}</span>
+                    <span dir="rtl" lang="ur" className="mt-1 block text-right text-sm font-medium leading-7 text-emerald-800">{item.urduLabel}</span>
+                  </span>
                 </label>
                 <FieldError message={fieldErrors[item.field]} />
               </div>
@@ -2201,6 +2508,9 @@ export default function RegisterPage() {
             <p className="mt-1 font-heading text-xl font-semibold text-[#0a4933]">
               {stepDefinitions[currentStep].title}
             </p>
+            <p dir="rtl" lang="ur" className="mt-0.5 text-right text-sm font-semibold text-emerald-700">
+              {stepDefinitions[currentStep].urduTitle}
+            </p>
           </div>
           <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-800">{progress}%</span>
         </div>
@@ -2257,6 +2567,7 @@ export default function RegisterPage() {
                       <span className="min-w-0">
                         <span className="block text-[10px] font-black uppercase tracking-wider opacity-60">Step {index + 1}</span>
                         <span className="mt-0.5 block truncate text-sm font-bold">{step.shortTitle}</span>
+                        <span dir="rtl" lang="ur" className="mt-0.5 block truncate text-right text-xs font-semibold text-emerald-700/80">{step.urduShortTitle}</span>
                       </span>
                     </button>
                   );
@@ -2270,7 +2581,7 @@ export default function RegisterPage() {
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                 >
                   <X className="h-4 w-4" />
-                  Clear questionnaire
+                  Clear questionnaire · سوالنامہ صاف کریں
                 </button>
               </div>
             </div>
@@ -2287,13 +2598,14 @@ export default function RegisterPage() {
                     })()}
                   </span>
                   <div className="hidden sm:block">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Membership questionnaire</p>
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Membership questionnaire · رکنیت کا سوالنامہ</p>
                     <p className="mt-0.5 text-sm font-bold text-slate-700">{stepDefinitions[currentStep].description}</p>
+                    <p dir="rtl" lang="ur" className="mt-0.5 text-right text-xs font-semibold text-emerald-700">{stepDefinitions[currentStep].urduDescription}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
                   <Save className="h-4 w-4 text-emerald-600" />
-                  Auto-saved
+                  Auto-saved · خودکار محفوظ
                 </div>
               </div>
             </div>
@@ -2320,7 +2632,7 @@ export default function RegisterPage() {
                   className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Back
+                  Back · واپس
                 </button>
 
                 <button
@@ -2328,7 +2640,7 @@ export default function RegisterPage() {
                   onClick={goNext}
                   className="inline-flex items-center gap-2 rounded-2xl bg-[#07533a] px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-[#06452f]"
                 >
-                  Continue
+                  Continue · آگے بڑھیں
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
