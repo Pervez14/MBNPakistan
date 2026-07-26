@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Clipboard,
   Copy,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -36,6 +37,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Share2,
   UserRound,
   UsersRound,
   X,
@@ -168,6 +170,231 @@ function privacyLabel(value: string | null) {
   if (value === 'hidden') return 'Photo hidden in network search';
   if (value === 'blurred') return 'Photo blurred in network search';
   return 'Photo visible to approved network users';
+}
+
+function roundedRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function fillRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fill: string,
+  stroke?: string
+) {
+  roundedRectPath(ctx, x, y, width, height, radius);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function wrapCanvasText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxLines = 100
+) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    const testLine = current ? `${current} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      current = testLine;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = word;
+    if (lines.length >= maxLines - 1) break;
+  }
+
+  if (current && lines.length < maxLines) lines.push(current);
+
+  if (words.length > 0 && lines.length === maxLines) {
+    const last = lines[maxLines - 1] ?? '';
+    let shortened = last;
+    while (shortened && ctx.measureText(`${shortened}…`).width > maxWidth) {
+      shortened = shortened.slice(0, -1);
+    }
+    lines[maxLines - 1] = `${shortened}…`;
+  }
+
+  return lines;
+}
+
+function drawTextLines(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  color: string,
+  maxLines = 3,
+  font = '500 22px Inter, Arial, sans-serif'
+) {
+  ctx.font = font;
+  ctx.fillStyle = color;
+  const lines = wrapCanvasText(ctx, text, maxWidth, maxLines);
+  lines.forEach((line, index) => {
+    ctx.fillText(line, x, y + index * lineHeight);
+  });
+  return lines.length;
+}
+
+function drawLabelValuePairs(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  title: string,
+  subtitle: string,
+  pairs: Array<{ label: string; value: string }>
+) {
+  const horizontalPadding = 28;
+  const topPadding = 26;
+  const cols = 2;
+  const gap = 18;
+  const itemWidth = (width - horizontalPadding * 2 - gap) / cols;
+  const lineHeight = 28;
+  const rowHeight = 86;
+  const rows = Math.ceil(pairs.length / cols);
+  const height = topPadding + 56 + rows * rowHeight + 18;
+
+  fillRoundedRect(ctx, x, y, width, height, 26, '#FFFFFF', '#DCE9E3');
+  ctx.fillStyle = '#0F172A';
+  ctx.font = '800 28px Inter, Arial, sans-serif';
+  ctx.fillText(title, x + horizontalPadding, y + 36);
+  ctx.fillStyle = '#4B5563';
+  ctx.font = '500 17px Inter, Arial, sans-serif';
+  ctx.fillText(subtitle, x + horizontalPadding, y + 62);
+
+  pairs.forEach((pair, index) => {
+    const column = index % cols;
+    const row = Math.floor(index / cols);
+    const itemX = x + horizontalPadding + column * (itemWidth + gap);
+    const itemY = y + 84 + row * rowHeight;
+
+    fillRoundedRect(ctx, itemX, itemY, itemWidth, 64, 18, '#F8FAF9', '#ECF2EF');
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '700 13px Inter, Arial, sans-serif';
+    ctx.fillText(pair.label, itemX + 16, itemY + 22);
+    ctx.fillStyle = '#0F172A';
+    ctx.font = '700 18px Inter, Arial, sans-serif';
+    drawTextLines(ctx, pair.value || 'Not provided', itemX + 16, itemY + 46, itemWidth - 32, lineHeight, '#0F172A', 2, '700 18px Inter, Arial, sans-serif');
+  });
+
+  return height;
+}
+
+function drawNarrativeSection(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  title: string,
+  subtitle: string,
+  paragraphs: Array<{ label: string; value: string }>
+) {
+  const padding = 28;
+  const contentWidth = width - padding * 2;
+  let cursorY = y + padding;
+
+  ctx.font = '500 20px Inter, Arial, sans-serif';
+  let measuredHeight = 0;
+  paragraphs.forEach((item) => {
+    const headingSpace = 28;
+    const lines = wrapCanvasText(ctx, item.value || 'Not provided', contentWidth, 5);
+    measuredHeight += headingSpace + lines.length * 28 + 14;
+  });
+  const height = padding + 42 + 20 + measuredHeight + 8;
+
+  fillRoundedRect(ctx, x, y, width, height, 26, '#FFFFFF', '#DCE9E3');
+  ctx.fillStyle = '#0F172A';
+  ctx.font = '800 28px Inter, Arial, sans-serif';
+  ctx.fillText(title, x + padding, cursorY + 10);
+  ctx.fillStyle = '#4B5563';
+  ctx.font = '500 17px Inter, Arial, sans-serif';
+  ctx.fillText(subtitle, x + padding, cursorY + 36);
+  cursorY += 64;
+
+  paragraphs.forEach((item) => {
+    ctx.fillStyle = '#065F46';
+    ctx.font = '800 15px Inter, Arial, sans-serif';
+    ctx.fillText(item.label, x + padding, cursorY);
+    cursorY += 26;
+    const linesDrawn = drawTextLines(ctx, item.value || 'Not provided', x + padding, cursorY, contentWidth, 28, '#334155', 5, '500 20px Inter, Arial, sans-serif');
+    cursorY += linesDrawn * 28 + 16;
+  });
+
+  return height;
+}
+
+function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate((-26 * Math.PI) / 180);
+  ctx.fillStyle = 'rgba(6, 95, 70, 0.055)';
+  ctx.font = '800 72px Inter, Arial, sans-serif';
+  for (let y = -height; y <= height; y += 220) {
+    for (let x = -width; x <= width; x += 420) {
+      ctx.fillText('MBNPakistan.com', x, y);
+    }
+  }
+  ctx.restore();
+}
+
+async function blobToDataUrl(blob: Blob) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(new Error('Unable to read image file.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function fetchImageAsDataUrl(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Image could not be fetched.');
+  const blob = await response.blob();
+  return blobToDataUrl(blob);
+}
+
+async function loadCanvasImage(src: string) {
+  return await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Image could not be loaded.'));
+    image.src = src;
+  });
 }
 
 function displayTitle(profile: MarriageProfile, isOwner: boolean) {
@@ -319,6 +546,9 @@ export default function ProfileDetailPage() {
   const [revealLoading, setRevealLoading] = useState(false);
   const [revealError, setRevealError] = useState('');
   const [contact, setContact] = useState<ContactDetails | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState<null | 'png' | 'jpeg'>(null);
+  const [shareError, setShareError] = useState('');
 
   const loadProfile = async () => {
     try {
@@ -508,6 +738,234 @@ export default function ProfileDetailPage() {
     }
   };
 
+  const downloadShareImage = async (format: 'png' | 'jpeg') => {
+    if (!profile) return;
+
+    try {
+      setShareLoading(format);
+      setShareError('');
+
+      const canvas = document.createElement('canvas');
+      const width = 1400;
+      const height = 1980;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) throw new Error('Your browser could not generate the share image.');
+
+      ctx.fillStyle = '#F4FBF7';
+      ctx.fillRect(0, 0, width, height);
+      drawWatermark(ctx, width, height);
+
+      const topGlow = ctx.createRadialGradient(1220, 120, 40, 1220, 120, 300);
+      topGlow.addColorStop(0, 'rgba(16, 185, 129, 0.18)');
+      topGlow.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      ctx.fillStyle = topGlow;
+      ctx.fillRect(0, 0, width, 420);
+
+      const leftGlow = ctx.createRadialGradient(80, 1640, 20, 80, 1640, 280);
+      leftGlow.addColorStop(0, 'rgba(5, 150, 105, 0.12)');
+      leftGlow.addColorStop(1, 'rgba(5, 150, 105, 0)');
+      ctx.fillStyle = leftGlow;
+      ctx.fillRect(0, 1360, 360, 420);
+
+      fillRoundedRect(ctx, 52, 46, width - 104, 230, 34, '#0B5D3D');
+      fillRoundedRect(ctx, 52, 46, width - 104, 230, 34, 'rgba(255,255,255,0.03)');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '800 54px Inter, Arial, sans-serif';
+      ctx.fillText('MBNPakistan.com', 90, 118);
+      ctx.font = '500 22px Inter, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.fillText('Private Matrimonial Network Profile Share', 92, 154);
+      ctx.font = '500 18px Inter, Arial, sans-serif';
+      ctx.fillText('This branded profile sheet is generated for professional matrimonial coordination.', 92, 184);
+
+      const metaText = `Generated: ${new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date())}`;
+      fillRoundedRect(ctx, 90, 200, 250, 46, 18, 'rgba(255,255,255,0.12)');
+      ctx.font = '700 18px Inter, Arial, sans-serif';
+      ctx.fillStyle = '#ECFDF5';
+      ctx.fillText(metaText, 106, 229);
+      const codePillText = profile.profile_code || 'Profile code pending';
+      const codePillWidth = Math.max(250, ctx.measureText(codePillText).width + 44);
+      fillRoundedRect(ctx, width - codePillWidth - 90, 88, codePillWidth, 52, 22, 'rgba(255,255,255,0.12)');
+      ctx.font = '800 20px Inter, Arial, sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(codePillText, width - codePillWidth - 68, 120);
+      fillRoundedRect(ctx, width - 420, 160, 330, 44, 18, 'rgba(255,255,255,0.10)');
+      ctx.font = '700 17px Inter, Arial, sans-serif';
+      ctx.fillStyle = '#D1FAE5';
+      ctx.fillText('Confidential · MBN branded share copy', width - 400, 189);
+
+      fillRoundedRect(ctx, 52, 304, width - 104, 330, 34, '#FFFFFF', '#DCE9E3');
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '800 42px Inter, Arial, sans-serif';
+      ctx.fillText(title, 90, 378);
+      ctx.fillStyle = '#334155';
+      ctx.font = '600 24px Inter, Arial, sans-serif';
+      const heroSub = [profile.age ? `${profile.age} years` : null, profile.gender, profile.marital_status].filter(Boolean).join(' · ');
+      ctx.fillText(heroSub || 'Profile overview', 90, 418);
+      ctx.fillStyle = '#64748B';
+      ctx.font = '500 20px Inter, Arial, sans-serif';
+      ctx.fillText(location || 'Location not provided', 90, 452);
+
+      const heroPairs = [
+        { label: 'Religion', value: profile.religion || 'Not provided' },
+        { label: 'Sect', value: profile.sect || 'Not provided' },
+        { label: 'Caste / Community', value: profile.caste || 'Not provided' },
+        { label: 'Height', value: profile.height || 'Not provided' },
+        { label: 'Education', value: profile.education || 'Not provided' },
+        { label: 'Profession', value: profile.profession || 'Not provided' },
+      ];
+      heroPairs.forEach((item, index) => {
+        const cardX = 90 + (index % 3) * 210;
+        const cardY = 488 + Math.floor(index / 3) * 68;
+        fillRoundedRect(ctx, cardX, cardY, 190, 54, 18, '#F8FAF9', '#ECF2EF');
+        ctx.fillStyle = '#6B7280';
+        ctx.font = '700 12px Inter, Arial, sans-serif';
+        ctx.fillText(item.label, cardX + 14, cardY + 20);
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '700 16px Inter, Arial, sans-serif';
+        drawTextLines(ctx, item.value, cardX + 14, cardY + 39, 160, 18, '#0F172A', 1, '700 16px Inter, Arial, sans-serif');
+      });
+
+      const photoX = width - 360;
+      const photoY = 348;
+      const photoW = 250;
+      const photoH = 240;
+      fillRoundedRect(ctx, photoX, photoY, photoW, photoH, 26, '#ECFDF5', '#CFE8DD');
+      const sharePhotoUrl = photos[0] || null;
+      if (sharePhotoUrl && !photoHidden) {
+        try {
+          const dataUrl = await fetchImageAsDataUrl(sharePhotoUrl);
+          const image = await loadCanvasImage(dataUrl);
+          ctx.save();
+          roundedRectPath(ctx, photoX + 12, photoY + 12, photoW - 24, photoH - 24, 20);
+          ctx.clip();
+          if (photoBlurred) ctx.filter = 'blur(12px)';
+          const ratio = Math.max((photoW - 24) / image.width, (photoH - 24) / image.height);
+          const drawW = image.width * ratio;
+          const drawH = image.height * ratio;
+          const drawX = photoX + 12 + (photoW - 24 - drawW) / 2;
+          const drawY = photoY + 12 + (photoH - 24 - drawH) / 2;
+          ctx.drawImage(image, drawX, drawY, drawW, drawH);
+          ctx.filter = 'none';
+          ctx.restore();
+          if (photoBlurred) {
+            fillRoundedRect(ctx, photoX + 28, photoY + 88, photoW - 56, 78, 20, 'rgba(6,95,70,0.72)');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '800 20px Inter, Arial, sans-serif';
+            ctx.fillText('Photo blurred for privacy', photoX + 48, photoY + 126);
+            ctx.font = '500 16px Inter, Arial, sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.82)';
+            ctx.fillText('Image visibility is restricted by the profile owner.', photoX + 34, photoY + 152);
+          }
+        } catch {
+          ctx.fillStyle = '#0B5D3D';
+          ctx.font = '700 18px Inter, Arial, sans-serif';
+          ctx.fillText('Photo preview unavailable', photoX + 28, photoY + 120);
+          ctx.fillStyle = '#6B7280';
+          ctx.font = '500 16px Inter, Arial, sans-serif';
+          ctx.fillText('The profile can still be shared without the image.', photoX + 28, photoY + 148);
+        }
+      } else {
+        ctx.fillStyle = '#0B5D3D';
+        ctx.font = '800 22px Inter, Arial, sans-serif';
+        ctx.fillText('Photo protected', photoX + 54, photoY + 116);
+        ctx.fillStyle = '#64748B';
+        ctx.font = '500 17px Inter, Arial, sans-serif';
+        ctx.fillText('Visibility settings do not allow the image to be shared.', photoX + 22, photoY + 144);
+      }
+
+      const contentWidth = width - 104;
+      const leftColWidth = 640;
+      const rightColWidth = contentWidth - leftColWidth - 22;
+      const leftX = 52;
+      const rightX = leftX + leftColWidth + 22;
+      let leftY = 664;
+      let rightY = 664;
+
+      leftY += drawLabelValuePairs(ctx, leftX, leftY, leftColWidth, 'Personal Overview', 'ذاتی معلومات', [
+        { label: 'Gender', value: formatLabel(profile.gender) },
+        { label: 'Age', value: profile.age ? `${profile.age} years` : 'Not provided' },
+        { label: 'Marital status', value: formatLabel(profile.marital_status) },
+        { label: 'Nationality', value: profile.nationality || 'Not provided' },
+        { label: 'Languages', value: profile.languages || 'Not provided' },
+        { label: 'Residence status', value: formatLabel(profile.residence_status) },
+      ]) + 18;
+
+      leftY += drawLabelValuePairs(ctx, leftX, leftY, leftColWidth, 'Education & Career', 'تعلیم اور پیشہ', [
+        { label: 'Education', value: profile.education || 'Not provided' },
+        { label: 'Profession', value: profile.profession || 'Not provided' },
+        { label: 'Employment', value: formatLabel(profile.employment_status) },
+        { label: 'Job type', value: formatLabel(profile.job_type) },
+        { label: 'Industry', value: formatLabel(profile.industry) },
+        { label: 'Income range', value: profile.income_range || 'Not provided' },
+      ]) + 18;
+
+      leftY += drawNarrativeSection(ctx, leftX, leftY, leftColWidth, 'Partner Preferences', 'پارٹنر کی ترجیحات', [
+        { label: 'Expected age', value: profile.expected_partner_age || 'Not provided' },
+        { label: 'Preferred location', value: profile.expected_partner_location || 'Not provided' },
+        { label: 'Preferred education', value: profile.expected_partner_education || 'Not provided' },
+        { label: 'Requirements', value: profile.requirements || 'Not provided' },
+      ]) + 18;
+
+      rightY += drawLabelValuePairs(ctx, rightX, rightY, rightColWidth, 'Location & Family', 'مقام اور خاندانی پس منظر', [
+        { label: 'City', value: profile.city || 'Not provided' },
+        { label: 'Province', value: profile.province || 'Not provided' },
+        { label: 'Country', value: profile.country || 'Not provided' },
+        { label: 'Siblings', value: profile.siblings || 'Not provided' },
+        { label: 'Father occupation', value: profile.father_occupation || 'Not provided' },
+        { label: 'Mother occupation', value: profile.mother_occupation || 'Not provided' },
+      ]) + 18;
+
+      rightY += drawNarrativeSection(ctx, rightX, rightY, rightColWidth, 'Additional Notes', 'اضافی معلومات', [
+        { label: 'Family details', value: profile.family_details || 'Not provided' },
+        { label: 'Profile notes', value: profile.additional_notes || 'Not provided' },
+      ]) + 18;
+
+      rightY += drawNarrativeSection(ctx, rightX, rightY, rightColWidth, 'Sharing & Privacy', 'شیئرنگ اور رازداری', [
+        { label: 'Photo privacy', value: privacyLabel(profile.photo_visibility) },
+        { label: 'Shared from', value: `MBNPakistan.com network${bureauName ? ` · Source bureau: ${bureauName}` : ''}` },
+        { label: 'Reminder', value: 'This profile image is intended for professional matrimonial coordination only. Please share responsibly and verify all details independently before proceeding further.' },
+      ]) + 18;
+
+      const footerY = 1856;
+      fillRoundedRect(ctx, 52, footerY, width - 104, 84, 26, '#E7F7EF', '#CFE8DD');
+      ctx.fillStyle = '#065F46';
+      ctx.font = '800 24px Inter, Arial, sans-serif';
+      ctx.fillText('Branded share copy · MBNPakistan.com', 84, footerY + 34);
+      ctx.fillStyle = '#166534';
+      ctx.font = '500 17px Inter, Arial, sans-serif';
+      ctx.fillText('Prepared for bureau-to-client discussion. Do not remove MBN branding or use outside genuine matrimonial coordination.', 84, footerY + 61);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#0F766E';
+      ctx.font = '800 18px Inter, Arial, sans-serif';
+      ctx.fillText(profile.profile_code || 'MBN profile', width - 84, footerY + 52);
+      ctx.textAlign = 'left';
+
+      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const extension = format === 'jpeg' ? 'jpg' : 'png';
+      const quality = format === 'jpeg' ? 0.94 : 1;
+      const dataUrl = canvas.toDataURL(mime, quality);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${(profile.profile_code || 'mbn-profile').replace(/\s+/g, '-').toLowerCase()}-share.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setShowShareModal(false);
+    } catch (error: unknown) {
+      setShareError(
+        error instanceof Error
+          ? error.message
+          : 'The share image could not be generated. Please try again.'
+      );
+    } finally {
+      setShareLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-[1450px] space-y-6 pb-12">
@@ -574,6 +1032,17 @@ export default function ProfileDetailPage() {
               {shortlisted ? 'Shortlisted' : 'Shortlist'}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              setShareError('');
+              setShowShareModal(true);
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Share2 className="h-4 w-4" />
+            Profile share
+          </button>
           <button
             type="button"
             onClick={copyProfileLink}
@@ -940,6 +1409,81 @@ export default function ProfileDetailPage() {
           </Link>
         </aside>
       </div>
+
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
+          <button
+            type="button"
+            aria-label="Close share dialog"
+            onClick={() => !shareLoading && setShowShareModal(false)}
+            className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+          />
+
+          <div className="relative w-full max-w-xl overflow-hidden rounded-[28px] border border-white/20 bg-white shadow-2xl">
+            <div className="bg-gradient-to-br from-[#073b2a] to-[#168a58] p-6 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10">
+                    <Download className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black">Download branded profile image</h2>
+                    <p dir="rtl" className="mt-1 text-sm text-emerald-100/75">برانڈڈ پروفائل امیج ڈاؤن لوڈ کریں</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !shareLoading && setShowShareModal(false)}
+                  className="rounded-xl bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="font-black text-emerald-950">What will be included?</p>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-emerald-900/80">
+                  <li>• A clean single-page JPG or PNG summary of this profile.</li>
+                  <li>• MBNPakistan.com branding and watermark for secure client sharing.</li>
+                  <li>• Current privacy rules, including hidden or blurred photo settings.</li>
+                </ul>
+                <p dir="rtl" className="mt-3 text-xs leading-5 text-emerald-800/75">یہ امیج ایک صفحے پر تیار ہوگی اور اس میں MBNPakistan.com کی برانڈنگ اور واٹرمارک شامل ہوں گے۔</p>
+              </div>
+
+              {shareError && (
+                <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" /> {shareError}
+                </div>
+              )}
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => downloadShareImage('png')}
+                  disabled={Boolean(shareLoading)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 py-4 text-sm font-black text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-65"
+                >
+                  {shareLoading === 'png' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {shareLoading === 'png' ? 'Generating PNG…' : 'Download PNG'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadShareImage('jpeg')}
+                  disabled={Boolean(shareLoading)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-black text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-65"
+                >
+                  {shareLoading === 'jpeg' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {shareLoading === 'jpeg' ? 'Generating JPG…' : 'Download JPG'}
+                </button>
+              </div>
+
+              <p className="mt-4 text-xs leading-5 text-slate-500">Use the downloaded image only for genuine matrimonial discussion with your client or family. Do not remove the platform branding.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showRevealConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
