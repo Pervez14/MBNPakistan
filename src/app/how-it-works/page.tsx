@@ -84,6 +84,16 @@ const content = {
       title: 'A guided path from profile submission to follow-up',
       text:
         'Instead of placing a profile into a public swipe-style marketplace, MBN begins with a detailed questionnaire and a review-first process.',
+      overview: {
+        eyebrow: 'Your journey at a glance',
+        title: 'Six clear stages, with the family involved throughout',
+        text: 'The process starts with accurate information—not a random match counter. Each stage has a clear purpose, from submission and review to professional follow-up.',
+        facts: [
+          { label: 'Starting point', value: 'Guided questionnaire' },
+          { label: 'First decision', value: 'Human profile review' },
+          { label: 'Ongoing role', value: 'Family-led follow-up' },
+        ],
+      },
       steps: [
         {
           title: 'Complete the guided questionnaire',
@@ -130,6 +140,16 @@ const content = {
       title: 'A structured workspace for profiles, search and follow-up',
       text:
         'MBN helps experienced matchmakers move beyond scattered spreadsheets and WhatsApp threads by organising key workflows in one dashboard.',
+      overview: {
+        eyebrow: 'Professional workflow at a glance',
+        title: 'From bureau application to organised case management',
+        text: 'Access begins with review and approval. Once approved, the bureau can create structured profiles, search available information and record responsible follow-up activity.',
+        facts: [
+          { label: 'Starting point', value: 'Bureau application' },
+          { label: 'Access rule', value: 'Approval required' },
+          { label: 'Workspace', value: 'Profiles, search & follow-up' },
+        ],
+      },
       steps: [
         {
           title: 'Submit a bureau application',
@@ -335,6 +355,16 @@ const content = {
       tag: 'افراد اور خاندانوں کے لیے',
       title: 'پروفائل سبمیشن سے باوقار فالو اپ تک واضح راستہ',
       text: 'پروفائل کو پبلک سوائپ مارکیٹ میں ڈالنے کے بجائے MBN ایک تفصیلی سوالنامے اور ریویو فرسٹ طریقے سے آغاز کرتا ہے۔',
+      overview: {
+        eyebrow: 'آپ کے سفر کا مختصر جائزہ',
+        title: 'چھ واضح مراحل، اور ہر قدم پر خاندان کی شمولیت',
+        text: 'عمل کا آغاز درست معلومات سے ہوتا ہے، کسی بے بنیاد فوری میچ کاؤنٹر سے نہیں۔ سبمیشن، جائزے اور پیشہ ور فالو اپ تک ہر مرحلے کا واضح مقصد ہے۔',
+        facts: [
+          { label: 'پہلا قدم', value: 'آسان سوالنامہ' },
+          { label: 'پہلا فیصلہ', value: 'انسانی پروفائل جائزہ' },
+          { label: 'مسلسل کردار', value: 'خاندان کے ساتھ فالو اپ' },
+        ],
+      },
       steps: [
         {
           title: 'آسان سوالنامہ مکمل کریں',
@@ -380,6 +410,16 @@ const content = {
       tag: 'پیشہ ور میرج بیوروز کے لیے',
       title: 'پروفائل، سرچ اور فالو اپ کے لیے منظم ورک اسپیس',
       text: 'MBN تجربہ کار میچ میکرز کو بکھری ہوئی اسپریڈ شیٹس اور واٹس ایپ چیٹس کے بجائے اہم کام ایک ڈیش بورڈ میں منظم کرنے میں مدد دیتا ہے۔',
+      overview: {
+        eyebrow: 'پیشہ ور ورک فلو کا مختصر جائزہ',
+        title: 'بیورو درخواست سے منظم کیس مینجمنٹ تک',
+        text: 'رسائی کا آغاز جائزے اور منظوری سے ہوتا ہے۔ منظوری کے بعد بیورو منظم پروفائلز بنا سکتا ہے، دستیاب معلومات میں سرچ کر سکتا ہے اور ذمہ دار فالو اپ ریکارڈ کر سکتا ہے۔',
+        facts: [
+          { label: 'پہلا قدم', value: 'بیورو درخواست' },
+          { label: 'رسائی کا اصول', value: 'منظوری ضروری' },
+          { label: 'ورک اسپیس', value: 'پروفائل، سرچ اور فالو اپ' },
+        ],
+      },
       steps: [
         {
           title: 'بیورو درخواست جمع کروائیں',
@@ -579,7 +619,7 @@ export default function HowItWorksPage() {
 
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
-  }, [language]);
+  }, [language, journey]);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
@@ -897,7 +937,37 @@ export default function HowItWorksPage() {
                 </div>
 
                 <div className="relative">
-                  <div className={`absolute bottom-8 top-8 w-px bg-gradient-to-b from-transparent via-[#96caa5] to-transparent ${isUrdu ? 'right-[27px]' : 'left-[27px]'}`} />
+                  <div className={`mb-6 overflow-hidden rounded-[2rem] border p-6 shadow-[0_16px_48px_rgba(5,61,37,0.08)] sm:p-7 ${journey === 'families' ? 'border-[#e8dbc4] bg-gradient-to-br from-white to-[#fbf4e9]' : 'border-emerald-900/10 bg-gradient-to-br from-[#edf7f0] to-white'}`}>
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="max-w-2xl">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#0a6a3f] shadow-sm ring-1 ring-emerald-950/5">
+                          {journey === 'families' ? <HeartHandshake className="h-3.5 w-3.5" /> : <Network className="h-3.5 w-3.5" />}
+                          {activeJourney.overview.eyebrow}
+                        </div>
+                        <h3 className="mt-4 font-heading text-2xl font-bold leading-tight text-[#073b24] sm:text-3xl">
+                          {activeJourney.overview.title}
+                        </h3>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{activeJourney.overview.text}</p>
+                      </div>
+                      <span className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${journey === 'families' ? 'bg-[#0a6a3f] text-white' : 'bg-[#073b24] text-[#bce5c8]'}`}>
+                        {journey === 'families' ? <Users className="h-6 w-6" /> : <SlidersHorizontal className="h-6 w-6" />}
+                      </span>
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                      {activeJourney.overview.facts.map((fact, index) => (
+                        <div key={fact.label} className="rounded-2xl border border-white bg-white/82 p-4 shadow-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-400">{fact.label}</span>
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#e8f4eb] text-[9px] font-extrabold text-[#0a6a3f]">0{index + 1}</span>
+                          </div>
+                          <p className="mt-3 text-xs font-extrabold leading-5 text-[#073b24]">{fact.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={`absolute bottom-8 top-[260px] w-px bg-gradient-to-b from-transparent via-[#96caa5] to-transparent sm:top-[235px] ${isUrdu ? 'right-[27px]' : 'left-[27px]'}`} />
                   <div className="grid gap-5">
                     {activeJourney.steps.map((step, index) => {
                       const Icon = activeIcons[index];
