@@ -1,7 +1,9 @@
 'use client';
 
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
   type FormEvent,
@@ -12,24 +14,93 @@ import Link from 'next/link';
 import {
   AlertCircle,
   ArrowLeft,
-  CheckCircle,
-  HeartHandshake,
-  Image as ImageIcon,
-  Lock,
-  ShieldCheck,
-  Upload,
-  X,
+  ArrowRight,
+  Briefcase,
+  Camera,
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Cloud,
   Copy,
-  Star,
-  MessageCircle,
-  Crown,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Heart,
+  HeartHandshake,
+  Home,
+  Image as ImageIcon,
+  Loader2,
+  Lock,
+  MapPin,
+  PartyPopper,
+  Save,
+  ShieldCheck,
+  Sparkles,
+  UploadCloud,
+  UserRound,
+  UsersRound,
+  X,
+  type LucideIcon,
 } from 'lucide-react';
 
-import { supabase } from '@/lib/supabase';
-import { createWatermarkedImageFile } from '@/lib/watermarkImage';
-import { useLanguage } from '@/lib/useLanguage';
 import LanguageToggle from '@/components/LanguageToggle';
+import { supabase } from '@/lib/supabase';
+import { useLanguage, type Language } from '@/lib/useLanguage';
+import { createWatermarkedImageFile } from '@/lib/watermarkImage';
 
+const DRAFT_KEY = 'mbn-public-profile-draft-v3';
+const MAX_PHOTOS = 2;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
+const relationshipOptions = [
+  'Self',
+  'Father',
+  'Mother',
+  'Brother',
+  'Sister',
+  'Relative',
+  'Family Friend',
+  'Other',
+];
+
+const maritalStatusOptions = [
+  'Never Married',
+  'Divorced',
+  'Widowed',
+  'Separated',
+  'Khula',
+];
+
+const heightOptions = Array.from({ length: 25 }, (_, index) => {
+  const totalInches = 54 + index;
+  const feet = Math.floor(totalInches / 12);
+  const inches = totalInches % 12;
+  return `${feet}' ${inches}\"`;
+});
+
+const religionOptions = [
+  'Islam',
+  'Christianity',
+  'Hinduism',
+  'Sikhism',
+  'Other',
+];
+
+const sectOptions = [
+  'Sunni',
+  'Shia',
+  'Deobandi',
+  'Barelvi',
+  'Ahl-e-Hadith',
+  'Salafi',
+  'Ismaili',
+  'Bohra',
+  'Ahmadi',
+  'Other',
+  'Prefer not to say',
+];
 
 const pakistaniCastes = [
   'Arain',
@@ -58,23 +129,8 @@ const pakistaniCastes = [
   'Tareen',
   'Yousafzai',
   'Other',
-];
-
-
-const sectOptions = [
-  'Sunni',
-  'Shia',
-  'Deobandi',
-  'Barelvi',
-  'Ahl-e-Hadith',
-  'Salafi',
-  'Ismaili',
-  'Bohra',
-  'Ahmadi',
-  'Other',
   'Prefer not to say',
 ];
-
 
 const citiesByProvince: Record<string, string[]> = {
   Punjab: [
@@ -99,7 +155,6 @@ const citiesByProvince: Record<string, string[]> = {
     'Mianwali',
     'Vehari',
   ],
-
   Sindh: [
     'Karachi',
     'Hyderabad',
@@ -114,7 +169,6 @@ const citiesByProvince: Record<string, string[]> = {
     'Thatta',
     'Badin',
   ],
-
   KPK: [
     'Peshawar',
     'Mardan',
@@ -128,7 +182,6 @@ const citiesByProvince: Record<string, string[]> = {
     'Nowshera',
     'Mansehra',
   ],
-
   Balochistan: [
     'Quetta',
     'Gwadar',
@@ -140,27 +193,9 @@ const citiesByProvince: Record<string, string[]> = {
     'Loralai',
     'Dera Murad Jamali',
   ],
-
   Islamabad: ['Islamabad'],
-
-  AJK: [
-    'Muzaffarabad',
-    'Mirpur',
-    'Kotli',
-    'Rawalakot',
-    'Bagh',
-    'Bhimber',
-  ],
-
-  'Gilgit-Baltistan': [
-    'Gilgit',
-    'Skardu',
-    'Hunza',
-    'Chilas',
-    'Ghizer',
-    'Astore',
-  ],
-
+  AJK: ['Muzaffarabad', 'Mirpur', 'Kotli', 'Rawalakot', 'Bagh', 'Bhimber'],
+  'Gilgit-Baltistan': ['Gilgit', 'Skardu', 'Hunza', 'Chilas', 'Ghizer', 'Astore'],
   Overseas: [
     'United Kingdom',
     'United Arab Emirates',
@@ -172,171 +207,111 @@ const citiesByProvince: Record<string, string[]> = {
   ],
 };
 
-
-const content = {
-  en: {
-    pageTitle: 'Submit Your Profile',
-    pageText:
-      'Share your information privately with MBN Pakistan. Our team will review your profile and may assign it to a suitable matchmaker or verified marriage bureau.',
-
-    privateTitle: 'Private & Secure Submission',
-    privateText:
-      'Your submission is reviewed by MBN Pakistan and is not automatically published in the searchable marriage bureau network.',
-
-    submitter: 'Who is submitting this profile?',
-    candidate: 'Candidate Information',
-    religion: 'Religion & Community',
-    location: 'Location',
-    career: 'Education & Career',
-    family: 'Family Details',
-    requirements: 'Partner Requirements',
-    additional: 'Additional Information',
-    photo: 'Candidate Photo',
-    consent: 'Consent & Privacy',
-
-    submitButton: 'Submit Profile for Review',
-    submitting: 'Submitting Profile...',
-
-    successTitle: 'Profile Submitted Successfully',
-    successText:
-      'Thank you for submitting your profile. Our team will review your information and contact you if suitable matching opportunities become available.',
-    successNote:
-      'Please keep your phone and WhatsApp details active so our team or an assigned matchmaker can contact you.',
-    referenceLabel: 'Your Submission Reference',
-    referenceHelp:
-      'Please save this reference number and use it when contacting MBN Pakistan about your submission.',
-    copyReference: 'Copy Reference Number',
-    copiedReference: 'Reference Copied',
-
-    premiumTitle: 'Premium Match Preview',
-    premiumSubtitle:
-      'Your profile preferences can now be reviewed against the MBN Pakistan network.',
-    matchesAvailable: 'matches available for your profile',
-    previewNote:
-      'Preview profiles are limited for privacy. Activate Premium Access to view full details and send interests.',
-    moreMatchesText: 'more suitable profiles may be unlocked with Premium Access.',
-    premiumRequired: 'Premium Required',
-    nameHidden: 'Name Hidden',
-    contactHidden: 'Contact Hidden',
-    activateWhatsapp: 'Choose Plan',
-    mostPopular: 'Most Popular',
-
-    backHome: 'Back to Homepage',
-    submitAnother: 'Submit Another Profile',
-  },
-
-  ur: {
-    pageTitle: 'اپنی پروفائل جمع کروائیں',
-    pageText:
-      'اپنی معلومات MBN Pakistan کے ساتھ نجی طور پر شیئر کریں۔ ہماری ٹیم آپ کی پروفائل کا جائزہ لے گی اور مناسب صورت میں اسے کسی میچ میکر یا تصدیق شدہ میرج بیورو کو اسائن کر سکتی ہے۔',
-
-    privateTitle: 'نجی اور محفوظ سبمیشن',
-    privateText:
-      'آپ کی پروفائل کا پہلے MBN Pakistan کی ٹیم جائزہ لے گی۔ اسے خودکار طور پر سرچ نیٹ ورک میں شائع نہیں کیا جائے گا۔',
-
-    submitter: 'یہ پروفائل کون جمع کروا رہا ہے؟',
-    candidate: 'امیدوار کی معلومات',
-    religion: 'مذہب اور کمیونٹی',
-    location: 'مقام',
-    career: 'تعلیم اور کیریئر',
-    family: 'خاندانی معلومات',
-    requirements: 'مطلوبہ شریک حیات',
-    additional: 'اضافی معلومات',
-    photo: 'امیدوار کی تصویر',
-    consent: 'رضامندی اور پرائیویسی',
-
-    submitButton: 'پروفائل جائزے کے لیے جمع کروائیں',
-    submitting: 'پروفائل جمع ہو رہی ہے...',
-
-    successTitle: 'پروفائل کامیابی سے جمع ہو گئی',
-    successText:
-      'اپنی پروفائل جمع کروانے کا شکریہ۔ ہماری ٹیم آپ کی معلومات کا جائزہ لے گی اور مناسب رشتے کے مواقع دستیاب ہونے پر آپ سے رابطہ کر سکتی ہے۔',
-    successNote:
-      'براہِ کرم اپنا فون اور واٹس ایپ فعال رکھیں تاکہ ہماری ٹیم یا اسائن شدہ میچ میکر آپ سے رابطہ کر سکے۔',
-    referenceLabel: 'آپ کا سبمیشن ریفرنس',
-    referenceHelp:
-      'براہِ کرم یہ ریفرنس نمبر محفوظ رکھیں اور اپنی سبمیشن کے بارے میں MBN Pakistan سے رابطہ کرتے وقت اسے استعمال کریں۔',
-    copyReference: 'ریفرنس نمبر کاپی کریں',
-    copiedReference: 'ریفرنس کاپی ہو گیا',
-
-    premiumTitle: 'پریمیم میچ پری ویو',
-    premiumSubtitle:
-      'آپ کی پروفائل ترجیحات کو MBN Pakistan نیٹ ورک کے ساتھ ریویو کیا جا سکتا ہے۔',
-    matchesAvailable: 'موزوں رشتے آپ کی پروفائل کے لیے دستیاب ہیں',
-    previewNote:
-      'پرائیویسی کی وجہ سے پری ویو محدود ہے۔ مکمل تفصیلات اور Interests بھیجنے کے لیے Premium Access حاصل کریں۔',
-    moreMatchesText: 'مزید موزوں پروفائلز Premium Access کے ساتھ دیکھی جا سکتی ہیں۔',
-    premiumRequired: 'پریمیم درکار ہے',
-    nameHidden: 'نام مخفی',
-    contactHidden: 'رابطہ مخفی',
-    activateWhatsapp: 'پلان منتخب کریں',
-    mostPopular: 'سب سے مقبول',
-
-    backHome: 'ہوم پیج پر واپس جائیں',
-    submitAnother: 'ایک اور پروفائل جمع کروائیں',
-  },
-};
-
-
-type MatchPreviewProfile = {
-  id: string | null;
-  gender: string | null;
-  age: number | string | null;
-  city: string | null;
-  profession: string | null;
-  education: string | null;
-  photo_url: string | null;
-  match_score: number | null;
-};
-
-
-
-const religionOptions = [
-  'Islam',
-  'Christianity',
-  'Hinduism',
-  'Sikhism',
-  'Ahmadiyya',
+const countryOptions = [
+  'Pakistan',
+  'United Kingdom',
+  'United Arab Emirates',
+  'Saudi Arabia',
+  'United States',
+  'Canada',
+  'Australia',
+  'Qatar',
+  'Oman',
+  'Germany',
+  'France',
+  'Italy',
   'Other',
 ];
 
-const maritalStatusOptions = [
-  'Never Married',
-  'Divorced',
-  'Widow',
-  'Widower',
-  'Separated',
+const nationalityOptions = [
+  'Pakistani',
+  'British Pakistani',
+  'American Pakistani',
+  'Canadian Pakistani',
+  'Australian Pakistani',
+  'Dual National',
+  'Other',
 ];
 
-const heightOptions = [
-  '4 ft 8 in',
-  '4 ft 9 in',
-  '4 ft 10 in',
-  '4 ft 11 in',
-  '5 ft 0 in',
-  '5 ft 1 in',
-  '5 ft 2 in',
-  '5 ft 3 in',
-  '5 ft 4 in',
-  '5 ft 5 in',
-  '5 ft 6 in',
-  '5 ft 7 in',
-  '5 ft 8 in',
-  '5 ft 9 in',
-  '5 ft 10 in',
-  '5 ft 11 in',
-  '6 ft 0 in',
-  '6 ft 1 in',
-  '6 ft 2 in',
-  '6 ft 3 in',
-  '6 ft 4 in',
+const residenceStatusOptions = [
+  'Living in Pakistan',
+  'Permanent Resident Abroad',
+  'Citizen Abroad',
+  'Work Visa Abroad',
+  'Student Visa Abroad',
   'Other',
+];
+
+const educationOptions = [
+  'Matric',
+  'Intermediate',
+  'Diploma',
+  "Bachelor's",
+  "Master's",
+  'MPhil',
+  'PhD',
+  'Professional Degree',
+  'Religious Education',
+  'Other',
+];
+
+const employmentStatusOptions = [
+  'Employed',
+  'Self-Employed',
+  'Business Owner',
+  'Student',
+  'Homemaker',
+  'Not Currently Working',
+  'Retired',
+  'Other',
+];
+
+const jobTypeOptions = [
+  'Government',
+  'Private Sector',
+  'Business',
+  'Freelance / Remote',
+  'Armed Forces',
+  'Medical',
+  'Education',
+  'Overseas Employment',
+  'Not Applicable',
+  'Other',
+];
+
+const industryOptions = [
+  'Information Technology',
+  'Healthcare',
+  'Education',
+  'Engineering',
+  'Finance / Banking',
+  'Government',
+  'Business / Trading',
+  'Law',
+  'Agriculture',
+  'Media / Creative',
+  'Hospitality',
+  'Religious Services',
+  'Not Applicable',
+  'Other',
+];
+
+const incomeRangeOptions = [
+  'Under 50,000 PKR',
+  '50,000 - 100,000 PKR',
+  '100,000 - 200,000 PKR',
+  '200,000 - 300,000 PKR',
+  '300,000 - 500,000 PKR',
+  '500,000+ PKR',
+  'Prefer not to say',
 ];
 
 const complexionOptions = [
+  'Very Fair',
   'Fair',
   'Wheatish',
-  'Medium',
+  'Wheatish Brown',
+  'Brown',
   'Dark',
   'Prefer not to say',
 ];
@@ -346,102 +321,24 @@ const bodyTypeOptions = [
   'Average',
   'Athletic',
   'Healthy',
+  'Heavy',
   'Prefer not to say',
 ];
 
 const languageOptions = [
   'Urdu',
   'Punjabi',
-  'English',
-  'Sindhi',
-  'Pashto',
-  'Balochi',
   'Saraiki',
+  'Pashto',
+  'Sindhi',
+  'Balochi',
+  'English',
   'Arabic',
+  'Multiple Languages',
   'Other',
 ];
 
-const residenceStatusOptions = [
-  'Own House',
-  'Rented House',
-  'Joint Family',
-  'Nuclear Family',
-  'Overseas Resident',
-];
-
-const educationOptions = [
-  'Matric',
-  'Intermediate',
-  'Graduation',
-  "Master's",
-  'MPhil',
-  'PhD',
-  'MBBS',
-  'BDS',
-  'Engineering',
-  'CA / ACCA',
-  'Other',
-];
-
-const employmentStatusOptions = [
-  'Employed',
-  'Self-employed',
-  'Business Owner',
-  'Government Job',
-  'Private Job',
-  'Student',
-  'Unemployed',
-  'Homemaker',
-];
-
-const jobTypeOptions = [
-  'Full-time',
-  'Part-time',
-  'Contract',
-  'Business',
-  'Freelance',
-  'Remote',
-  'Not Applicable',
-  'Other',
-];
-
-const industryOptions = [
-  'Medical / Healthcare',
-  'Engineering',
-  'IT / Software',
-  'Education',
-  'Banking / Finance',
-  'Government',
-  'Business / Trade',
-  'Real Estate',
-  'Legal',
-  'Agriculture',
-  'Armed Forces',
-  'Homemaker',
-  'Student',
-  'Other',
-];
-
-const incomeRangeOptions = [
-  'Under 50,000 PKR',
-  '50,000 - 100,000 PKR',
-  '100,000 - 250,000 PKR',
-  '250,000 - 500,000 PKR',
-  '500,000+ PKR',
-  'Prefer not to say',
-];
-
-const siblingCountOptions = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8+',
-];
+const siblingCountOptions = ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
 
 const occupationOptions = [
   'Government Employee',
@@ -458,15 +355,10 @@ const occupationOptions = [
   'Other',
 ];
 
-const preferredAgeOptions = [
-  '20-25',
-  '25-30',
-  '30-35',
-  '35-40',
-  'Custom Range',
-];
+const preferredAgeOptions = ['20-25', '25-30', '30-35', '35-40', '40-45', 'Custom Range'];
 
 const preferredCityOptions = [
+  'Anywhere in Pakistan',
   'Islamabad',
   'Lahore',
   'Karachi',
@@ -479,12 +371,14 @@ const preferredCityOptions = [
 ];
 
 const partnerEducationOptions = [
+  'No Preference',
   'Matric',
   'Intermediate',
   'Graduation',
   "Master's",
   'MPhil',
   'PhD',
+  'Professional Degree',
 ];
 
 type PublicProfileFormData = {
@@ -493,360 +387,665 @@ type PublicProfileFormData = {
   submitterMobile: string;
   submitterWhatsApp: string;
   relationshipToCandidate: string;
-
   candidateName: string;
   gender: string;
   dateOfBirth: string;
   maritalStatus: string;
   height: string;
-
   religion: string;
   sect: string;
   caste: string;
-
   province: string;
   city: string;
   country: string;
   nationality: string;
   residenceStatus: string;
-
   education: string;
   profession: string;
   employmentStatus: string;
   jobType: string;
   industry: string;
   incomeRange: string;
-
   complexion: string;
   bodyType: string;
   languages: string;
-
   totalSiblings: string;
   brothersCount: string;
   sistersCount: string;
   fatherOccupation: string;
   motherOccupation: string;
   familyDetails: string;
-
   expectedPartnerAge: string;
   expectedPartnerLocation: string;
   expectedPartnerEducation: string;
   requirements: string;
-
   additionalNotes: string;
-
   photoVisibility: string;
-
   consentToStore: boolean;
   consentToShare: boolean;
 };
+
+const initialFormData: PublicProfileFormData = {
+  submitterFullName: '',
+  submitterEmail: '',
+  submitterMobile: '',
+  submitterWhatsApp: '',
+  relationshipToCandidate: 'Self',
+  candidateName: '',
+  gender: '',
+  dateOfBirth: '',
+  maritalStatus: '',
+  height: '',
+  religion: 'Islam',
+  sect: '',
+  caste: '',
+  province: '',
+  city: '',
+  country: 'Pakistan',
+  nationality: 'Pakistani',
+  residenceStatus: 'Living in Pakistan',
+  education: '',
+  profession: '',
+  employmentStatus: '',
+  jobType: '',
+  industry: '',
+  incomeRange: '',
+  complexion: '',
+  bodyType: '',
+  languages: '',
+  totalSiblings: '',
+  brothersCount: '',
+  sistersCount: '',
+  fatherOccupation: '',
+  motherOccupation: '',
+  familyDetails: '',
+  expectedPartnerAge: '',
+  expectedPartnerLocation: '',
+  expectedPartnerEducation: 'No Preference',
+  requirements: '',
+  additionalNotes: '',
+  photoVisibility: 'blurred',
+  consentToStore: false,
+  consentToShare: false,
+};
+
+type StepDefinition = {
+  title: string;
+  titleUrdu: string;
+  shortTitle: string;
+  shortTitleUrdu: string;
+  description: string;
+  descriptionUrdu: string;
+  icon: LucideIcon;
+};
+
+const stepDefinitions: StepDefinition[] = [
+  {
+    title: 'Let’s start with you',
+    titleUrdu: 'سب سے پہلے آپ کے بارے میں',
+    shortTitle: 'Submitter',
+    shortTitleUrdu: 'جمع کروانے والا',
+    description: 'Tell us who is creating this profile and how we can contact you securely.',
+    descriptionUrdu: 'بتائیں یہ پروفائل کون بنا رہا ہے اور ہم آپ سے محفوظ طریقے سے کیسے رابطہ کریں۔',
+    icon: UserRound,
+  },
+  {
+    title: 'Meet the candidate',
+    titleUrdu: 'امیدوار کا تعارف',
+    shortTitle: 'Candidate',
+    shortTitleUrdu: 'امیدوار',
+    description: 'The essential details that help us understand the person behind the profile.',
+    descriptionUrdu: 'وہ بنیادی معلومات جو ہمیں امیدوار کو بہتر طور پر سمجھنے میں مدد دیتی ہیں۔',
+    icon: Heart,
+  },
+  {
+    title: 'Community & location',
+    titleUrdu: 'کمیونٹی اور مقام',
+    shortTitle: 'Background',
+    shortTitleUrdu: 'پس منظر',
+    description: 'Share cultural and location details used by families during initial shortlisting.',
+    descriptionUrdu: 'ثقافتی اور رہائشی معلومات جو ابتدائی شارٹ لسٹنگ میں مدد دیتی ہیں۔',
+    icon: MapPin,
+  },
+  {
+    title: 'Education, career & personality',
+    titleUrdu: 'تعلیم، پیشہ اور شخصیت',
+    shortTitle: 'Lifestyle',
+    shortTitleUrdu: 'طرزِ زندگی',
+    description: 'A balanced snapshot of education, work and everyday personality.',
+    descriptionUrdu: 'تعلیم، پیشے اور روزمرہ شخصیت کی ایک متوازن تصویر۔',
+    icon: Briefcase,
+  },
+  {
+    title: 'Family introduction',
+    titleUrdu: 'خاندان کا تعارف',
+    shortTitle: 'Family',
+    shortTitleUrdu: 'خاندان',
+    description: 'A respectful overview of the family environment and background.',
+    descriptionUrdu: 'خاندانی ماحول اور پس منظر کا باوقار تعارف۔',
+    icon: UsersRound,
+  },
+  {
+    title: 'What kind of match feels right?',
+    titleUrdu: 'آپ کے لیے موزوں رشتہ کیسا ہو؟',
+    shortTitle: 'Preferences',
+    shortTitleUrdu: 'ترجیحات',
+    description: 'Keep must-haves realistic and use the notes for what truly matters to your family.',
+    descriptionUrdu: 'ضروری ترجیحات حقیقت پسندانہ رکھیں اور اہم باتیں نوٹس میں لکھیں۔',
+    icon: Sparkles,
+  },
+  {
+    title: 'Photos & privacy',
+    titleUrdu: 'تصاویر اور رازداری',
+    shortTitle: 'Privacy',
+    shortTitleUrdu: 'رازداری',
+    description: 'Choose how the photo should appear and confirm permission to process the profile.',
+    descriptionUrdu: 'تصویر کی نمائش کا طریقہ منتخب کریں اور پروفائل کے استعمال کی اجازت دیں۔',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Review your profile',
+    titleUrdu: 'اپنی پروفائل کا جائزہ لیں',
+    shortTitle: 'Review',
+    shortTitleUrdu: 'جائزہ',
+    description: 'Check the important details before sending the profile to the MBN review team.',
+    descriptionUrdu: 'MBN کی ریویو ٹیم کو بھیجنے سے پہلے اہم معلومات دوبارہ چیک کریں۔',
+    icon: ClipboardCheck,
+  },
+];
 
 function calculateAgeFromDob(dateOfBirth: string) {
   if (!dateOfBirth) return '';
 
   const dob = new Date(dateOfBirth);
-
-  if (Number.isNaN(dob.getTime())) {
-    return '';
-  }
+  if (Number.isNaN(dob.getTime())) return '';
 
   const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDifference = today.getMonth() - dob.getMonth();
+  const dayDifference = today.getDate() - dob.getDate();
 
-  let age =
-    today.getFullYear() -
-    dob.getFullYear();
-
-  const monthDifference =
-    today.getMonth() -
-    dob.getMonth();
-
-  const dayDifference =
-    today.getDate() -
-    dob.getDate();
-
-  if (
-    monthDifference < 0 ||
-    (
-      monthDifference === 0 &&
-      dayDifference < 0
-    )
-  ) {
+  if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
     age -= 1;
   }
 
-  if (age < 0 || age > 100) {
-    return '';
-  }
-
+  if (age < 0 || age > 100) return '';
   return String(age);
 }
 
 function normalizeCount(value: string) {
   if (!value) return null;
-
   if (value === '8+') return 8;
 
   const numericValue = Number(value);
-
-  return Number.isFinite(numericValue)
-    ? numericValue
-    : null;
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
+function cleanPhone(value: string) {
+  return value.replace(/[^\d+]/g, '').slice(0, 16);
+}
 
 export default function SubmitProfilePage() {
   const { language, setLanguage, isUrdu } = useLanguage();
-  const t = content[language];
+  const tr = (english: string, urdu: string) => (isUrdu ? urdu : english);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const [
-    submissionReference,
-    setSubmissionReference,
-  ] = useState('');
-
-  const [
-    referenceCopied,
-    setReferenceCopied,
-  ] = useState(false);
-
-  const [
-    matchPreviewCount,
-    setMatchPreviewCount,
-  ] = useState(0);
-
-  const [
-    matchPreviewProfiles,
-    setMatchPreviewProfiles,
-  ] = useState<MatchPreviewProfile[]>([]);
-
+  const [formData, setFormData] = useState<PublicProfileFormData>(initialFormData);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [maxStepReached, setMaxStepReached] = useState(0);
+  const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back'>('forward');
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStage, setSubmissionStage] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [submissionReference, setSubmissionReference] = useState('');
+  const [referenceCopied, setReferenceCopied] = useState(false);
 
-  const [selectedPhotos, setSelectedPhotos] =
-    useState<File[]>([]);
-
-  const [photoPreviews, setPhotoPreviews] =
-    useState<string[]>([]);
-
-
-  const [formData, setFormData] =
-    useState<PublicProfileFormData>({
-      submitterFullName: '',
-      submitterEmail: '',
-      submitterMobile: '',
-      submitterWhatsApp: '',
-      relationshipToCandidate: 'Self',
-
-      candidateName: '',
-      gender: '',
-      dateOfBirth: '',
-      maritalStatus: '',
-      height: '',
-
-      religion: 'Islam',
-      sect: '',
-      caste: '',
-
-      province: '',
-      city: '',
-      country: 'Pakistan',
-      nationality: 'Pakistani',
-      residenceStatus: '',
-
-      education: '',
-      profession: '',
-      employmentStatus: '',
-      jobType: '',
-      industry: '',
-      incomeRange: '',
-
-      complexion: '',
-      bodyType: '',
-      languages: '',
-
-      totalSiblings: '',
-      brothersCount: '',
-      sistersCount: '',
-      fatherOccupation: '',
-      motherOccupation: '',
-      familyDetails: '',
-
-      expectedPartnerAge: '',
-      expectedPartnerLocation: '',
-      expectedPartnerEducation: '',
-      requirements: '',
-
-      additionalNotes: '',
-
-      photoVisibility: 'public',
-
-      consentToStore: false,
-      consentToShare: false,
-    });
-
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const photoPreviewsRef = useRef<string[]>([]);
 
   const calculatedAge = useMemo(
     () => calculateAgeFromDob(formData.dateOfBirth),
     [formData.dateOfBirth]
   );
 
+  const cityOptions = formData.province
+    ? citiesByProvince[formData.province] || []
+    : [];
+
+  const completionPercent = useMemo(() => {
+    const completionFields: Array<keyof PublicProfileFormData> = [
+      'submitterFullName',
+      'submitterMobile',
+      'relationshipToCandidate',
+      'candidateName',
+      'gender',
+      'dateOfBirth',
+      'maritalStatus',
+      'height',
+      'religion',
+      'sect',
+      'caste',
+      'province',
+      'city',
+      'country',
+      'nationality',
+      'residenceStatus',
+      'education',
+      'profession',
+      'employmentStatus',
+      'jobType',
+      'industry',
+      'incomeRange',
+      'complexion',
+      'bodyType',
+      'languages',
+      'totalSiblings',
+      'brothersCount',
+      'sistersCount',
+      'fatherOccupation',
+      'motherOccupation',
+      'expectedPartnerAge',
+      'expectedPartnerLocation',
+    ];
+
+    const completed = completionFields.reduce((total, key) => {
+      const value = formData[key];
+      return total + (typeof value === 'string' && value.trim() ? 1 : 0);
+    }, 0);
+
+    const photoScore = selectedPhotos.length > 0 ? 1 : 0;
+    const consentScore = formData.consentToStore && formData.consentToShare ? 1 : 0;
+
+    return Math.round(((completed + photoScore + consentScore) / (completionFields.length + 2)) * 100);
+  }, [formData, selectedPhotos.length]);
+
+  useEffect(() => {
+    try {
+      const storedDraft = localStorage.getItem(DRAFT_KEY);
+      if (storedDraft) {
+        const parsed = JSON.parse(storedDraft) as {
+          formData?: Partial<PublicProfileFormData>;
+          currentStep?: number;
+          maxStepReached?: number;
+          savedAt?: string;
+        };
+
+        if (parsed.formData) {
+          setFormData((previous) => ({ ...previous, ...parsed.formData }));
+        }
+
+        if (
+          typeof parsed.currentStep === 'number' &&
+          parsed.currentStep >= 0 &&
+          parsed.currentStep < stepDefinitions.length
+        ) {
+          setCurrentStep(parsed.currentStep);
+          setMaxStepReached(
+            typeof parsed.maxStepReached === 'number'
+              ? Math.max(parsed.currentStep, Math.min(parsed.maxStepReached, stepDefinitions.length - 1))
+              : parsed.currentStep
+          );
+        }
+
+        if (parsed.savedAt) {
+          const savedDate = new Date(parsed.savedAt);
+          if (!Number.isNaN(savedDate.getTime())) {
+            setLastSavedAt(savedDate);
+            setDraftStatus('saved');
+          }
+        }
+      }
+    } catch {
+      localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded || submitted) return;
+
+    setDraftStatus('saving');
+
+    const timer = window.setTimeout(() => {
+      try {
+        const savedAt = new Date();
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ formData, currentStep, maxStepReached, savedAt: savedAt.toISOString() })
+        );
+        setLastSavedAt(savedAt);
+        setDraftStatus('saved');
+      } catch {
+        setDraftStatus('idle');
+      }
+    }, 550);
+
+    return () => window.clearTimeout(timer);
+  }, [formData, currentStep, maxStepReached, draftLoaded, submitted]);
+
+  useEffect(() => {
+    photoPreviewsRef.current = photoPreviews;
+  }, [photoPreviews]);
+
+  useEffect(() => {
+    return () => {
+      photoPreviewsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, []);
 
   const updateField = (
-    e: ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const target = e.target;
+    const target = event.target;
     const { name } = target;
 
-    if (
-      target instanceof HTMLInputElement &&
-      target.type === 'checkbox'
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: target.checked,
-      }));
-
+    if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+      setFormData((previous) => ({ ...previous, [name]: target.checked }));
+      setErrorMessage('');
       return;
     }
 
-    const value = target.value;
+    let value = target.value;
+    if (name === 'submitterMobile' || name === 'submitterWhatsApp') {
+      value = cleanPhone(value);
+    }
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
       ...(name === 'province' ? { city: '' } : {}),
     }));
+    setErrorMessage('');
   };
 
-
-  const handlePhotoChange = (
-    e: ChangeEvent<HTMLInputElement>
+  const updateValue = <K extends keyof PublicProfileFormData>(
+    name: K,
+    value: PublicProfileFormData[K]
   ) => {
-    const files = Array.from(e.target.files || []);
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+      ...(name === 'province' ? { city: '' } : {}),
+    }));
+    setErrorMessage('');
+  };
 
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
 
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ];
-
-    const maxSize =
-      5 * 1024 * 1024;
-
-    const remainingSlots =
-      2 - selectedPhotos.length;
-
+    const remainingSlots = MAX_PHOTOS - selectedPhotos.length;
     if (remainingSlots <= 0) {
-      setErrorMessage('Maximum 2 photos are allowed.');
-      e.target.value = '';
+      setErrorMessage(tr('You can upload a maximum of 2 photos.', 'آپ زیادہ سے زیادہ 2 تصاویر اپ لوڈ کر سکتے ہیں۔'));
+      event.target.value = '';
       return;
     }
 
     const acceptedFiles: File[] = [];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     for (const file of files.slice(0, remainingSlots)) {
       if (!allowedTypes.includes(file.type)) {
-        setErrorMessage(
-          'Please upload JPG, PNG, or WEBP images only.'
-        );
-        e.target.value = '';
+        setErrorMessage(tr('Only JPG, PNG or WEBP images are accepted.', 'صرف JPG، PNG یا WEBP تصاویر قبول کی جاتی ہیں۔'));
+        event.target.value = '';
         return;
       }
 
-      if (file.size > maxSize) {
-        setErrorMessage(
-          'Each photo must be smaller than 5MB.'
-        );
-        e.target.value = '';
+      if (file.size > MAX_PHOTO_SIZE) {
+        setErrorMessage(tr('Each photo must be smaller than 5MB.', 'ہر تصویر کا سائز 5MB سے کم ہونا چاہیے۔'));
+        event.target.value = '';
         return;
       }
 
       acceptedFiles.push(file);
     }
 
-    if (files.length > remainingSlots) {
-      setErrorMessage(
-        'Only 2 photos are allowed. Extra files were ignored.'
-      );
-    } else {
-      setErrorMessage('');
-    }
-
-    setSelectedPhotos((prev) => [
-      ...prev,
-      ...acceptedFiles,
+    setSelectedPhotos((previous) => [...previous, ...acceptedFiles]);
+    setPhotoPreviews((previous) => [
+      ...previous,
+      ...acceptedFiles.map((file) => URL.createObjectURL(file)),
     ]);
-
-    setPhotoPreviews((prev) => [
-      ...prev,
-      ...acceptedFiles.map((file) =>
-        URL.createObjectURL(file)
-      ),
-    ]);
-
-    e.target.value = '';
+    setErrorMessage(
+      files.length > remainingSlots
+        ? tr('Only the first available photo slots were added.', 'صرف دستیاب جگہ کے مطابق ابتدائی تصاویر شامل کی گئی ہیں۔')
+        : ''
+    );
+    event.target.value = '';
   };
-
 
   const removePhoto = (index: number) => {
-    setSelectedPhotos((prev) =>
-      prev.filter((_, itemIndex) => itemIndex !== index)
-    );
+    const previewToRemove = photoPreviews[index];
+    if (previewToRemove) URL.revokeObjectURL(previewToRemove);
 
-    setPhotoPreviews((prev) =>
-      prev.filter((_, itemIndex) => itemIndex !== index)
-    );
+    setSelectedPhotos((previous) => previous.filter((_, itemIndex) => itemIndex !== index));
+    setPhotoPreviews((previous) => previous.filter((_, itemIndex) => itemIndex !== index));
   };
 
+  const clearDraft = () => {
+    const shouldClear = window.confirm(
+      tr(
+        'Clear all saved answers and start again?',
+        'تمام محفوظ شدہ معلومات مٹا کر دوبارہ شروع کرنا چاہتے ہیں؟'
+      )
+    );
+
+    if (!shouldClear) return;
+
+    photoPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    localStorage.removeItem(DRAFT_KEY);
+    setFormData(initialFormData);
+    setSelectedPhotos([]);
+    setPhotoPreviews([]);
+    setCurrentStep(0);
+    setMaxStepReached(0);
+    setErrorMessage('');
+    setDraftStatus('idle');
+    setLastSavedAt(null);
+  };
+
+  const getStepError = (stepIndex: number) => {
+    const required = (
+      fields: Array<[keyof PublicProfileFormData, string, string]>
+    ) => {
+      for (const [field, english, urdu] of fields) {
+        const value = formData[field];
+        if (typeof value !== 'string' || !value.trim()) {
+          return { message: tr(english, urdu), field };
+        }
+      }
+      return null;
+    };
+
+    if (stepIndex === 0) {
+      return required([
+        ['submitterFullName', 'Please enter your full name.', 'براہِ کرم اپنا مکمل نام درج کریں۔'],
+        ['relationshipToCandidate', 'Please select your relationship to the candidate.', 'امیدوار سے اپنا تعلق منتخب کریں۔'],
+        ['submitterMobile', 'Please enter an active mobile number.', 'فعال موبائل نمبر درج کریں۔'],
+      ]);
+    }
+
+    if (stepIndex === 1) {
+      const basicError = required([
+        ['candidateName', 'Please enter the candidate name.', 'امیدوار کا نام درج کریں۔'],
+        ['gender', 'Please select the candidate gender.', 'امیدوار کی جنس منتخب کریں۔'],
+        ['dateOfBirth', 'Please enter the date of birth.', 'تاریخِ پیدائش درج کریں۔'],
+        ['maritalStatus', 'Please select marital status.', 'ازدواجی حیثیت منتخب کریں۔'],
+        ['height', 'Please select height.', 'قد منتخب کریں۔'],
+      ]);
+
+      if (basicError) return basicError;
+      if (!calculatedAge) {
+        return {
+          message: tr('Please enter a valid date of birth.', 'درست تاریخِ پیدائش درج کریں۔'),
+          field: 'dateOfBirth' as keyof PublicProfileFormData,
+        };
+      }
+      if (Number(calculatedAge) < 18) {
+        return {
+          message: tr('The candidate must be at least 18 years old.', 'امیدوار کی عمر کم از کم 18 سال ہونی چاہیے۔'),
+          field: 'dateOfBirth' as keyof PublicProfileFormData,
+        };
+      }
+      return null;
+    }
+
+    if (stepIndex === 2) {
+      return required([
+        ['religion', 'Please select religion.', 'مذہب منتخب کریں۔'],
+        ['sect', 'Please select sect or “Prefer not to say”.', 'مسلک یا “بتانا پسند نہیں” منتخب کریں۔'],
+        ['caste', 'Please select community or “Prefer not to say”.', 'برادری یا “بتانا پسند نہیں” منتخب کریں۔'],
+        ['province', 'Please select province or region.', 'صوبہ یا علاقہ منتخب کریں۔'],
+        ['city', 'Please select city.', 'شہر منتخب کریں۔'],
+        ['country', 'Please select country.', 'ملک منتخب کریں۔'],
+        ['nationality', 'Please select nationality.', 'قومیت منتخب کریں۔'],
+        ['residenceStatus', 'Please select residence status.', 'رہائشی حیثیت منتخب کریں۔'],
+      ]);
+    }
+
+    if (stepIndex === 3) {
+      return required([
+        ['education', 'Please select education.', 'تعلیم منتخب کریں۔'],
+        ['profession', 'Please enter profession or role.', 'پیشہ یا کردار درج کریں۔'],
+        ['employmentStatus', 'Please select employment status.', 'ملازمت کی حیثیت منتخب کریں۔'],
+        ['jobType', 'Please select job type.', 'ملازمت کی قسم منتخب کریں۔'],
+        ['industry', 'Please select industry.', 'شعبہ منتخب کریں۔'],
+        ['incomeRange', 'Please select income range or “Prefer not to say”.', 'آمدنی کی حد یا “بتانا پسند نہیں” منتخب کریں۔'],
+        ['complexion', 'Please select complexion or “Prefer not to say”.', 'رنگت یا “بتانا پسند نہیں” منتخب کریں۔'],
+        ['bodyType', 'Please select body type or “Prefer not to say”.', 'جسمانی ساخت یا “بتانا پسند نہیں” منتخب کریں۔'],
+        ['languages', 'Please select the main language.', 'مرکزی زبان منتخب کریں۔'],
+      ]);
+    }
+
+    if (stepIndex === 4) {
+      return required([
+        ['totalSiblings', 'Please select total siblings.', 'کل بہن بھائیوں کی تعداد منتخب کریں۔'],
+        ['brothersCount', 'Please select number of brothers.', 'بھائیوں کی تعداد منتخب کریں۔'],
+        ['sistersCount', 'Please select number of sisters.', 'بہنوں کی تعداد منتخب کریں۔'],
+        ['fatherOccupation', 'Please select father’s occupation.', 'والد کا پیشہ منتخب کریں۔'],
+        ['motherOccupation', 'Please select mother’s occupation.', 'والدہ کا پیشہ منتخب کریں۔'],
+      ]);
+    }
+
+    if (stepIndex === 5) {
+      return required([
+        ['expectedPartnerAge', 'Please select a preferred age range.', 'ترجیحی عمر کی حد منتخب کریں۔'],
+        ['expectedPartnerLocation', 'Please select a preferred location.', 'ترجیحی مقام منتخب کریں۔'],
+        ['expectedPartnerEducation', 'Please select an education preference.', 'تعلیمی ترجیح منتخب کریں۔'],
+      ]);
+    }
+
+    if (stepIndex === 6 || stepIndex === 7) {
+      if (selectedPhotos.length < 1) {
+        return {
+          message: tr('Please upload at least one candidate photo.', 'امیدوار کی کم از کم ایک تصویر اپ لوڈ کریں۔'),
+          field: 'photoVisibility' as keyof PublicProfileFormData,
+        };
+      }
+
+      if (!formData.consentToStore) {
+        return {
+          message: tr('Please allow secure storage and processing of this profile.', 'اس پروفائل کو محفوظ رکھنے اور پراسیس کرنے کی اجازت دیں۔'),
+          field: 'consentToStore' as keyof PublicProfileFormData,
+        };
+      }
+
+      if (!formData.consentToShare) {
+        return {
+          message: tr('Please confirm authorized matchmaking sharing.', 'مجاز میچ میکنگ شیئرنگ کی اجازت کی تصدیق کریں۔'),
+          field: 'consentToShare' as keyof PublicProfileFormData,
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const scrollToFormTop = () => {
+    window.setTimeout(() => {
+      formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 40);
+  };
+
+  const focusInvalidField = (field?: keyof PublicProfileFormData) => {
+    if (!field) return;
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>(`[name="${String(field)}"]`)?.focus();
+    }, 350);
+  };
+
+  const goNext = () => {
+    const validationError = getStepError(currentStep);
+    if (validationError) {
+      setErrorMessage(validationError.message);
+      focusInvalidField(validationError.field);
+      return;
+    }
+
+    setErrorMessage('');
+    setTransitionDirection('forward');
+    const nextStep = Math.min(currentStep + 1, stepDefinitions.length - 1);
+    setCurrentStep(nextStep);
+    setMaxStepReached((previous) => Math.max(previous, nextStep));
+    scrollToFormTop();
+  };
+
+  const goBack = () => {
+    setErrorMessage('');
+    setTransitionDirection('back');
+    setCurrentStep((previous) => Math.max(previous - 1, 0));
+    scrollToFormTop();
+  };
+
+  const jumpToStep = (stepIndex: number) => {
+    if (stepIndex > maxStepReached) return;
+    setTransitionDirection(stepIndex < currentStep ? 'back' : 'forward');
+    setCurrentStep(stepIndex);
+    setErrorMessage('');
+    scrollToFormTop();
+  };
 
   const uploadPhotos = async () => {
-    if (selectedPhotos.length === 0) return [];
-
     const uploadedUrls: string[] = [];
 
-    for (const photo of selectedPhotos) {
-      const watermarkedPhoto =
-        await createWatermarkedImageFile(
-          photo,
-          'MBNPakistan.com'
-        );
+    for (let index = 0; index < selectedPhotos.length; index += 1) {
+      const photo = selectedPhotos[index];
+      setSubmissionStage(
+        tr(
+          `Protecting photo ${index + 1} of ${selectedPhotos.length}…`,
+          `تصویر ${index + 1} از ${selectedPhotos.length} محفوظ کی جا رہی ہے…`
+        )
+      );
 
-      const safeFileName =
-        watermarkedPhoto.name
-          .replace(/\s+/g, '-')
-          .replace(/[^a-zA-Z0-9.-]/g, '')
-          .toLowerCase();
+      const watermarkedPhoto = await createWatermarkedImageFile(photo, 'MBNPakistan.com');
+      const safeFileName = watermarkedPhoto.name
+        .replace(/\s+/g, '-')
+        .replace(/[^a-zA-Z0-9.-]/g, '')
+        .toLowerCase();
 
       const randomFolder =
-        typeof crypto !== 'undefined' &&
-        crypto.randomUUID
+        typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2)}`;
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-      const filePath =
-        `${randomFolder}/${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2)}-${safeFileName}`;
+      const filePath = `${randomFolder}/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}-${safeFileName}`;
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from('public-submission-photos')
-          .upload(filePath, watermarkedPhoto, {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: 'image/jpeg',
-          });
+      const { error: uploadError } = await supabase.storage
+        .from('public-submission-photos')
+        .upload(filePath, watermarkedPhoto, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg',
+        });
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       const { data } = supabase.storage
         .from('public-submission-photos')
@@ -858,2224 +1057,1896 @@ export default function SubmitProfilePage() {
     return uploadedUrls;
   };
 
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
 
-  const validateRequiredFields = () => {
-    const requiredFields:
-      Array<[keyof PublicProfileFormData, string]> = [
-        [
-          'submitterFullName',
-          'Please enter the submitter full name.',
-        ],
-        [
-          'submitterMobile',
-          'Please enter a mobile number.',
-        ],
-        [
-          'candidateName',
-          'Candidate Name is required.',
-        ],
-        [
-          'gender',
-          'Please select candidate gender.',
-        ],
-        [
-          'dateOfBirth',
-          'Date of Birth is required.',
-        ],
-        [
-          'maritalStatus',
-          'Please select marital status.',
-        ],
-        [
-          'height',
-          'Please select height.',
-        ],
-        [
-          'complexion',
-          'Please select complexion.',
-        ],
-        [
-          'bodyType',
-          'Please select body type.',
-        ],
-        [
-          'languages',
-          'Please select language.',
-        ],
-
-        [
-          'religion',
-          'Please select religion.',
-        ],
-        [
-          'sect',
-          'Please select sect.',
-        ],
-        [
-          'caste',
-          'Please select caste.',
-        ],
-
-        [
-          'province',
-          'Please select province / region.',
-        ],
-        [
-          'city',
-          'Please select city.',
-        ],
-        [
-          'country',
-          'Country is required.',
-        ],
-        [
-          'nationality',
-          'Nationality is required.',
-        ],
-        [
-          'residenceStatus',
-          'Please select residence status.',
-        ],
-
-        [
-          'education',
-          'Please select education.',
-        ],
-        [
-          'profession',
-          'Profession is required.',
-        ],
-        [
-          'employmentStatus',
-          'Please select employment status.',
-        ],
-        [
-          'jobType',
-          'Please select job type.',
-        ],
-        [
-          'industry',
-          'Please select industry.',
-        ],
-        [
-          'incomeRange',
-          'Please select income range.',
-        ],
-
-        [
-          'totalSiblings',
-          'Please select total siblings.',
-        ],
-        [
-          'brothersCount',
-          'Please select number of brothers.',
-        ],
-        [
-          'sistersCount',
-          'Please select number of sisters.',
-        ],
-        [
-          'fatherOccupation',
-          'Please select father occupation.',
-        ],
-        [
-          'motherOccupation',
-          'Please select mother occupation.',
-        ],
-      ];
-
-    for (const [fieldName, message] of requiredFields) {
-      const value = formData[fieldName];
-
-      if (
-        typeof value !== 'string' ||
-        !value.trim()
-      ) {
-        throw new Error(message);
-      }
+    const validationError = getStepError(7);
+    if (validationError) {
+      setErrorMessage(validationError.message);
+      focusInvalidField(validationError.field);
+      return;
     }
-
-    if (!calculatedAge) {
-      throw new Error(
-        'Please enter a valid Date of Birth.'
-      );
-    }
-
-    if (Number(calculatedAge) < 18) {
-      throw new Error(
-        'Candidate age must be at least 18 years.'
-      );
-    }
-
-    if (selectedPhotos.length < 1) {
-      throw new Error(
-        'Candidate Photo is required. Please upload at least 1 photo.'
-      );
-    }
-
-    if (selectedPhotos.length > 2) {
-      throw new Error(
-        'Maximum 2 photos are allowed.'
-      );
-    }
-
-    if (!formData.consentToStore) {
-      throw new Error(
-        'You must agree to secure storage of your profile information.'
-      );
-    }
-
-    if (!formData.consentToShare) {
-      throw new Error(
-        'You must agree to matchmaking sharing with authorized bureaus or matchmakers.'
-      );
-    }
-  };
-
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
 
     try {
       setIsSubmitting(true);
       setErrorMessage('');
 
-      validateRequiredFields();
+      const photoUrls = await uploadPhotos();
+      setSubmissionStage(tr('Sending your profile securely…', 'آپ کی پروفائل محفوظ طریقے سے بھیجی جا رہی ہے…'));
 
-      const photoUrls =
-        await uploadPhotos();
-
-      const siblingsSummary =
-        `${formData.totalSiblings} total siblings, ${formData.brothersCount} brothers, ${formData.sistersCount} sisters`;
-
+      const siblingsSummary = `${formData.totalSiblings} total siblings, ${formData.brothersCount} brothers, ${formData.sistersCount} sisters`;
       const submissionId =
-        typeof crypto !== 'undefined' &&
-        crypto.randomUUID
+        typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2)}-${Math.random()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
               .toString(36)
               .slice(2)}`;
 
-      const { error } = await supabase
-        .from('public_profile_submissions')
-        .insert({
-          id: submissionId,
-          source_type: 'public_submission',
-
-          submitter_full_name:
-            formData.submitterFullName.trim(),
-
-          submitter_email:
-            formData.submitterEmail.trim() || null,
-
-          submitter_mobile:
-            formData.submitterMobile.trim(),
-
-          submitter_whatsapp:
-            formData.submitterWhatsApp.trim() || null,
-
-          relationship_to_candidate:
-            formData.relationshipToCandidate || 'Self',
-
-          candidate_name:
-            formData.candidateName.trim(),
-
-          gender: formData.gender,
-
-          age: Number(calculatedAge),
-
-          date_of_birth:
-            formData.dateOfBirth,
-
-          marital_status:
-            formData.maritalStatus,
-
-          height:
-            formData.height,
-
-          religion:
-            formData.religion || 'Islam',
-
-          sect:
-            formData.sect,
-
-          caste:
-            formData.caste,
-
-          province:
-            formData.province,
-
-          city:
-            formData.city,
-
-          country:
-            formData.country || 'Pakistan',
-
-          nationality:
-            formData.nationality || 'Pakistani',
-
-          residence_status:
-            formData.residenceStatus,
-
-          education:
-            formData.education,
-
-          profession:
-            formData.profession.trim(),
-
-          employment_status:
-            formData.employmentStatus,
-
-          job_type:
-            formData.jobType,
-
-          industry:
-            formData.industry,
-
-          income_range:
-            formData.incomeRange,
-
-          complexion:
-            formData.complexion,
-
-          body_type:
-            formData.bodyType,
-
-          languages:
-            formData.languages,
-
-          siblings:
-            siblingsSummary,
-
-          total_siblings:
-            normalizeCount(formData.totalSiblings),
-
-          brothers_count:
-            normalizeCount(formData.brothersCount),
-
-          sisters_count:
-            normalizeCount(formData.sistersCount),
-
-          father_occupation:
-            formData.fatherOccupation,
-
-          mother_occupation:
-            formData.motherOccupation,
-
-          family_details:
-            formData.familyDetails || null,
-
-          expected_partner_age:
-            formData.expectedPartnerAge || null,
-
-          expected_partner_location:
-            formData.expectedPartnerLocation || null,
-
-          expected_partner_education:
-            formData.expectedPartnerEducation || null,
-
-          requirements:
-            formData.requirements || null,
-
-          additional_notes:
-            formData.additionalNotes || null,
-
-          photo_url: photoUrls[0],
-
-          photo_url_2:
-            photoUrls[1] || null,
-
-          photo_visibility:
-            formData.photoVisibility || 'public',
-
-          consent_to_store:
-            formData.consentToStore,
-
-          consent_to_share:
-            formData.consentToShare,
-
-          review_status: 'new',
-
-          converted_to_profile: false,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      const {
-        data: referenceData,
-        error: referenceError,
-      } = await supabase.rpc(
-        'get_public_submission_reference',
-        {
-          p_submission_id: submissionId,
-        }
-      );
-
-      if (referenceError) {
-        throw referenceError;
-      }
-
-      setSubmissionReference(
-        typeof referenceData === 'string'
-          ? referenceData
-          : ''
-      );
-
-      const generatedMatchCount =
-        Math.floor(Math.random() * 25) + 25;
-
-
-      setMatchPreviewCount(
-        generatedMatchCount
-      );
-
-
-      try {
-        const {
-          data: previewProfileData,
-          error: previewProfileError,
-        } = await supabase.rpc(
-          'get_public_match_preview_profiles',
-          {
-            p_gender: formData.gender,
-            p_city: formData.city,
-            p_province: formData.province,
-            p_limit: 3,
-          }
-        );
-
-
-        if (!previewProfileError && previewProfileData) {
-          setMatchPreviewProfiles(
-            previewProfileData as MatchPreviewProfile[]
-          );
-        } else {
-          setMatchPreviewProfiles([]);
-        }
-
-      } catch {
-        setMatchPreviewProfiles([]);
-      }
-
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
+      const { error } = await supabase.from('public_profile_submissions').insert({
+        id: submissionId,
+        source_type: 'public_submission',
+        submitter_full_name: formData.submitterFullName.trim(),
+        submitter_email: formData.submitterEmail.trim() || null,
+        submitter_mobile: formData.submitterMobile.trim(),
+        submitter_whatsapp: formData.submitterWhatsApp.trim() || null,
+        relationship_to_candidate: formData.relationshipToCandidate || 'Self',
+        candidate_name: formData.candidateName.trim(),
+        gender: formData.gender,
+        age: Number(calculatedAge),
+        date_of_birth: formData.dateOfBirth,
+        marital_status: formData.maritalStatus,
+        height: formData.height,
+        religion: formData.religion || 'Islam',
+        sect: formData.sect,
+        caste: formData.caste,
+        province: formData.province,
+        city: formData.city,
+        country: formData.country || 'Pakistan',
+        nationality: formData.nationality || 'Pakistani',
+        residence_status: formData.residenceStatus,
+        education: formData.education,
+        profession: formData.profession.trim(),
+        employment_status: formData.employmentStatus,
+        job_type: formData.jobType,
+        industry: formData.industry,
+        income_range: formData.incomeRange,
+        complexion: formData.complexion,
+        body_type: formData.bodyType,
+        languages: formData.languages,
+        siblings: siblingsSummary,
+        total_siblings: normalizeCount(formData.totalSiblings),
+        brothers_count: normalizeCount(formData.brothersCount),
+        sisters_count: normalizeCount(formData.sistersCount),
+        father_occupation: formData.fatherOccupation,
+        mother_occupation: formData.motherOccupation,
+        family_details: formData.familyDetails.trim() || null,
+        expected_partner_age: formData.expectedPartnerAge || null,
+        expected_partner_location: formData.expectedPartnerLocation || null,
+        expected_partner_education: formData.expectedPartnerEducation || null,
+        requirements: formData.requirements.trim() || null,
+        additional_notes: formData.additionalNotes.trim() || null,
+        photo_url: photoUrls[0],
+        photo_url_2: photoUrls[1] || null,
+        photo_visibility: formData.photoVisibility || 'blurred',
+        consent_to_store: formData.consentToStore,
+        consent_to_share: formData.consentToShare,
+        review_status: 'new',
+        converted_to_profile: false,
       });
 
+      if (error) throw error;
+
+      setSubmissionStage(tr('Creating your private reference…', 'آپ کا نجی ریفرنس بنایا جا رہا ہے…'));
+
+      const { data: referenceData, error: referenceError } = await supabase.rpc(
+        'get_public_submission_reference',
+        { p_submission_id: submissionId }
+      );
+
+      if (referenceError) throw referenceError;
+
+      setSubmissionReference(typeof referenceData === 'string' ? referenceData : submissionId);
+      localStorage.removeItem(DRAFT_KEY);
       setSubmitted(true);
-    } catch (err: unknown) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: unknown) {
       const message =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' &&
-              err !== null &&
-              'message' in err &&
-              typeof (err as { message?: unknown }).message === 'string'
-            ? (err as { message: string }).message
-            : 'Profile could not be submitted. Please try again.';
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' &&
+              error !== null &&
+              'message' in error &&
+              typeof (error as { message?: unknown }).message === 'string'
+            ? (error as { message: string }).message
+            : tr('Profile could not be submitted. Please try again.', 'پروفائل جمع نہیں ہو سکی۔ دوبارہ کوشش کریں۔');
 
       setErrorMessage(message);
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
+      setSubmissionStage('');
     }
   };
-
 
   const copyReferenceNumber = async () => {
     if (!submissionReference) return;
 
     try {
-      await navigator.clipboard.writeText(
-        submissionReference
-      );
-
+      await navigator.clipboard.writeText(submissionReference);
       setReferenceCopied(true);
-
-      window.setTimeout(() => {
-        setReferenceCopied(false);
-      }, 2500);
-
+      window.setTimeout(() => setReferenceCopied(false), 2400);
     } catch {
       setErrorMessage(
-        'Reference number could not be copied automatically. Please copy it manually.'
+        tr(
+          'Reference number could not be copied automatically.',
+          'ریفرنس نمبر خودکار طور پر کاپی نہیں ہو سکا۔'
+        )
       );
     }
   };
 
-
-  const cityOptions = formData.province
-    ? citiesByProvince[formData.province] || []
-    : [];
-
+  const resetForAnotherProfile = () => {
+    photoPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    setFormData(initialFormData);
+    setSelectedPhotos([]);
+    setPhotoPreviews([]);
+    setCurrentStep(0);
+    setMaxStepReached(0);
+    setSubmitted(false);
+    setSubmissionReference('');
+    setErrorMessage('');
+    setDraftStatus('idle');
+    setLastSavedAt(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (submitted) {
     return (
-      <div
-        dir={isUrdu ? 'rtl' : 'ltr'}
-        className="min-h-screen bg-[#f3f8f4]"
-      >
-        <PublicHeader
-          language={language}
-          setLanguage={setLanguage}
-        />
+      <div dir={isUrdu ? 'rtl' : 'ltr'} className="min-h-screen overflow-hidden bg-[#f3f8f4]">
+        <PublicHeader language={language} setLanguage={setLanguage} />
 
-        <main className="max-w-3xl mx-auto px-4 py-16 md:py-24">
-          <div className="bg-white border border-green-200 rounded-[2rem] p-8 md:p-12 text-center shadow-xl">
-            <div className="w-20 h-20 rounded-full bg-green-100 mx-auto flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-[#137a4a]" />
+        <main className="relative mx-auto max-w-4xl px-4 py-12 md:px-8 md:py-20">
+          <div className="pointer-events-none absolute left-[-8rem] top-6 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute right-[-8rem] top-32 h-80 w-80 rounded-full bg-amber-100/60 blur-3xl" />
+
+          <section className="relative overflow-hidden rounded-[2.25rem] border border-emerald-200/80 bg-white px-6 py-10 text-center shadow-[0_30px_90px_-42px_rgba(15,79,50,0.45)] md:px-12 md:py-14">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#c8a84b] to-emerald-500" />
+            <div className="success-orbit mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 ring-8 ring-emerald-50">
+              <CheckCircle2 className="h-12 w-12 text-[#137a4a]" />
             </div>
 
-            <h1 className="font-heading text-3xl md:text-5xl font-bold text-slate-950 mt-7">
-              {t.successTitle}
+            <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800">
+              <PartyPopper className="h-4 w-4" />
+              {tr('Profile received securely', 'پروفائل محفوظ طریقے سے موصول ہو گئی')}
+            </div>
+
+            <h1 className="mt-5 font-heading text-4xl font-bold tracking-tight text-slate-950 md:text-6xl">
+              {tr('Thank you for trusting MBN', 'MBN پر اعتماد کرنے کا شکریہ')}
             </h1>
 
-            <p className="text-lg text-slate-600 leading-relaxed mt-5">
-              {t.successText}
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
+              {tr(
+                'Your profile is now in the private review queue. It is not automatically published or shown as a public match.',
+                'آپ کی پروفائل اب نجی ریویو قطار میں ہے۔ اسے خودکار طور پر شائع یا عوامی میچ کے طور پر نہیں دکھایا جائے گا۔'
+              )}
             </p>
 
-            {submissionReference && (
-              <div className="mt-8 rounded-3xl border-2 border-[#137a4a]/20 bg-[#f7fcf8] p-6 md:p-8">
-
-                <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#137a4a]">
-                  {t.referenceLabel}
-                </p>
-
-                <div className="mt-4 rounded-2xl bg-white border border-green-200 px-4 py-5 md:px-6">
-                  <p
-                    dir="ltr"
-                    className="font-mono text-2xl md:text-4xl font-black tracking-wide text-slate-950 break-all"
-                  >
-                    {submissionReference}
-                  </p>
-                </div>
-
-                <p className="text-sm text-slate-600 leading-relaxed mt-4">
-                  {t.referenceHelp}
-                </p>
-
+            <div className="mx-auto mt-9 max-w-xl rounded-3xl border border-emerald-200 bg-[#f7fcf8] p-5 md:p-7">
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-emerald-700">
+                {tr('Your private reference', 'آپ کا نجی ریفرنس')}
+              </p>
+              <div className="mt-3 flex flex-col items-stretch gap-3 rounded-2xl border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
+                <code dir="ltr" className="flex-1 select-all text-xl font-black tracking-wider text-slate-900 md:text-2xl">
+                  {submissionReference}
+                </code>
                 <button
                   type="button"
                   onClick={copyReferenceNumber}
-                  className="mt-5 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-800"
                 >
-                  <Copy className="w-4 h-4" />
-
-                  {referenceCopied
-                    ? t.copiedReference
-                    : t.copyReference}
+                  {referenceCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {referenceCopied ? tr('Copied', 'کاپی ہو گیا') : tr('Copy', 'کاپی کریں')}
                 </button>
-
               </div>
-            )}
-
-            {matchPreviewCount > 0 && (
-              <PremiumMatchPreview
-                count={matchPreviewCount}
-                reference={submissionReference}
-                submittedGender={formData.gender}
-                databaseProfiles={matchPreviewProfiles}
-                isUrdu={isUrdu}
-                t={t}
-              />
-            )}
-
-            <div className="mt-7 rounded-2xl bg-green-50 border border-green-200 p-5">
-              <p className="text-sm text-green-800 leading-relaxed">
-                {t.successNote}
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                {tr(
+                  'Save this number. Our team may ask for it when you contact MBN about this submission.',
+                  'یہ نمبر محفوظ رکھیں۔ اس پروفائل کے متعلق رابطہ کرتے وقت ہماری ٹیم یہ نمبر پوچھ سکتی ہے۔'
+                )}
               </p>
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+            <div className="mx-auto mt-9 grid max-w-3xl gap-3 text-start md:grid-cols-3">
+              <SuccessStage
+                icon={CheckCircle2}
+                title={tr('Received', 'موصول')}
+                text={tr('Your answers and photos were submitted.', 'آپ کی معلومات اور تصاویر جمع ہو گئیں۔')}
+                active
+              />
+              <SuccessStage
+                icon={ShieldCheck}
+                title={tr('Private review', 'نجی جائزہ')}
+                text={tr('The MBN team checks completeness and consent.', 'MBN ٹیم معلومات اور اجازت کا جائزہ لے گی۔')}
+              />
+              <SuccessStage
+                icon={HeartHandshake}
+                title={tr('Matchmaking', 'میچ میکنگ')}
+                text={tr('You will be contacted when a suitable next step exists.', 'مناسب اگلے مرحلے پر آپ سے رابطہ کیا جائے گا۔')}
+              />
+            </div>
+
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/"
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-[#137a4a] text-white font-bold hover:bg-[#0b5f38]"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#137a4a] px-6 py-3.5 font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#0b5f38]"
               >
-                {t.backHome}
+                <Home className="h-4 w-4" />
+                {tr('Back to homepage', 'ہوم پیج پر جائیں')}
               </Link>
-
               <button
                 type="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  setSubmissionReference('');
-                  setReferenceCopied(false);
-                  setMatchPreviewCount(0);
-                  setMatchPreviewProfiles([]);
-                  setErrorMessage('');
-                  window.location.reload();
-                }}
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50"
+                onClick={resetForAnotherProfile}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50"
               >
-                {t.submitAnother}
+                <UserRound className="h-4 w-4" />
+                {tr('Submit another profile', 'ایک اور پروفائل جمع کریں')}
               </button>
             </div>
-          </div>
+          </section>
         </main>
+
+        <PageAnimations />
       </div>
     );
   }
 
+  const currentStepDefinition = stepDefinitions[currentStep];
+  const CurrentStepIcon = currentStepDefinition.icon;
+  const stepProgress = Math.round(((currentStep + 1) / stepDefinitions.length) * 100);
 
   return (
-    <div
-      dir={isUrdu ? 'rtl' : 'ltr'}
-      className="min-h-screen bg-[#f3f8f4]"
-    >
-      <PublicHeader
-        language={language}
-        setLanguage={setLanguage}
-      />
+    <div dir={isUrdu ? 'rtl' : 'ltr'} className="min-h-screen overflow-x-hidden bg-[#f4f8f5]">
+      <PublicHeader language={language} setLanguage={setLanguage} />
 
-      <main className="max-w-5xl mx-auto px-4 md:px-8 py-10 md:py-14">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#137a4a] mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {isUrdu ? 'ہوم پیج' : 'Back to Homepage'}
-        </Link>
+      <main className="relative mx-auto max-w-[1380px] px-4 py-7 md:px-8 md:py-10 xl:px-10">
+        <div className="pointer-events-none absolute left-[-12rem] top-20 h-[30rem] w-[30rem] rounded-full bg-emerald-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute right-[-12rem] top-80 h-[28rem] w-[28rem] rounded-full bg-amber-100/60 blur-3xl" />
 
+        <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur transition hover:border-emerald-200 hover:text-emerald-700"
+          >
+            <ArrowLeft className={`h-4 w-4 ${isUrdu ? 'rotate-180' : ''}`} />
+            {tr('Back to homepage', 'ہوم پیج پر واپس')}
+          </Link>
 
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#137a4a] p-8 md:p-12 text-white mb-8">
-          <div className="absolute inset-0 opacity-20">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">
+              {draftStatus === 'saving' ? (
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+              ) : draftStatus === 'saved' ? (
+                <Cloud className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Save className="h-4 w-4 text-slate-400" />
+              )}
+              <span>
+                {draftStatus === 'saving'
+                  ? tr('Saving…', 'محفوظ ہو رہا ہے…')
+                  : draftStatus === 'saved'
+                    ? tr('Draft saved', 'ڈرافٹ محفوظ ہے')
+                    : tr('Auto-save on', 'آٹو سیو فعال')}
+              </span>
+              {lastSavedAt && draftStatus === 'saved' && (
+                <span className="hidden text-slate-400 sm:inline">
+                  · {lastSavedAt.toLocaleTimeString(isUrdu ? 'ur-PK' : 'en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={clearDraft}
+              className="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-bold text-slate-500 shadow-sm backdrop-blur transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              {tr('Clear', 'صاف کریں')}
+            </button>
+          </div>
+        </div>
+
+        <section className="relative mb-6 overflow-hidden rounded-[2rem] bg-[#0f5939] px-6 py-8 text-white shadow-[0_28px_80px_-40px_rgba(15,79,50,0.65)] md:px-10 md:py-10">
+          <div className="absolute inset-0 opacity-30">
             <PatternLayer />
           </div>
+          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[38px] border-white/5" />
+          <div className="absolute -bottom-28 right-20 h-64 w-64 rounded-full bg-[#c8a84b]/15 blur-2xl" />
 
-          <div className="relative max-w-3xl">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm font-semibold">
-              <HeartHandshake className="w-4 h-4" />
-              MBN Pakistan Matchmaking
-            </span>
-
-            <h1 className="font-heading text-4xl md:text-5xl font-bold mt-5">
-              {t.pageTitle}
-            </h1>
-
-            <p className="text-green-50/90 text-lg mt-4 leading-relaxed">
-              {t.pageText}
-            </p>
-          </div>
-        </div>
-
-
-        <div className="flex items-start gap-3 rounded-2xl bg-white border border-green-200 p-5 mb-8">
-          <ShieldCheck className="w-6 h-6 text-[#137a4a] mt-0.5 flex-shrink-0" />
-
-          <div>
-            <p className="font-bold text-slate-950">
-              {t.privateTitle}
-            </p>
-
-            <p className="text-sm text-slate-600 mt-1 leading-relaxed">
-              {t.privateText}
-            </p>
-          </div>
-        </div>
-
-
-        {errorMessage && (
-          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6 text-sm text-red-700">
-            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-slate-200 rounded-[2rem] p-6 md:p-10 space-y-10 shadow-sm"
-        >
-
-          <FormSection title={t.submitter}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextField
-                label="Full Name *"
-                name="submitterFullName"
-                value={formData.submitterFullName}
-                onChange={updateField}
-                placeholder="Your full name"
-                required
-              />
-
-              <SelectField
-                label="Relationship to Candidate *"
-                name="relationshipToCandidate"
-                value={formData.relationshipToCandidate}
-                onChange={updateField}
-                options={[
-                  'Self',
-                  'Father',
-                  'Mother',
-                  'Brother',
-                  'Sister',
-                  'Relative',
-                  'Family Friend',
-                  'Other',
-                ]}
-                placeholder="Select Relationship"
-                required
-              />
-
-              <TextField
-                label="Mobile Number *"
-                name="submitterMobile"
-                value={formData.submitterMobile}
-                onChange={updateField}
-                placeholder="+92 300 1234567"
-                required
-              />
-
-              <TextField
-                label="WhatsApp Number"
-                name="submitterWhatsApp"
-                value={formData.submitterWhatsApp}
-                onChange={updateField}
-                placeholder="+92 300 1234567"
-              />
-
-              <TextField
-                label="Email Address"
-                name="submitterEmail"
-                type="email"
-                value={formData.submitterEmail}
-                onChange={updateField}
-                placeholder="you@example.com"
-              />
-            </div>
-          </FormSection>
-
-
-          <FormSection title={t.candidate}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <TextField
-                label="Candidate Name *"
-                name="candidateName"
-                value={formData.candidateName}
-                onChange={updateField}
-                placeholder="Candidate full name"
-                required
-              />
-
-              <SelectField
-                label="Gender *"
-                name="gender"
-                value={formData.gender}
-                onChange={updateField}
-                options={[
-                  'Male',
-                  'Female',
-                ]}
-                optionLabels={{
-                  Male: 'Male / Groom',
-                  Female: 'Female / Bride',
-                }}
-                placeholder="Select Gender"
-                required
-              />
-
-              <TextField
-                label="Date of Birth *"
-                name="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={updateField}
-                required
-              />
-
-              <div>
-                <label className="label">Age</label>
-
-                <input
-                  value={calculatedAge ? `${calculatedAge} years` : ''}
-                  readOnly
-                  className="input-field bg-slate-100 text-slate-600"
-                  placeholder="Auto calculated from Date of Birth"
-                />
-
-                <p className="text-xs text-slate-400 mt-1">
-                  Age is automatically calculated in completed years.
-                </p>
+          <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto]">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+                <Sparkles className="h-4 w-4 text-amber-300" />
+                {tr('A private profile journey', 'ایک نجی پروفائل کا سفر')}
               </div>
-
-              <SelectField
-                label="Marital Status *"
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={updateField}
-                options={maritalStatusOptions}
-                placeholder="Select Marital Status"
-                required
-              />
-
-              <SelectField
-                label="Height *"
-                name="height"
-                value={formData.height}
-                onChange={updateField}
-                options={heightOptions}
-                placeholder="Select Height"
-                required
-              />
-
-              <SelectField
-                label="Complexion *"
-                name="complexion"
-                value={formData.complexion}
-                onChange={updateField}
-                options={complexionOptions}
-                placeholder="Select Complexion"
-                required
-              />
-
-              <SelectField
-                label="Body Type *"
-                name="bodyType"
-                value={formData.bodyType}
-                onChange={updateField}
-                options={bodyTypeOptions}
-                placeholder="Select Body Type"
-                required
-              />
-
-              <SelectField
-                label="Languages *"
-                name="languages"
-                value={formData.languages}
-                onChange={updateField}
-                options={languageOptions}
-                placeholder="Select Main Language"
-                required
-              />
+              <h1 className="mt-5 font-heading text-4xl font-bold leading-tight md:text-6xl">
+                {tr('Tell your story, one easy step at a time.', 'اپنی کہانی آسان مراحل میں بیان کریں۔')}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-emerald-50/85 md:text-lg">
+                {tr(
+                  'A guided, privacy-first questionnaire designed for Pakistani families. Your profile remains under review and is never auto-published.',
+                  'پاکستانی خاندانوں کے لیے ایک آسان اور رازداری پر مبنی سوالنامہ۔ آپ کی پروفائل پہلے ریویو ہوگی اور خودکار طور پر شائع نہیں کی جائے گی۔'
+                )}
+              </p>
             </div>
-          </FormSection>
 
-
-          <FormSection title={t.religion}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <SelectField
-                label="Religion *"
-                name="religion"
-                value={formData.religion}
-                onChange={updateField}
-                options={religionOptions}
-                placeholder="Select Religion"
-                required
-              />
-
-              <SelectField
-                label="Sect *"
-                name="sect"
-                value={formData.sect}
-                onChange={updateField}
-                options={sectOptions}
-                placeholder="Select Sect"
-                required
-              />
-
-              <SelectField
-                label="Caste / Community *"
-                name="caste"
-                value={formData.caste}
-                onChange={updateField}
-                options={pakistaniCastes}
-                placeholder="Select Caste"
-                required
-              />
-            </div>
-          </FormSection>
-
-
-          <FormSection title={t.location}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <SelectField
-                label="Province / Region *"
-                name="province"
-                value={formData.province}
-                onChange={updateField}
-                options={Object.keys(citiesByProvince)}
-                placeholder="Select Province"
-                required
-              />
-
-              <div>
-                <label className="label">City *</label>
-
-                <select
-                  name="city"
-                  value={formData.city}
-                  onChange={updateField}
-                  required
-                  disabled={!formData.province}
-                  className="input-field disabled:bg-slate-100"
-                >
-                  <option value="">
-                    {formData.province
-                      ? 'Select City'
-                      : 'Select Province First'}
-                  </option>
-
-                  {cityOptions.map((city) => (
-                    <option
-                      key={city}
-                      value={city}
-                    >
-                      {city}
-                    </option>
-                  ))}
-                </select>
+            <div className="hidden min-w-[210px] rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur lg:block">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-emerald-50/75">{tr('Profile completion', 'پروفائل تکمیل')}</span>
+                <strong>{completionPercent}%</strong>
               </div>
-
-              <TextField
-                label="Country *"
-                name="country"
-                value={formData.country}
-                onChange={updateField}
-                placeholder="Pakistan"
-                required
-              />
-
-              <TextField
-                label="Nationality *"
-                name="nationality"
-                value={formData.nationality}
-                onChange={updateField}
-                placeholder="Pakistani"
-                required
-              />
-
-              <SelectField
-                label="Residence Status *"
-                name="residenceStatus"
-                value={formData.residenceStatus}
-                onChange={updateField}
-                options={residenceStatusOptions}
-                placeholder="Select Residence Status"
-                required
-              />
-            </div>
-          </FormSection>
-
-
-          <FormSection title={t.career}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <SelectField
-                label="Education *"
-                name="education"
-                value={formData.education}
-                onChange={updateField}
-                options={educationOptions}
-                placeholder="Select Education"
-                required
-              />
-
-              <TextField
-                label="Profession *"
-                name="profession"
-                value={formData.profession}
-                onChange={updateField}
-                placeholder="Doctor, Engineer, Business Owner"
-                required
-              />
-
-              <SelectField
-                label="Employment Status *"
-                name="employmentStatus"
-                value={formData.employmentStatus}
-                onChange={updateField}
-                options={employmentStatusOptions}
-                placeholder="Select Employment Status"
-                required
-              />
-
-              <SelectField
-                label="Job Type *"
-                name="jobType"
-                value={formData.jobType}
-                onChange={updateField}
-                options={jobTypeOptions}
-                placeholder="Select Job Type"
-                required
-              />
-
-              <SelectField
-                label="Industry *"
-                name="industry"
-                value={formData.industry}
-                onChange={updateField}
-                options={industryOptions}
-                placeholder="Select Industry"
-                required
-              />
-
-              <SelectField
-                label="Income Range *"
-                name="incomeRange"
-                value={formData.incomeRange}
-                onChange={updateField}
-                options={incomeRangeOptions}
-                placeholder="Select Income Range"
-                required
-              />
-            </div>
-          </FormSection>
-
-
-          <FormSection title={t.family}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <SelectField
-                label="Total Siblings *"
-                name="totalSiblings"
-                value={formData.totalSiblings}
-                onChange={updateField}
-                options={siblingCountOptions}
-                placeholder="Select Total Siblings"
-                required
-              />
-
-              <SelectField
-                label="Brothers *"
-                name="brothersCount"
-                value={formData.brothersCount}
-                onChange={updateField}
-                options={siblingCountOptions}
-                placeholder="Select Brothers"
-                required
-              />
-
-              <SelectField
-                label="Sisters *"
-                name="sistersCount"
-                value={formData.sistersCount}
-                onChange={updateField}
-                options={siblingCountOptions}
-                placeholder="Select Sisters"
-                required
-              />
-
-              <SelectField
-                label="Father Occupation *"
-                name="fatherOccupation"
-                value={formData.fatherOccupation}
-                onChange={updateField}
-                options={occupationOptions}
-                placeholder="Select Father Occupation"
-                required
-              />
-
-              <SelectField
-                label="Mother Occupation *"
-                name="motherOccupation"
-                value={formData.motherOccupation}
-                onChange={updateField}
-                options={occupationOptions}
-                placeholder="Select Mother Occupation"
-                required
-              />
-
-              <div className="md:col-span-2">
-                <label className="label">
-                  Family Summary
-                </label>
-
-                <textarea
-                  name="familyDetails"
-                  value={formData.familyDetails}
-                  onChange={updateField}
-                  rows={4}
-                  className="input-field resize-none"
-                  placeholder="Optional: tell us about family background, values and family structure..."
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-100 transition-all duration-700"
+                  style={{ width: `${completionPercent}%` }}
                 />
               </div>
-            </div>
-          </FormSection>
-
-
-          <FormSection title={`${t.requirements} ${isUrdu ? '(اختیاری)' : '(Optional)'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <SelectField
-                label="Preferred Age Range"
-                name="expectedPartnerAge"
-                value={formData.expectedPartnerAge}
-                onChange={updateField}
-                options={preferredAgeOptions}
-                placeholder="Select Preferred Age Range"
-              />
-
-              <SelectField
-                label="Preferred City"
-                name="expectedPartnerLocation"
-                value={formData.expectedPartnerLocation}
-                onChange={updateField}
-                options={preferredCityOptions}
-                placeholder="Select Preferred City"
-              />
-
-              <SelectField
-                label="Expected Partner Education"
-                name="expectedPartnerEducation"
-                value={formData.expectedPartnerEducation}
-                onChange={updateField}
-                options={partnerEducationOptions}
-                placeholder="Select Education"
-              />
-
-              <div className="md:col-span-2">
-                <label className="label">
-                  Detailed Match Requirements
-                </label>
-
-                <textarea
-                  name="requirements"
-                  value={formData.requirements}
-                  onChange={updateField}
-                  rows={4}
-                  className="input-field resize-none"
-                  placeholder="Optional: preferred caste, family background, lifestyle, etc."
-                />
+              <div className="mt-5 flex items-start gap-3 text-sm text-emerald-50/80">
+                <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-300" />
+                <span>{tr('Drafts stay on this device until submission.', 'ڈرافٹ جمع ہونے تک اسی ڈیوائس پر محفوظ رہتا ہے۔')}</span>
               </div>
             </div>
-          </FormSection>
+          </div>
+        </section>
 
+        <div ref={formTopRef} className="scroll-mt-6" />
 
-          <FormSection title={t.additional}>
-            <textarea
-              name="additionalNotes"
-              value={formData.additionalNotes}
-              onChange={updateField}
-              rows={4}
-              className="input-field resize-none"
-              placeholder="Any other information you would like the matchmaking team to know..."
-            />
-          </FormSection>
-
-
-          <FormSection title={t.photo}>
-            <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
-
-              <div className="grid grid-cols-2 gap-3">
-                {photoPreviews.map((preview, index) => (
+        <div className="relative grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[330px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white/90 p-4 shadow-[0_18px_60px_-42px_rgba(15,23,42,0.4)] backdrop-blur">
+              <div className="px-3 pb-4 pt-2">
+                <div className="flex items-center justify-between text-sm font-bold text-slate-700">
+                  <span>{tr('Your progress', 'آپ کی پیش رفت')}</span>
+                  <span className="text-emerald-700">{stepProgress}%</span>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    key={preview}
-                    className="relative overflow-hidden rounded-2xl"
-                  >
-                    <img
-                      src={preview}
-                      alt={`Candidate preview ${index + 1}`}
-                      className={`w-full h-48 object-cover object-top border border-slate-200 ${
-                        formData.photoVisibility === 'blurred'
-                          ? 'blur-md scale-105'
-                          : ''
-                      }`}
-                    />
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-700"
+                    style={{ width: `${stepProgress}%` }}
+                  />
+                </div>
+              </div>
 
-                    {formData.photoVisibility === 'blurred' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="px-3 py-2 rounded-full bg-white/90 text-slate-700 text-xs font-semibold shadow">
-                          Blurred Preview
-                        </span>
-                      </div>
-                    )}
+              <nav className="space-y-1.5" aria-label={tr('Profile steps', 'پروفائل مراحل')}>
+                {stepDefinitions.map((step, index) => {
+                  const Icon = step.icon;
+                  const isActive = index === currentStep;
+                  const isComplete = index !== currentStep && index <= maxStepReached;
+                  const isLocked = index > maxStepReached;
 
-                    {formData.photoVisibility === 'hidden' && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-                        <span className="px-3 py-2 rounded-full bg-white text-slate-700 text-xs font-semibold shadow">
-                          Hidden Photo
-                        </span>
-                      </div>
-                    )}
-
+                  return (
                     <button
+                      key={step.shortTitle}
                       type="button"
-                      onClick={() => removePhoto(index)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center"
+                      disabled={isLocked}
+                      onClick={() => jumpToStep(index)}
+                      className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-start transition-all ${
+                        isActive
+                          ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-900/10'
+                          : isComplete
+                            ? 'text-slate-700 hover:bg-emerald-50'
+                            : 'cursor-default text-slate-400'
+                      }`}
                     >
-                      <X className="w-4 h-4" />
+                      <span
+                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border transition ${
+                          isActive
+                            ? 'border-white/20 bg-white/15'
+                            : isComplete
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-slate-50'
+                        }`}
+                      >
+                        {isComplete ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className={`block text-[11px] font-bold uppercase tracking-[0.14em] ${isActive ? 'text-emerald-100' : 'text-slate-400'}`}>
+                          {tr(`Step ${index + 1}`, `مرحلہ ${index + 1}`)}
+                        </span>
+                        <span className="block truncate text-sm font-bold">
+                          {isUrdu ? step.shortTitleUrdu : step.shortTitle}
+                        </span>
+                      </span>
                     </button>
-                  </div>
-                ))}
+                  );
+                })}
+              </nav>
 
-                {photoPreviews.length === 0 && (
-                  <div className="col-span-2 w-full h-72 rounded-2xl bg-slate-50 border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
-                    <ImageIcon className="w-10 h-10" />
-                    <p className="text-sm mt-2">
-                      No photo selected
+              <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700" />
+                  <p className="text-xs leading-5 text-amber-900/75">
+                    {tr(
+                      'Only authorized MBN reviewers and approved matchmaking partners should access submitted details.',
+                      'جمع شدہ معلومات صرف مجاز MBN ریویورز اور منظور شدہ میچ میکنگ پارٹنرز کے لیے ہیں۔'
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section className="min-w-0">
+            <div className="mb-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <CurrentStepIcon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">
+                      {tr(`Step ${currentStep + 1} of ${stepDefinitions.length}`, `مرحلہ ${currentStep + 1} از ${stepDefinitions.length}`)}
+                    </p>
+                    <p className="truncate font-bold text-slate-900">
+                      {isUrdu ? currentStepDefinition.shortTitleUrdu : currentStepDefinition.shortTitle}
                     </p>
                   </div>
-                )}
+                </div>
+                <span className="text-sm font-black text-emerald-700">{stepProgress}%</span>
               </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-emerald-600 transition-all duration-700" style={{ width: `${stepProgress}%` }} />
+              </div>
+            </div>
 
+            {errorMessage && (
+              <div className="mb-4 flex animate-error-shake items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm" role="alert">
+                <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                <div className="flex-1 font-semibold leading-6">{errorMessage}</div>
+                <button type="button" onClick={() => setErrorMessage('')} className="rounded-full p-1 hover:bg-red-100" aria-label={tr('Close error', 'غلطی بند کریں')}>
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
 
-              <div>
-                <label className="label">
-                  Candidate Photo *{' '}
-                  <span className="text-slate-400">
-                    (1 to 2 photos)
-                  </span>
-                </label>
+            <form onSubmit={handleSubmit}>
+              <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_26px_80px_-48px_rgba(15,23,42,0.45)]">
+                <div className="border-b border-slate-100 bg-gradient-to-r from-white via-emerald-50/60 to-white px-5 py-6 md:px-8 md:py-8">
+                  <div className="flex items-start gap-4">
+                    <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-lg shadow-emerald-900/10 md:h-16 md:w-16">
+                      <CurrentStepIcon className="h-7 w-7" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">
+                        {tr(`Step ${currentStep + 1} of ${stepDefinitions.length}`, `مرحلہ ${currentStep + 1} از ${stepDefinitions.length}`)}
+                      </p>
+                      <h2 className="mt-1 font-heading text-3xl font-bold leading-tight text-slate-950 md:text-4xl">
+                        {isUrdu ? currentStepDefinition.titleUrdu : currentStepDefinition.title}
+                      </h2>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 md:text-base">
+                        {isUrdu ? currentStepDefinition.descriptionUrdu : currentStepDefinition.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-                <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#137a4a] text-white font-bold cursor-pointer hover:bg-[#0b5f38]">
-                  <Upload className="w-4 h-4" />
+                <div
+                  key={currentStep}
+                  className={`min-h-[470px] px-5 py-6 md:px-8 md:py-9 ${
+                    transitionDirection === 'forward' ? 'animate-step-forward' : 'animate-step-back'
+                  }`}
+                >
+                  {currentStep === 0 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Who is this profile for?', 'یہ پروفائل کس کے لیے ہے؟')}
+                        help={tr('Choose the relationship of the person completing this form.', 'فارم مکمل کرنے والے فرد کا امیدوار سے تعلق منتخب کریں۔')}
+                      >
+                        <ChoiceGrid
+                          name="relationshipToCandidate"
+                          value={formData.relationshipToCandidate}
+                          options={relationshipOptions}
+                          onSelect={(value) => updateValue('relationshipToCandidate', value)}
+                          labels={{
+                            Self: tr('Myself', 'اپنے لیے'),
+                            Father: tr('My child — father', 'اپنی اولاد — والد'),
+                            Mother: tr('My child — mother', 'اپنی اولاد — والدہ'),
+                            Brother: tr('My sibling — brother', 'اپنے بہن بھائی — بھائی'),
+                            Sister: tr('My sibling — sister', 'اپنے بہن بھائی — بہن'),
+                            Relative: tr('A relative', 'رشتہ دار'),
+                            'Family Friend': tr('A family friend', 'خاندانی دوست'),
+                            Other: tr('Someone else', 'کوئی اور'),
+                          }}
+                          columns="sm:grid-cols-2 xl:grid-cols-4"
+                        />
+                      </QuestionBlock>
 
-                  Choose Photo
+                      <QuestionBlock
+                        number="02"
+                        title={tr('How should we identify and contact you?', 'ہم آپ کو کیسے شناخت اور رابطہ کریں؟')}
+                        help={tr('Use an active number that you personally control.', 'ایسا فعال نمبر دیں جو آپ خود استعمال کرتے ہوں۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <TextInput
+                            label={tr('Your full name', 'آپ کا مکمل نام')}
+                            name="submitterFullName"
+                            value={formData.submitterFullName}
+                            onChange={updateField}
+                            placeholder={tr('e.g. Muhammad Ahmed', 'مثلاً محمد احمد')}
+                            required
+                            autoComplete="name"
+                          />
+                          <TextInput
+                            label={tr('Mobile number', 'موبائل نمبر')}
+                            name="submitterMobile"
+                            value={formData.submitterMobile}
+                            onChange={updateField}
+                            placeholder="+92 300 1234567"
+                            required
+                            inputMode="tel"
+                            autoComplete="tel"
+                            dir="ltr"
+                          />
+                          <TextInput
+                            label={tr('WhatsApp number', 'واٹس ایپ نمبر')}
+                            name="submitterWhatsApp"
+                            value={formData.submitterWhatsApp}
+                            onChange={updateField}
+                            placeholder={tr('Leave blank if same as mobile', 'اگر موبائل نمبر ہی ہے تو خالی چھوڑ دیں')}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            dir="ltr"
+                          />
+                          <TextInput
+                            label={tr('Email address', 'ای میل ایڈریس')}
+                            name="submitterEmail"
+                            type="email"
+                            value={formData.submitterEmail}
+                            onChange={updateField}
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            dir="ltr"
+                          />
+                        </div>
+                      </QuestionBlock>
 
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                </label>
+                      <TrustNote
+                        icon={Lock}
+                        title={tr('Why we ask', 'ہم یہ کیوں پوچھتے ہیں')}
+                        text={tr(
+                          'This contact is used for profile review and follow-up. It is not displayed on a public page.',
+                          'یہ رابطہ پروفائل ریویو اور فالو اَپ کے لیے استعمال ہوگا۔ اسے عوامی صفحے پر نہیں دکھایا جائے گا۔'
+                        )}
+                      />
+                    </div>
+                  )}
 
-                <p className="text-sm text-slate-500 mt-3">
-                  Upload at least 1 and maximum 2 photos. JPG, PNG,
-                  or WEBP. Maximum 5MB per photo.
-                </p>
+                  {currentStep === 1 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Is the candidate a bride or groom?', 'امیدوار دلہن ہے یا دلہا؟')}
+                        help={tr('This helps us show the right wording and matchmaking filters.', 'اس سے درست الفاظ اور میچ میکنگ فلٹرز استعمال ہوتے ہیں۔')}
+                      >
+                        <ChoiceGrid
+                          name="gender"
+                          value={formData.gender}
+                          options={['Female', 'Male']}
+                          onSelect={(value) => updateValue('gender', value)}
+                          labels={{ Female: tr('Bride profile', 'دلہن کی پروفائل'), Male: tr('Groom profile', 'دلہا کی پروفائل') }}
+                          icons={{ Female: Heart, Male: HeartHandshake }}
+                          columns="sm:grid-cols-2"
+                          large
+                        />
+                      </QuestionBlock>
 
-                <p className="text-sm text-slate-500 mt-2">
-                  Uploaded photos are automatically protected with an
-                  MBNPakistan.com watermark.
-                </p>
+                      <QuestionBlock
+                        number="02"
+                        title={tr('Tell us the candidate’s essentials', 'امیدوار کی بنیادی معلومات')}
+                        help={tr('These details form the identity section of the private profile.', 'یہ معلومات نجی پروفائل کے شناختی حصے میں شامل ہوں گی۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <TextInput
+                            label={tr('Candidate full name', 'امیدوار کا مکمل نام')}
+                            name="candidateName"
+                            value={formData.candidateName}
+                            onChange={updateField}
+                            placeholder={tr('Full name', 'مکمل نام')}
+                            required
+                          />
+                          <TextInput
+                            label={tr('Date of birth', 'تاریخِ پیدائش')}
+                            name="dateOfBirth"
+                            type="date"
+                            value={formData.dateOfBirth}
+                            onChange={updateField}
+                            required
+                            dir="ltr"
+                          />
+                          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-700">
+                              {tr('Calculated age', 'حساب شدہ عمر')}
+                            </p>
+                            <p className="mt-1 text-2xl font-black text-slate-950">
+                              {calculatedAge ? tr(`${calculatedAge} years`, `${calculatedAge} سال`) : '—'}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {tr('Automatically calculated from date of birth.', 'تاریخِ پیدائش سے خودکار طور پر حساب کیا گیا۔')}
+                            </p>
+                          </div>
+                          <SelectInput
+                            label={tr('Height', 'قد')}
+                            name="height"
+                            value={formData.height}
+                            onChange={updateField}
+                            options={heightOptions}
+                            placeholder={tr('Select height', 'قد منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
 
+                      <QuestionBlock
+                        number="03"
+                        title={tr('What is the current marital status?', 'موجودہ ازدواجی حیثیت کیا ہے؟')}
+                      >
+                        <ChoiceGrid
+                          name="maritalStatus"
+                          value={formData.maritalStatus}
+                          options={maritalStatusOptions}
+                          onSelect={(value) => updateValue('maritalStatus', value)}
+                          labels={{
+                            'Never Married': tr('Never married', 'غیر شادی شدہ'),
+                            Divorced: tr('Divorced', 'طلاق یافتہ'),
+                            Widowed: tr('Widowed', 'بیوہ / رنڈوا'),
+                            Separated: tr('Separated', 'علیحدہ'),
+                            Khula: tr('Khula', 'خلع یافتہ'),
+                          }}
+                          columns="sm:grid-cols-2 xl:grid-cols-3"
+                        />
+                      </QuestionBlock>
+                    </div>
+                  )}
 
-                <div className="mt-5">
-                  <label className="label">
-                    Photo Visibility Preference
-                  </label>
+                  {currentStep === 2 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Religious and community background', 'مذہبی اور برادری کا پس منظر')}
+                        help={tr('You may choose “Prefer not to say” for sensitive community details.', 'حساس برادری کی معلومات کے لیے “بتانا پسند نہیں” منتخب کیا جا سکتا ہے۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-3">
+                          <SelectInput
+                            label={tr('Religion', 'مذہب')}
+                            name="religion"
+                            value={formData.religion}
+                            onChange={updateField}
+                            options={religionOptions}
+                            placeholder={tr('Select religion', 'مذہب منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Sect', 'مسلک')}
+                            name="sect"
+                            value={formData.sect}
+                            onChange={updateField}
+                            options={sectOptions}
+                            placeholder={tr('Select sect', 'مسلک منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Caste / community', 'ذات / برادری')}
+                            name="caste"
+                            value={formData.caste}
+                            onChange={updateField}
+                            options={pakistaniCastes}
+                            placeholder={tr('Select community', 'برادری منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
 
-                  <select
-                    name="photoVisibility"
-                    value={formData.photoVisibility}
-                    onChange={updateField}
-                    className="input-field"
-                  >
-                    <option value="public">
-                      Public Photo
-                    </option>
+                      <QuestionBlock
+                        number="02"
+                        title={tr('Where does the candidate live?', 'امیدوار کہاں رہتا ہے؟')}
+                        help={tr('Select Overseas as the region when the candidate mainly lives abroad.', 'اگر امیدوار بیرونِ ملک رہتا ہے تو علاقہ Overseas منتخب کریں۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <SelectInput
+                            label={tr('Province / region', 'صوبہ / علاقہ')}
+                            name="province"
+                            value={formData.province}
+                            onChange={updateField}
+                            options={Object.keys(citiesByProvince)}
+                            placeholder={tr('Select province or region', 'صوبہ یا علاقہ منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('City', 'شہر')}
+                            name="city"
+                            value={formData.city}
+                            onChange={updateField}
+                            options={cityOptions}
+                            placeholder={formData.province ? tr('Select city', 'شہر منتخب کریں') : tr('Select region first', 'پہلے علاقہ منتخب کریں')}
+                            required
+                            disabled={!formData.province}
+                          />
+                          <SelectInput
+                            label={tr('Current country', 'موجودہ ملک')}
+                            name="country"
+                            value={formData.country}
+                            onChange={updateField}
+                            options={countryOptions}
+                            placeholder={tr('Select country', 'ملک منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Nationality', 'قومیت')}
+                            name="nationality"
+                            value={formData.nationality}
+                            onChange={updateField}
+                            options={nationalityOptions}
+                            placeholder={tr('Select nationality', 'قومیت منتخب کریں')}
+                            required
+                          />
+                          <div className="md:col-span-2">
+                            <SelectInput
+                              label={tr('Residence status', 'رہائشی حیثیت')}
+                              name="residenceStatus"
+                              value={formData.residenceStatus}
+                              onChange={updateField}
+                              options={residenceStatusOptions}
+                              placeholder={tr('Select residence status', 'رہائشی حیثیت منتخب کریں')}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </QuestionBlock>
 
-                    <option value="blurred">
-                      Blurred for Privacy
-                    </option>
+                      <TrustNote
+                        icon={MapPin}
+                        title={tr('Location helps, but does not define compatibility', 'مقام مدد کرتا ہے، مگر مطابقت کا واحد معیار نہیں')}
+                        text={tr(
+                          'The review team can consider relocation and overseas preferences later in the process.',
+                          'ریویو ٹیم بعد میں منتقلی اور بیرونِ ملک ترجیحات کو بھی مدِنظر رکھ سکتی ہے۔'
+                        )}
+                      />
+                    </div>
+                  )}
 
-                    <option value="hidden">
-                      Hidden Photo
-                    </option>
-                  </select>
+                  {currentStep === 3 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Education and professional life', 'تعلیم اور پیشہ ورانہ زندگی')}
+                        help={tr('Choose the closest option; details can be clarified in the profession field.', 'قریب ترین آپشن منتخب کریں؛ مزید تفصیل پیشے کے خانے میں لکھی جا سکتی ہے۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <SelectInput
+                            label={tr('Highest education', 'اعلیٰ ترین تعلیم')}
+                            name="education"
+                            value={formData.education}
+                            onChange={updateField}
+                            options={educationOptions}
+                            placeholder={tr('Select education', 'تعلیم منتخب کریں')}
+                            required
+                          />
+                          <TextInput
+                            label={tr('Profession / role', 'پیشہ / کردار')}
+                            name="profession"
+                            value={formData.profession}
+                            onChange={updateField}
+                            placeholder={tr('e.g. Doctor, Teacher, Business Owner', 'مثلاً ڈاکٹر، ٹیچر، بزنس اونر')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Employment status', 'ملازمت کی حیثیت')}
+                            name="employmentStatus"
+                            value={formData.employmentStatus}
+                            onChange={updateField}
+                            options={employmentStatusOptions}
+                            placeholder={tr('Select status', 'حیثیت منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Work type', 'کام کی قسم')}
+                            name="jobType"
+                            value={formData.jobType}
+                            onChange={updateField}
+                            options={jobTypeOptions}
+                            placeholder={tr('Select work type', 'کام کی قسم منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Industry', 'شعبہ')}
+                            name="industry"
+                            value={formData.industry}
+                            onChange={updateField}
+                            options={industryOptions}
+                            placeholder={tr('Select industry', 'شعبہ منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Monthly income range', 'ماہانہ آمدنی کی حد')}
+                            name="incomeRange"
+                            value={formData.incomeRange}
+                            onChange={updateField}
+                            options={incomeRangeOptions}
+                            placeholder={tr('Select range', 'حد منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
+
+                      <QuestionBlock
+                        number="02"
+                        title={tr('A simple personality snapshot', 'شخصیت کی مختصر جھلک')}
+                        help={tr('Privacy-respecting “Prefer not to say” options are available.', 'رازداری کے لیے “بتانا پسند نہیں” کے آپشن موجود ہیں۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-3">
+                          <SelectInput
+                            label={tr('Complexion', 'رنگت')}
+                            name="complexion"
+                            value={formData.complexion}
+                            onChange={updateField}
+                            options={complexionOptions}
+                            placeholder={tr('Select', 'منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Body type', 'جسمانی ساخت')}
+                            name="bodyType"
+                            value={formData.bodyType}
+                            onChange={updateField}
+                            options={bodyTypeOptions}
+                            placeholder={tr('Select', 'منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Main language', 'مرکزی زبان')}
+                            name="languages"
+                            value={formData.languages}
+                            onChange={updateField}
+                            options={languageOptions}
+                            placeholder={tr('Select language', 'زبان منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
+
+                      <TrustNote
+                        icon={GraduationCap}
+                        title={tr('Good profiles feel human', 'اچھی پروفائل انسان کو ظاہر کرتی ہے')}
+                        text={tr(
+                          'Use Additional Notes later to share values, interests or ambitions that cannot fit into a dropdown.',
+                          'بعد میں اضافی نوٹس میں اقدار، دلچسپیاں یا مقاصد لکھیں جو ڈراپ ڈاؤن میں بیان نہیں ہو سکتے۔'
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {currentStep === 4 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Siblings at a glance', 'بہن بھائیوں کی مختصر معلومات')}
+                        help={tr('Use the counts as a simple family overview.', 'یہ تعداد خاندان کے مختصر تعارف کے طور پر استعمال ہوگی۔')}
+                      >
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <SelectInput
+                            label={tr('Total siblings', 'کل بہن بھائی')}
+                            name="totalSiblings"
+                            value={formData.totalSiblings}
+                            onChange={updateField}
+                            options={siblingCountOptions}
+                            placeholder={tr('Select', 'منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Brothers', 'بھائی')}
+                            name="brothersCount"
+                            value={formData.brothersCount}
+                            onChange={updateField}
+                            options={siblingCountOptions}
+                            placeholder={tr('Select', 'منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Sisters', 'بہنیں')}
+                            name="sistersCount"
+                            value={formData.sistersCount}
+                            onChange={updateField}
+                            options={siblingCountOptions}
+                            placeholder={tr('Select', 'منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
+
+                      <QuestionBlock
+                        number="02"
+                        title={tr('Parents and family environment', 'والدین اور خاندانی ماحول')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <SelectInput
+                            label={tr('Father’s occupation', 'والد کا پیشہ')}
+                            name="fatherOccupation"
+                            value={formData.fatherOccupation}
+                            onChange={updateField}
+                            options={occupationOptions}
+                            placeholder={tr('Select occupation', 'پیشہ منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Mother’s occupation', 'والدہ کا پیشہ')}
+                            name="motherOccupation"
+                            value={formData.motherOccupation}
+                            onChange={updateField}
+                            options={occupationOptions}
+                            placeholder={tr('Select occupation', 'پیشہ منتخب کریں')}
+                            required
+                          />
+                          <div className="md:col-span-2">
+                            <TextAreaInput
+                              label={tr('Family introduction', 'خاندان کا تعارف')}
+                              name="familyDetails"
+                              value={formData.familyDetails}
+                              onChange={updateField}
+                              placeholder={tr(
+                                'Share family values, family system, hometown or anything important for a respectful introduction…',
+                                'خاندانی اقدار، فیملی سسٹم، آبائی شہر یا باوقار تعارف کے لیے کوئی اہم بات لکھیں…'
+                              )}
+                              rows={5}
+                              maxLength={800}
+                            />
+                          </div>
+                        </div>
+                      </QuestionBlock>
+
+                      <TrustNote
+                        icon={UsersRound}
+                        title={tr('Respect over excessive detail', 'ضرورت سے زیادہ تفصیل کے بجائے احترام')}
+                        text={tr(
+                          'Avoid CNIC numbers, exact addresses, bank details or private documents in this text box.',
+                          'اس خانے میں شناختی کارڈ نمبر، مکمل پتہ، بینک تفصیل یا نجی دستاویزات نہ لکھیں۔'
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {currentStep === 5 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Your practical preferences', 'آپ کی عملی ترجیحات')}
+                        help={tr('Choose broad ranges where possible to avoid missing compatible profiles.', 'ممکن ہو تو وسیع حد منتخب کریں تاکہ موزوں پروفائل چھوٹ نہ جائے۔')}
+                      >
+                        <div className="grid gap-4 md:grid-cols-3">
+                          <SelectInput
+                            label={tr('Preferred age range', 'ترجیحی عمر')}
+                            name="expectedPartnerAge"
+                            value={formData.expectedPartnerAge}
+                            onChange={updateField}
+                            options={preferredAgeOptions}
+                            placeholder={tr('Select age range', 'عمر کی حد منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Preferred location', 'ترجیحی مقام')}
+                            name="expectedPartnerLocation"
+                            value={formData.expectedPartnerLocation}
+                            onChange={updateField}
+                            options={preferredCityOptions}
+                            placeholder={tr('Select location', 'مقام منتخب کریں')}
+                            required
+                          />
+                          <SelectInput
+                            label={tr('Education preference', 'تعلیمی ترجیح')}
+                            name="expectedPartnerEducation"
+                            value={formData.expectedPartnerEducation}
+                            onChange={updateField}
+                            options={partnerEducationOptions}
+                            placeholder={tr('Select preference', 'ترجیح منتخب کریں')}
+                            required
+                          />
+                        </div>
+                      </QuestionBlock>
+
+                      <QuestionBlock
+                        number="02"
+                        title={tr('What truly matters in a partner?', 'شریکِ حیات میں واقعی کیا اہم ہے؟')}
+                        help={tr('Focus on values, lifestyle, family expectations and genuine deal-breakers.', 'اقدار، طرزِ زندگی، خاندانی توقعات اور حقیقی ضروریات پر توجہ دیں۔')}
+                      >
+                        <TextAreaInput
+                          label={tr('Partner requirements', 'شریکِ حیات کی ضروریات')}
+                          name="requirements"
+                          value={formData.requirements}
+                          onChange={updateField}
+                          placeholder={tr(
+                            'Example: family-oriented, respectful, open to relocation, values education and clear communication…',
+                            'مثال: خاندان کو اہمیت دینے والا، باعزت، منتقلی کے لیے تیار، تعلیم اور واضح گفتگو کو اہمیت دینے والا…'
+                          )}
+                          rows={6}
+                          maxLength={1000}
+                        />
+                      </QuestionBlock>
+
+                      <QuestionBlock
+                        number="03"
+                        title={tr('Anything else our reviewer should know?', 'ریویور کو کوئی اور اہم بات بتانا چاہتے ہیں؟')}
+                      >
+                        <TextAreaInput
+                          label={tr('Additional notes', 'اضافی نوٹس')}
+                          name="additionalNotes"
+                          value={formData.additionalNotes}
+                          onChange={updateField}
+                          placeholder={tr(
+                            'Optional: personality, hobbies, marriage timeline or a detail that helps us understand the profile better…',
+                            'اختیاری: شخصیت، دلچسپیاں، شادی کا متوقع وقت یا کوئی بات جو پروفائل سمجھنے میں مدد دے…'
+                          )}
+                          rows={4}
+                          maxLength={800}
+                        />
+                      </QuestionBlock>
+                    </div>
+                  )}
+
+                  {currentStep === 6 && (
+                    <div className="space-y-7">
+                      <QuestionBlock
+                        number="01"
+                        title={tr('Add one or two clear photos', 'ایک یا دو واضح تصاویر شامل کریں')}
+                        help={tr('Photos are watermarked before upload. Choose recent, respectful and front-facing images.', 'تصاویر اپ لوڈ سے پہلے واٹر مارک کی جاتی ہیں۔ حالیہ، باوقار اور سامنے سے لی گئی تصاویر منتخب کریں۔')}
+                      >
+                        <div className="grid items-start gap-6 xl:grid-cols-[1fr_0.9fr]">
+                          <div className="grid min-h-[300px] grid-cols-2 gap-3">
+                            {photoPreviews.map((preview, index) => (
+                              <div key={preview} className="group relative min-h-[260px] overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
+                                <img
+                                  src={preview}
+                                  alt={tr(`Candidate photo ${index + 1}`, `امیدوار کی تصویر ${index + 1}`)}
+                                  className={`h-full min-h-[260px] w-full object-cover object-top transition duration-500 group-hover:scale-[1.03] ${
+                                    formData.photoVisibility === 'blurred' ? 'scale-105 blur-md' : ''
+                                  }`}
+                                />
+                                {formData.photoVisibility === 'hidden' && (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-white">
+                                    <EyeOff className="h-9 w-9" />
+                                    <span className="mt-2 text-sm font-bold">{tr('Hidden preview', 'پوشیدہ تصویر')}</span>
+                                  </div>
+                                )}
+                                {formData.photoVisibility === 'blurred' && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="rounded-full border border-white/50 bg-white/90 px-3 py-2 text-xs font-bold text-slate-700 shadow-lg">
+                                      {tr('Blurred for privacy', 'رازداری کے لیے دھندلی')}
+                                    </span>
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removePhoto(index)}
+                                  className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 shadow-lg transition hover:scale-105 hover:text-red-600"
+                                  aria-label={tr('Remove photo', 'تصویر ہٹائیں')}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+
+                            {photoPreviews.length < MAX_PHOTOS && (
+                              <label className={`${photoPreviews.length === 0 ? 'col-span-2' : ''} group flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-6 text-center transition hover:-translate-y-1 hover:border-emerald-400 hover:bg-emerald-50`}>
+                                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm transition group-hover:scale-105">
+                                  <UploadCloud className="h-8 w-8" />
+                                </span>
+                                <span className="mt-4 font-bold text-slate-900">{tr('Choose photo', 'تصویر منتخب کریں')}</span>
+                                <span className="mt-1 max-w-xs text-sm leading-6 text-slate-500">
+                                  {tr('JPG, PNG or WEBP · maximum 5MB each', 'JPG، PNG یا WEBP · ہر تصویر زیادہ سے زیادہ 5MB')}
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  multiple
+                                  onChange={handlePhotoChange}
+                                  className="hidden"
+                                />
+                              </label>
+                            )}
+                          </div>
+
+                          <div className="space-y-3">
+                            <p className="text-sm font-extrabold text-slate-900">{tr('Photo visibility preference', 'تصویر کی رازداری منتخب کریں')}</p>
+                            <PrivacyOption
+                              name="photoVisibility"
+                              value="public"
+                              selected={formData.photoVisibility === 'public'}
+                              onSelect={() => updateValue('photoVisibility', 'public')}
+                              icon={Eye}
+                              title={tr('Visible', 'نظر آئے')}
+                              text={tr('Suitable where the review team may show the normal photo.', 'جہاں ریویو ٹیم مناسب سمجھے وہاں عام تصویر دکھائی جا سکے۔')}
+                            />
+                            <PrivacyOption
+                              name="photoVisibility"
+                              value="blurred"
+                              selected={formData.photoVisibility === 'blurred'}
+                              onSelect={() => updateValue('photoVisibility', 'blurred')}
+                              icon={Camera}
+                              title={tr('Blurred first', 'پہلے دھندلی')}
+                              text={tr('A privacy-friendly preview before any approved reveal.', 'منظور شدہ نمائش سے پہلے رازداری والا دھندلا پری ویو۔')}
+                              recommended
+                            />
+                            <PrivacyOption
+                              name="photoVisibility"
+                              value="hidden"
+                              selected={formData.photoVisibility === 'hidden'}
+                              onSelect={() => updateValue('photoVisibility', 'hidden')}
+                              icon={EyeOff}
+                              title={tr('Hidden', 'پوشیدہ')}
+                              text={tr('Keep the photo hidden in normal profile previews.', 'عام پروفائل پری ویو میں تصویر پوشیدہ رکھی جائے۔')}
+                            />
+                          </div>
+                        </div>
+                      </QuestionBlock>
+
+                      <QuestionBlock
+                        number="02"
+                        title={tr('Confirm privacy permissions', 'رازداری کی اجازت کی تصدیق')}
+                        help={tr('Both confirmations are required to submit the profile for matchmaking review.', 'میچ میکنگ ریویو کے لیے دونوں اجازتیں ضروری ہیں۔')}
+                      >
+                        <div className="space-y-3">
+                          <ConsentCard
+                            name="consentToStore"
+                            checked={formData.consentToStore}
+                            onChange={updateField}
+                            title={tr('Secure storage and processing', 'محفوظ اسٹوریج اور پراسیسنگ')}
+                            text={tr(
+                              'I allow MBN Pakistan to securely store and process this information for profile review, administration and matchmaking.',
+                              'میں MBN Pakistan کو پروفائل ریویو، انتظام اور میچ میکنگ کے لیے یہ معلومات محفوظ رکھنے اور پراسیس کرنے کی اجازت دیتا/دیتی ہوں۔'
+                            )}
+                          />
+                          <ConsentCard
+                            name="consentToShare"
+                            checked={formData.consentToShare}
+                            onChange={updateField}
+                            title={tr('Authorized matchmaking sharing', 'مجاز میچ میکنگ شیئرنگ')}
+                            text={tr(
+                              'I allow relevant profile details to be shared with authorized matchmakers or verified bureaus for legitimate matchmaking.',
+                              'میں حقیقی میچ میکنگ کے لیے متعلقہ پروفائل معلومات مجاز میچ میکرز یا تصدیق شدہ بیوروز کے ساتھ شیئر کرنے کی اجازت دیتا/دیتی ہوں۔'
+                            )}
+                          />
+                        </div>
+                      </QuestionBlock>
+
+                      <TrustNote
+                        icon={ShieldCheck}
+                        title={tr('Your profile is reviewed before use', 'آپ کی پروفائل استعمال سے پہلے ریویو ہوتی ہے')}
+                        text={tr(
+                          'Submitting does not automatically publish the profile and does not guarantee a match.',
+                          'پروفائل جمع کروانے سے یہ خودکار طور پر شائع نہیں ہوتی اور رشتہ کی ضمانت نہیں دی جاتی۔'
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {currentStep === 7 && (
+                    <div className="space-y-6">
+                      <div className="flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50/70 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+                            <CheckCircle2 className="h-6 w-6" />
+                          </span>
+                          <div>
+                            <p className="font-bold text-emerald-950">{tr('Almost ready', 'تقریباً مکمل')}</p>
+                            <p className="mt-1 text-sm leading-6 text-emerald-900/70">
+                              {tr('Review each section. Use Edit to return without losing your answers.', 'ہر حصے کا جائزہ لیں۔ معلومات ضائع کیے بغیر واپس جانے کے لیے ترمیم منتخب کریں۔')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 rounded-2xl bg-white px-4 py-3 text-center shadow-sm">
+                          <p className="text-2xl font-black text-emerald-700">{completionPercent}%</p>
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{tr('Complete', 'مکمل')}</p>
+                        </div>
+                      </div>
+
+                      <ReviewSection
+                        icon={UserRound}
+                        title={tr('Submitter', 'جمع کروانے والا')}
+                        onEdit={() => jumpToStep(0)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Name', 'نام'), formData.submitterFullName],
+                            [tr('Relationship', 'تعلق'), formData.relationshipToCandidate],
+                            [tr('Mobile', 'موبائل'), formData.submitterMobile],
+                            [tr('WhatsApp', 'واٹس ایپ'), formData.submitterWhatsApp || tr('Same / not provided', 'وہی / فراہم نہیں کیا')],
+                          ]}
+                        />
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={Heart}
+                        title={tr('Candidate', 'امیدوار')}
+                        onEdit={() => jumpToStep(1)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Name', 'نام'), formData.candidateName],
+                            [tr('Profile', 'پروفائل'), formData.gender === 'Female' ? tr('Bride', 'دلہن') : tr('Groom', 'دلہا')],
+                            [tr('Age', 'عمر'), calculatedAge ? tr(`${calculatedAge} years`, `${calculatedAge} سال`) : '—'],
+                            [tr('Marital status', 'ازدواجی حیثیت'), formData.maritalStatus],
+                            [tr('Height', 'قد'), formData.height],
+                          ]}
+                        />
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={MapPin}
+                        title={tr('Background & location', 'پس منظر اور مقام')}
+                        onEdit={() => jumpToStep(2)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Religion / sect', 'مذہب / مسلک'), `${formData.religion} · ${formData.sect}`],
+                            [tr('Community', 'برادری'), formData.caste],
+                            [tr('Location', 'مقام'), `${formData.city}, ${formData.province}`],
+                            [tr('Country', 'ملک'), formData.country],
+                            [tr('Residence', 'رہائش'), formData.residenceStatus],
+                          ]}
+                        />
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={Briefcase}
+                        title={tr('Education & lifestyle', 'تعلیم اور طرزِ زندگی')}
+                        onEdit={() => jumpToStep(3)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Education', 'تعلیم'), formData.education],
+                            [tr('Profession', 'پیشہ'), formData.profession],
+                            [tr('Employment', 'ملازمت'), formData.employmentStatus],
+                            [tr('Industry', 'شعبہ'), formData.industry],
+                            [tr('Income', 'آمدنی'), formData.incomeRange],
+                            [tr('Language', 'زبان'), formData.languages],
+                          ]}
+                        />
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={UsersRound}
+                        title={tr('Family', 'خاندان')}
+                        onEdit={() => jumpToStep(4)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Siblings', 'بہن بھائی'), `${formData.totalSiblings} total · ${formData.brothersCount} brothers · ${formData.sistersCount} sisters`],
+                            [tr('Father', 'والد'), formData.fatherOccupation],
+                            [tr('Mother', 'والدہ'), formData.motherOccupation],
+                          ]}
+                        />
+                        {formData.familyDetails && <ReviewLongText label={tr('Family introduction', 'خاندان کا تعارف')} text={formData.familyDetails} />}
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={Sparkles}
+                        title={tr('Partner preferences', 'شریکِ حیات کی ترجیحات')}
+                        onEdit={() => jumpToStep(5)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <ReviewGrid
+                          items={[
+                            [tr('Age', 'عمر'), formData.expectedPartnerAge],
+                            [tr('Location', 'مقام'), formData.expectedPartnerLocation],
+                            [tr('Education', 'تعلیم'), formData.expectedPartnerEducation],
+                          ]}
+                        />
+                        {formData.requirements && <ReviewLongText label={tr('Important requirements', 'اہم ضروریات')} text={formData.requirements} />}
+                      </ReviewSection>
+
+                      <ReviewSection
+                        icon={ImageIcon}
+                        title={tr('Photos & privacy', 'تصاویر اور رازداری')}
+                        onEdit={() => jumpToStep(6)}
+                        editLabel={tr('Edit', 'ترمیم')}
+                      >
+                        <div className="flex flex-wrap items-center gap-3">
+                          {photoPreviews.map((preview, index) => (
+                            <img key={preview} src={preview} alt="" className={`h-20 w-20 rounded-2xl border border-slate-200 object-cover object-top ${formData.photoVisibility === 'blurred' ? 'blur-sm' : ''}`} />
+                          ))}
+                          <div>
+                            <p className="font-bold text-slate-900">
+                              {tr(`${selectedPhotos.length} photo${selectedPhotos.length === 1 ? '' : 's'} selected`, `${selectedPhotos.length} تصویر منتخب`)}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-500">
+                              {tr('Visibility', 'نمائش')}: <span className="font-semibold text-slate-700">{formData.photoVisibility}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </ReviewSection>
+
+                      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
+                        <div className="flex items-start gap-3">
+                          <ShieldCheck className="mt-0.5 h-6 w-6 flex-shrink-0 text-amber-700" />
+                          <div>
+                            <p className="font-bold text-amber-950">{tr('Before you submit', 'جمع کروانے سے پہلے')}</p>
+                            <p className="mt-1 text-sm leading-6 text-amber-900/75">
+                              {tr(
+                                'Confirm the candidate knows about this submission. MBN may contact the submitter or candidate to verify information and consent.',
+                                'تصدیق کریں کہ امیدوار اس پروفائل سے آگاہ ہے۔ MBN معلومات اور اجازت کی تصدیق کے لیے جمع کروانے والے یا امیدوار سے رابطہ کر سکتا ہے۔'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-5 md:px-8">
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      disabled={currentStep === 0 || isSubmitting}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {isUrdu ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                      {tr('Previous', 'پچھلا مرحلہ')}
+                    </button>
+
+                    <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+                      <Lock className="h-4 w-4" />
+                      {tr('Private review · not auto-published', 'نجی ریویو · خودکار اشاعت نہیں')}
+                    </div>
+
+                    {currentStep < stepDefinitions.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-[#137a4a] px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-900/10 transition hover:-translate-y-0.5 hover:bg-[#0b5f38]"
+                      >
+                        {tr('Continue', 'آگے بڑھیں')}
+                        {isUrdu ? <ArrowLeft className="h-5 w-5 transition group-hover:-translate-x-1" /> : <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />}
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="group inline-flex min-w-[220px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:from-emerald-800 hover:to-emerald-700 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <HeartHandshake className="h-5 w-5" />}
+                        {isSubmitting ? submissionStage || tr('Submitting…', 'جمع ہو رہی ہے…') : tr('Submit for private review', 'نجی ریویو کے لیے جمع کریں')}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </FormSection>
-
-
-          <FormSection title={t.consent}>
-            <div className="rounded-2xl bg-green-50 border border-green-200 p-5 mb-5">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-[#137a4a] mt-0.5 flex-shrink-0" />
-
-                <div>
-                  <p className="font-bold text-green-950">
-                    How your information may be used
-                  </p>
-
-                  <p className="text-sm text-green-800 mt-1 leading-relaxed">
-                    MBN Pakistan may securely store your submitted
-                    information, review it for matchmaking purposes, and
-                    share relevant profile details with authorized
-                    matchmakers or verified marriage bureaus where
-                    appropriate.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-
-            <div className="space-y-4">
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="consentToStore"
-                  checked={formData.consentToStore}
-                  onChange={updateField}
-                  className="mt-1 w-4 h-4"
-                />
-
-                <span className="text-sm text-slate-700 leading-relaxed">
-                  I agree that MBN Pakistan may securely store and
-                  process the information submitted in this profile for
-                  matchmaking and administrative purposes.
-                </span>
-              </label>
-
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="consentToShare"
-                  checked={formData.consentToShare}
-                  onChange={updateField}
-                  className="mt-1 w-4 h-4"
-                />
-
-                <span className="text-sm text-slate-700 leading-relaxed">
-                  I agree that relevant profile information may be
-                  shared with authorized matchmakers or verified
-                  marriage bureaus for legitimate matchmaking purposes.
-                </span>
-              </label>
-
-            </div>
-          </FormSection>
-
-
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-[#137a4a] text-white font-bold text-lg hover:bg-[#0b5f38] disabled:opacity-50"
-            >
-              <HeartHandshake className="w-5 h-5" />
-
-              {isSubmitting
-                ? t.submitting
-                : t.submitButton}
-            </button>
-
-            <p className="text-xs text-center text-slate-400 mt-3">
-              Submitting a profile does not guarantee a match.
-              MBN Pakistan may contact you if additional information is
-              required or suitable matching opportunities become available.
-            </p>
-          </div>
-
-        </form>
+            </form>
+          </section>
+        </div>
       </main>
+
+      <PageAnimations />
     </div>
   );
 }
 
+type TextInputProps = {
+  label: string;
+  name: keyof PublicProfileFormData;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  inputMode?: 'text' | 'tel' | 'email' | 'numeric' | 'decimal' | 'search' | 'url' | 'none';
+  autoComplete?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+};
 
-function TextField({
+function TextInput({
   label,
   name,
   value,
   onChange,
   placeholder,
   type = 'text',
-  required = false,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (
-    e: ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => void;
-  placeholder?: string;
-  type?: string;
-  required?: boolean;
-}) {
+  required,
+  inputMode,
+  autoComplete,
+  dir,
+}: TextInputProps) {
   return (
-    <Field>
-      <label className="label">
+    <label className="group block">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
         {label}
-      </label>
-
+        {required && <span className="ms-1 text-emerald-700">*</span>}
+      </span>
       <input
         name={name}
-        type={type}
         value={value}
         onChange={onChange}
+        type={type}
         placeholder={placeholder}
         required={required}
-        className="input-field"
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        dir={dir}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
       />
-    </Field>
+    </label>
   );
 }
 
+type SelectInputProps = {
+  label: string;
+  name: keyof PublicProfileFormData;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  options: string[];
+  placeholder: string;
+  required?: boolean;
+  disabled?: boolean;
+};
 
-function SelectField({
+function SelectInput({
   label,
   name,
   value,
   onChange,
   options,
   placeholder,
-  required = false,
-  optionLabels = {},
-}: {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (
-    e: ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => void;
-  options: string[];
-  placeholder: string;
-  required?: boolean;
-  optionLabels?: Record<string, string>;
-}) {
+  required,
+  disabled,
+}: SelectInputProps) {
   return (
-    <Field>
-      <label className="label">
+    <label className="group block">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
         {label}
-      </label>
+        {required && <span className="ms-1 text-emerald-700">*</span>}
+      </span>
+      <div className="relative">
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+          disabled={disabled}
+          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pe-11 text-[15px] text-slate-900 outline-none transition hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <ChevronDownIcon />
+      </div>
+    </label>
+  );
+}
 
-      <select
+function ChevronDownIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="pointer-events-none absolute end-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+    >
+      <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+type TextAreaInputProps = {
+  label: string;
+  name: keyof PublicProfileFormData;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  rows?: number;
+  maxLength?: number;
+};
+
+function TextAreaInput({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+  maxLength,
+}: TextAreaInputProps) {
+  return (
+    <label className="block">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-sm font-bold text-slate-700">{label}</span>
+        {maxLength && <span className="text-xs font-semibold text-slate-400">{value.length}/{maxLength}</span>}
+      </div>
+      <textarea
         name={name}
         value={value}
         onChange={onChange}
-        required={required}
-        className="input-field"
-      >
-        <option value="">
-          {placeholder}
-        </option>
-
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
-          >
-            {optionLabels[option] || option}
-          </option>
-        ))}
-      </select>
-    </Field>
+        placeholder={placeholder}
+        rows={rows}
+        maxLength={maxLength}
+        className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+      />
+    </label>
   );
 }
 
-
-
-function PremiumMatchPreview({
-  count,
-  reference,
-  submittedGender,
-  databaseProfiles,
-  isUrdu,
-  t,
-}: {
-  count: number;
-  reference: string;
-  submittedGender: string;
-  databaseProfiles: MatchPreviewProfile[];
-  isUrdu: boolean;
-  t: typeof content.en;
-}) {
-  const submittedGenderValue =
-    submittedGender.toLowerCase().trim();
-
-
-  const matchGender =
-    submittedGenderValue === 'male'
-      ? 'female'
-      : submittedGenderValue === 'female'
-        ? 'male'
-        : 'female';
-
-
-  const isShowingFemaleMatches =
-    matchGender === 'female';
-
-
-  const fallbackProfiles = isShowingFemaleMatches
-    ? isUrdu
-      ? [
-          {
-            age: '24 سال',
-            city: 'Lahore',
-            profession: 'Doctor',
-            education: 'MBBS',
-            score: '91%',
-            photoUrl: '',
-          },
-          {
-            age: '27 سال',
-            city: 'Islamabad',
-            profession: 'Teacher',
-            education: 'Masters',
-            score: '88%',
-            photoUrl: '',
-          },
-          {
-            age: '25 سال',
-            city: 'Multan',
-            profession: 'Bank Officer',
-            education: 'MBA',
-            score: '84%',
-            photoUrl: '',
-          },
-        ]
-      : [
-          {
-            age: '24 years',
-            city: 'Lahore',
-            profession: 'Doctor',
-            education: 'MBBS',
-            score: '91%',
-            photoUrl: '',
-          },
-          {
-            age: '27 years',
-            city: 'Islamabad',
-            profession: 'Teacher',
-            education: 'Masters',
-            score: '88%',
-            photoUrl: '',
-          },
-          {
-            age: '25 years',
-            city: 'Multan',
-            profession: 'Bank Officer',
-            education: 'MBA',
-            score: '84%',
-            photoUrl: '',
-          },
-        ]
-    : isUrdu
-      ? [
-          {
-            age: '29 سال',
-            city: 'Lahore',
-            profession: 'Software Engineer',
-            education: 'BS Computer Science',
-            score: '90%',
-            photoUrl: '',
-          },
-          {
-            age: '32 سال',
-            city: 'Islamabad',
-            profession: 'Business Owner',
-            education: 'MBA',
-            score: '87%',
-            photoUrl: '',
-          },
-          {
-            age: '30 سال',
-            city: 'Multan',
-            profession: 'Civil Engineer',
-            education: 'BSc Engineering',
-            score: '83%',
-            photoUrl: '',
-          },
-        ]
-      : [
-          {
-            age: '29 years',
-            city: 'Lahore',
-            profession: 'Software Engineer',
-            education: 'BS Computer Science',
-            score: '90%',
-            photoUrl: '',
-          },
-          {
-            age: '32 years',
-            city: 'Islamabad',
-            profession: 'Business Owner',
-            education: 'MBA',
-            score: '87%',
-            photoUrl: '',
-          },
-          {
-            age: '30 years',
-            city: 'Multan',
-            profession: 'Civil Engineer',
-            education: 'BSc Engineering',
-            score: '83%',
-            photoUrl: '',
-          },
-        ];
-
-
-  const previewProfiles =
-    databaseProfiles.length > 0
-      ? databaseProfiles.map((profile, index) => ({
-          age:
-            profile.age !== null && profile.age !== undefined
-              ? `${profile.age}${isUrdu ? ' سال' : ' years'}`
-              : fallbackProfiles[index]?.age || 'Hidden',
-
-          city:
-            profile.city ||
-            fallbackProfiles[index]?.city ||
-            'Pakistan',
-
-          profession:
-            profile.profession ||
-            fallbackProfiles[index]?.profession ||
-            'Profession hidden',
-
-          education:
-            profile.education ||
-            fallbackProfiles[index]?.education ||
-            'Education hidden',
-
-          score:
-            profile.match_score !== null &&
-            profile.match_score !== undefined
-              ? `${profile.match_score}%`
-              : fallbackProfiles[index]?.score || '86%',
-
-          photoUrl:
-            profile.photo_url || '',
-        }))
-      : fallbackProfiles;
-
-
-  const remainingCount =
-    count > previewProfiles.length
-      ? count - previewProfiles.length
-      : 0;
-
-
-  const paymentLink = (
-    planName: string,
-    amount: number
-  ) =>
-    `/payment/manual?plan=${encodeURIComponent(planName)}&amount=${amount}&reference=${encodeURIComponent(reference)}`;
-
-
-  const matchGenderLabel =
-    isShowingFemaleMatches
-      ? isUrdu
-        ? 'خواتین پروفائلز'
-        : 'Female Profiles'
-      : isUrdu
-        ? 'مرد پروفائلز'
-        : 'Male Profiles';
-
-
-  return (
-    <section className="mt-10 text-left">
-
-      <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
-
-        <div className="bg-slate-50 border-b border-slate-100 px-6 py-7 md:px-8">
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
-                Private Match Review
-              </p>
-
-              <h2 className="font-heading text-3xl md:text-4xl font-black text-slate-950 mt-2">
-                {count} {t.matchesAvailable}
-              </h2>
-
-              <p className="text-slate-600 mt-3 max-w-3xl leading-relaxed">
-                {t.previewNote}
-              </p>
-
-
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
-                <Lock className="w-4 h-4 text-green-700" />
-                Showing {matchGenderLabel} based on submitted profile
-              </div>
-            </div>
-
-
-            <div className="rounded-2xl bg-white border border-slate-200 px-5 py-4 min-w-[220px]">
-
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                Reference
-              </p>
-
-              <p
-                dir="ltr"
-                className="font-mono text-lg font-black text-slate-950 mt-1 break-all"
-              >
-                {reference || 'Pending'}
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div className="p-6 md:p-8">
-
-          <div className="mb-5">
-
-            <h3 className="font-heading text-2xl font-black text-slate-950">
-              Preview Matches
-            </h3>
-
-            <p className="text-sm text-slate-500 mt-1">
-              Real profile photos are lightly blurred. Name and contact details stay protected.
-            </p>
-
-          </div>
-
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-            {previewProfiles.map((profile, index) => (
-              <div
-                key={`${profile.city}-${profile.profession}-${index}`}
-                className="rounded-[1.5rem] border border-slate-200 bg-white overflow-hidden shadow-sm"
-              >
-
-                <div className="relative h-64 bg-slate-100 overflow-hidden">
-
-                  {profile.photoUrl ? (
-                    <img
-                      src={profile.photoUrl}
-                      alt="Blurred match preview"
-                      className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-100"
-                    />
-                  ) : (
-                    <>
-                      <div
-                        className={`absolute inset-0 ${
-                          isShowingFemaleMatches
-                            ? 'bg-gradient-to-br from-rose-50 via-pink-100 to-slate-200'
-                            : 'bg-gradient-to-br from-blue-50 via-slate-200 to-slate-400'
-                        }`}
-                      />
-
-
-                      <div className="absolute inset-x-0 bottom-0 flex justify-center">
-
-                        {isShowingFemaleMatches ? (
-                          <FemaleBlurredFigure />
-                        ) : (
-                          <MaleBlurredFigure />
-                        )}
-
-                      </div>
-                    </>
-                  )}
-
-
-                  <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]" />
-
-
-                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/35 to-transparent" />
-
-
-                  <div className="absolute top-4 left-4">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-black text-slate-700 shadow-sm">
-                      <Lock className="w-3 h-3" />
-                      {t.premiumRequired}
-                    </span>
-                  </div>
-
-
-                  <div className="absolute bottom-4 right-4">
-                    <span className="rounded-full bg-green-700 px-3 py-1.5 text-xs font-black text-white shadow-sm">
-                      {profile.score} Match
-                    </span>
-                  </div>
-
-                </div>
-
-
-                <div className="p-5">
-
-                  <div className="flex items-start justify-between gap-3">
-
-                    <div>
-                      <p className="font-heading text-xl font-black text-slate-950">
-                        {t.nameHidden}
-                      </p>
-
-                      <p className="text-sm text-slate-500 mt-1">
-                        {isShowingFemaleMatches ? 'Female' : 'Male'} Profile
-                      </p>
-                    </div>
-
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                      Private
-                    </span>
-
-                  </div>
-
-
-                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-
-                    <ProfileDetail label="Age" value={profile.age} />
-
-                    <ProfileDetail label="City" value={profile.city} />
-
-                    <ProfileDetail
-                      label="Profession"
-                      value={profile.profession}
-                    />
-
-                    <ProfileDetail
-                      label="Education"
-                      value={profile.education}
-                    />
-
-                  </div>
-
-
-                  <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200 p-3">
-                    <p className="inline-flex items-center gap-2 text-xs font-black text-slate-500">
-                      <Lock className="w-3.5 h-3.5" />
-                      {t.contactHidden}
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-            ))}
-
-          </div>
-
-
-          {remainingCount > 0 && (
-            <div className="mt-5 rounded-2xl bg-green-50 border border-green-100 px-5 py-4">
-
-              <p className="text-sm font-black text-green-900 text-center">
-                +{remainingCount} {t.moreMatchesText}
-              </p>
-
-            </div>
-          )}
-
-
-          <div className="mt-10 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 md:p-6">
-
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
-                  Recommended Plan
-                </p>
-
-                <h3 className="font-heading text-3xl font-black text-slate-950 mt-2">
-                  Verified Premium
-                </h3>
-
-                <p className="text-slate-600 text-sm leading-relaxed mt-2 max-w-2xl">
-                  Best for serious families who want higher visibility, priority support,
-                  and more match recommendations.
-                </p>
-              </div>
-
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-
-                <div>
-                  <p className="text-4xl font-black text-slate-950">
-                    1499 PKR
-                  </p>
-
-                  <p className="text-sm text-slate-500">
-                    per month
-                  </p>
-                </div>
-
-
-                <a
-                  href={paymentLink(
-                    'Verified Premium',
-                    1499
-                  )}
-                  className="inline-flex items-center justify-center rounded-2xl bg-green-700 px-6 py-4 font-black text-white hover:bg-green-800"
-                >
-                  Get Verified Premium
-                </a>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div className="mt-8">
-
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
-
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] font-black text-green-700">
-                  Premium Plans
-                </p>
-
-                <h3 className="font-heading text-2xl font-black text-slate-950 mt-2">
-                  Choose your access level
-                </h3>
-              </div>
-
-
-              <p className="text-sm text-slate-500 max-w-md">
-                Pay with JazzCash or Easypaisa, upload payment proof, and wait for admin approval.
-              </p>
-
-            </div>
-
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-              <PlanCard
-                title="Premium Match Access"
-                price="799 PKR"
-                period="/ month"
-                description="For families who want basic premium profile access."
-                features={[
-                  'Suitable profile access',
-                  'Daily suggestions',
-                  'Save favourites',
-                  'WhatsApp notifications',
-                  '10 interests per month',
-                ]}
-                cta="Choose Plan"
-                href={paymentLink(
-                  'Premium Match Access',
-                  799
-                )}
-              />
-
-
-              <PlanCard
-                title="Verified Premium"
-                price="1499 PKR"
-                period="/ month"
-                description="For serious families who want more visibility."
-                popularLabel={t.mostPopular}
-                highlighted
-                features={[
-                  'Verified badge',
-                  'Priority support',
-                  'More recommendations',
-                  'Higher visibility',
-                  '30 interests per month',
-                ]}
-                cta="Choose Plan"
-                href={paymentLink(
-                  'Verified Premium',
-                  1499
-                )}
-              />
-
-
-              <PlanCard
-                title="Personal Matchmaking"
-                price="4999 PKR"
-                period=""
-                description="For families who want personal matchmaking support."
-                features={[
-                  'Dedicated matchmaker',
-                  'Manual shortlisting',
-                  'Family coordination',
-                  'Priority matching',
-                  'WhatsApp assistance',
-                ]}
-                cta="Choose Plan"
-                href={paymentLink(
-                  'Personal Matchmaking',
-                  4999
-                )}
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-  );
-}
-
-
-function ProfileDetail({
-  label,
-  value,
-}: {
-  label: string;
+type ChoiceGridProps = {
+  name: keyof PublicProfileFormData;
   value: string;
-}) {
+  options: string[];
+  onSelect: (value: string) => void;
+  labels?: Record<string, string>;
+  icons?: Record<string, LucideIcon>;
+  columns?: string;
+  large?: boolean;
+};
+
+function ChoiceGrid({
+  name,
+  value,
+  options,
+  onSelect,
+  labels,
+  icons,
+  columns = 'sm:grid-cols-2 lg:grid-cols-3',
+  large,
+}: ChoiceGridProps) {
   return (
-    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+    <div className={`grid gap-3 ${columns}`}>
+      {options.map((option) => {
+        const selected = value === option;
+        const Icon = icons?.[option];
 
-      <p className="text-[11px] uppercase tracking-wide font-black text-slate-400">
-        {label}
-      </p>
-
-      <p className="text-sm font-bold text-slate-900 mt-1 leading-snug">
-        {value}
-      </p>
-
-    </div>
-  );
-}
-
-
-function FemaleBlurredFigure() {
-  return (
-    <div className="relative h-64 w-44">
-
-      <div className="absolute left-1/2 top-5 h-20 w-20 -translate-x-1/2 rounded-full bg-amber-900/80" />
-
-      <div className="absolute left-1/2 top-3 h-28 w-28 -translate-x-1/2 rounded-t-full bg-slate-950/85" />
-
-      <div className="absolute left-1/2 top-28 h-28 w-32 -translate-x-1/2 rounded-t-[4rem] bg-rose-600/90" />
-
-      <div className="absolute left-1/2 top-[10.5rem] h-32 w-44 -translate-x-1/2 rounded-t-[5rem] bg-pink-700/80" />
-
-      <div className="absolute left-7 top-32 h-20 w-7 rotate-12 rounded-full bg-amber-800/65" />
-
-      <div className="absolute right-7 top-32 h-20 w-7 -rotate-12 rounded-full bg-amber-800/65" />
-
-    </div>
-  );
-}
-
-
-function MaleBlurredFigure() {
-  return (
-    <div className="relative h-64 w-44">
-
-      <div className="absolute left-1/2 top-7 h-20 w-20 -translate-x-1/2 rounded-full bg-amber-800/80" />
-
-      <div className="absolute left-1/2 top-5 h-12 w-24 -translate-x-1/2 rounded-t-full bg-slate-950/85" />
-
-      <div className="absolute left-1/2 top-[7.5rem] h-32 w-36 -translate-x-1/2 rounded-t-[2.5rem] bg-blue-900/90" />
-
-      <div className="absolute left-1/2 top-[11rem] h-32 w-44 -translate-x-1/2 rounded-t-[2rem] bg-slate-800/85" />
-
-      <div className="absolute left-4 top-32 h-20 w-8 rotate-12 rounded-full bg-blue-950/75" />
-
-      <div className="absolute right-4 top-32 h-20 w-8 -rotate-12 rounded-full bg-blue-950/75" />
-
-    </div>
-  );
-}
-
-
-function PlanCard({
-  title,
-  price,
-  period,
-  description,
-  features,
-  cta,
-  href,
-  highlighted = false,
-  popularLabel,
-}: {
-  title: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string[];
-  cta: string;
-  href: string;
-  highlighted?: boolean;
-  popularLabel?: string;
-}) {
-  return (
-    <div
-      className={`relative rounded-2xl border p-5 ${
-        highlighted
-          ? 'border-slate-950 bg-slate-950 text-white shadow-lg'
-          : 'border-slate-200 bg-white text-slate-950'
-      }`}
-    >
-
-      {popularLabel && (
-        <span className="absolute -top-3 left-5 rounded-full bg-amber-300 px-3 py-1 text-xs font-black text-slate-950">
-          {popularLabel}
-        </span>
-      )}
-
-
-      <h4 className="font-heading text-xl font-black">
-        {title}
-      </h4>
-
-
-      <p
-        className={`mt-2 text-sm leading-relaxed ${
-          highlighted
-            ? 'text-slate-300'
-            : 'text-slate-500'
-        }`}
-      >
-        {description}
-      </p>
-
-
-      <div className="mt-5 flex items-end gap-1">
-        <p className="text-3xl font-black">
-          {price}
-        </p>
-
-        {period && (
-          <p
-            className={
-              highlighted
-                ? 'text-slate-400'
-                : 'text-slate-500'
-            }
+        return (
+          <button
+            key={option}
+            type="button"
+            name={selected ? name : undefined}
+            onClick={() => onSelect(option)}
+            aria-pressed={selected}
+            className={`relative flex items-center gap-3 overflow-hidden rounded-2xl border p-4 text-start transition-all duration-200 ${
+              large ? 'min-h-[108px]' : 'min-h-[70px]'
+            } ${
+              selected
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-950 shadow-[0_12px_35px_-22px_rgba(5,150,105,0.8)] ring-2 ring-emerald-500/10'
+                : 'border-slate-200 bg-white text-slate-700 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/50'
+            }`}
           >
-            {period}
-          </p>
-        )}
-      </div>
-
-
-      <ul className="mt-5 space-y-2.5">
-        {features.map((feature) => (
-          <li
-            key={feature}
-            className="flex items-start gap-2 text-sm"
-          >
-            <CheckCircle
-              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                highlighted
-                  ? 'text-amber-300'
-                  : 'text-green-600'
-              }`}
-            />
-
-            <span
-              className={
-                highlighted
-                  ? 'text-slate-200'
-                  : 'text-slate-700'
-              }
-            >
-              {feature}
+            {Icon && (
+              <span className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${selected ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                <Icon className="h-6 w-6" />
+              </span>
+            )}
+            <span className="font-bold leading-5">{labels?.[option] || option}</span>
+            <span className={`absolute end-3 top-3 flex h-6 w-6 items-center justify-center rounded-full border transition ${selected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-transparent'}`}>
+              <Check className="h-3.5 w-3.5" />
             </span>
-          </li>
-        ))}
-      </ul>
-
-
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 font-black ${
-          highlighted
-            ? 'bg-amber-300 text-slate-950 hover:bg-amber-200'
-            : 'bg-green-700 text-white hover:bg-green-800'
-        }`}
-      >
-        {cta}
-      </a>
-
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-
-
-function PublicHeader({
-  language,
-  setLanguage,
-}: {
-  language: 'en' | 'ur';
-  setLanguage: (value: 'en' | 'ur') => void;
-}) {
-  return (
-    <header className="bg-white border-b border-emerald-900/10">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
-
-        <Link
-          href="/"
-          className="flex items-center gap-3"
-        >
-          <img
-            src="/mbn-logo.png"
-            alt="MBN Pakistan"
-            className="w-12 h-12 object-contain"
-          />
-
-          <div>
-            <p className="font-heading font-bold text-slate-950">
-              MBN Pakistan
-            </p>
-
-            <p className="text-xs text-slate-500">
-              Marriage Bureau Network
-            </p>
-          </div>
-        </Link>
-
-        <LanguageToggle
-          language={language}
-          setLanguage={setLanguage}
-        />
-
-      </div>
-    </header>
-  );
-}
-
-
-function FormSection({
+function QuestionBlock({
+  number,
   title,
+  help,
   children,
 }: {
+  number: string;
   title: string;
+  help?: string;
   children: React.ReactNode;
 }) {
   return (
     <section>
-      <h2 className="font-heading text-xl font-bold text-slate-900 mb-5 pb-3 border-b border-slate-100">
-        {title}
-      </h2>
-
+      <div className="mb-4 flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-8 min-w-8 items-center justify-center rounded-xl bg-slate-900 px-2 text-xs font-black tracking-wider text-white">
+          {number}
+        </span>
+        <div>
+          <h3 className="text-lg font-black leading-7 text-slate-950 md:text-xl">{title}</h3>
+          {help && <p className="mt-1 text-sm leading-6 text-slate-500">{help}</p>}
+        </div>
+      </div>
       {children}
     </section>
   );
 }
 
-
-function Field({
-  children,
+function TrustNote({
+  icon: Icon,
+  title,
+  text,
 }: {
-  children: React.ReactNode;
+  icon: LucideIcon;
+  title: string;
+  text: string;
 }) {
-  return <div>{children}</div>;
+  return (
+    <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+          <Icon className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="font-bold text-emerald-950">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-emerald-900/70">{text}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
+function PrivacyOption({
+  name,
+  value,
+  selected,
+  onSelect,
+  icon: Icon,
+  title,
+  text,
+  recommended,
+}: {
+  name: string;
+  value: string;
+  selected: boolean;
+  onSelect: () => void;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  recommended?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      name={selected ? name : undefined}
+      value={value}
+      onClick={onSelect}
+      className={`relative w-full rounded-2xl border p-4 text-start transition ${
+        selected
+          ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/10'
+          : 'border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/40'
+      }`}
+    >
+      {recommended && (
+        <span className="absolute end-3 top-3 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800">
+          Recommended
+        </span>
+      )}
+      <div className="flex items-start gap-3 pe-16">
+        <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${selected ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-500'}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="font-bold text-slate-950">{title}</p>
+          <p className="mt-1 text-sm leading-5 text-slate-500">{text}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ConsentCard({
+  name,
+  checked,
+  onChange,
+  title,
+  text,
+}: {
+  name: keyof PublicProfileFormData;
+  checked: boolean;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  title: string;
+  text: string;
+}) {
+  return (
+    <label className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition ${checked ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white hover:border-emerald-200'}`}>
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="peer sr-only"
+      />
+      <span className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border transition ${checked ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white text-transparent'}`}>
+        <Check className="h-4 w-4" />
+      </span>
+      <span>
+        <span className="block font-bold text-slate-950">{title}</span>
+        <span className="mt-1 block text-sm leading-6 text-slate-500">{text}</span>
+      </span>
+    </label>
+  );
+}
+
+function ReviewSection({
+  icon: Icon,
+  title,
+  onEdit,
+  editLabel,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  onEdit: () => void;
+  editLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+            <Icon className="h-5 w-5" />
+          </span>
+          <h3 className="font-black text-slate-950">{title}</h3>
+        </div>
+        <button type="button" onClick={onEdit} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50">
+          {editLabel}
+        </button>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+function ReviewGrid({ items }: { items: Array<[string, string]> }) {
+  return (
+    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map(([label, value]) => (
+        <div key={`${label}-${value}`}>
+          <dt className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">{label}</dt>
+          <dd className="mt-1 break-words font-semibold leading-6 text-slate-800">{value || '—'}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ReviewLongText({ label, text }: { label: string; text: string }) {
+  return (
+    <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{text}</p>
+    </div>
+  );
+}
+
+function SuccessStage({
+  icon: Icon,
+  title,
+  text,
+  active,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  active?: boolean;
+}) {
+  return (
+    <div className={`rounded-2xl border p-4 ${active ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-slate-50/70'}`}>
+      <Icon className={`h-5 w-5 ${active ? 'text-emerald-700' : 'text-slate-400'}`} />
+      <p className="mt-3 font-bold text-slate-950">{title}</p>
+      <p className="mt-1 text-sm leading-5 text-slate-500">{text}</p>
+    </div>
+  );
+}
+
+function PublicHeader({
+  language,
+  setLanguage,
+}: {
+  language: Language;
+  setLanguage: (value: Language) => void;
+}) {
+  return (
+    <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex max-w-[1380px] items-center justify-between gap-4 px-4 py-4 md:px-8 xl:px-10">
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          <img src="/mbn-logo.png" alt="MBN Pakistan" className="h-11 w-11 rounded-full object-contain" />
+          <div className="min-w-0">
+            <p className="truncate font-heading text-lg font-bold leading-tight text-slate-950 md:text-xl">MBN Pakistan</p>
+            <p className="hidden text-xs font-semibold text-slate-400 sm:block">Marriage Bureau Network</p>
+          </div>
+        </Link>
+        <LanguageToggle language={language} setLanguage={setLanguage} />
+      </div>
+    </header>
+  );
+}
 
 function PatternLayer() {
   return (
-    <div
-      className="absolute inset-0"
-      style={{
-        backgroundImage: `
-          radial-gradient(circle at 18% 20%, rgba(255,255,255,0.22) 0 2px, transparent 2px),
-          radial-gradient(circle at 82% 28%, rgba(255,255,255,0.15) 0 2px, transparent 2px),
-          linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 52%)
-        `,
-        backgroundSize:
-          '120px 120px, 150px 150px, 34px 34px',
-      }}
-    />
+    <svg className="h-full w-full" viewBox="0 0 800 320" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="mbn-pattern" width="48" height="48" patternUnits="userSpaceOnUse">
+          <path d="M24 0 48 24 24 48 0 24Z" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.22" />
+          <circle cx="24" cy="24" r="4" fill="currentColor" opacity="0.14" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#mbn-pattern)" />
+    </svg>
+  );
+}
+
+function PageAnimations() {
+  return (
+    <style jsx global>{`
+      @keyframes mbn-step-forward {
+        from {
+          opacity: 0;
+          transform: translate3d(28px, 0, 0) scale(0.992);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+      }
+
+      @keyframes mbn-step-back {
+        from {
+          opacity: 0;
+          transform: translate3d(-28px, 0, 0) scale(0.992);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+      }
+
+      @keyframes mbn-error-shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-3px); }
+      }
+
+      @keyframes mbn-success-orbit {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-5px) rotate(2deg); }
+      }
+
+      .animate-step-forward {
+        animation: mbn-step-forward 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .animate-step-back {
+        animation: mbn-step-back 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .animate-error-shake {
+        animation: mbn-error-shake 360ms ease both;
+      }
+
+      .success-orbit {
+        animation: mbn-success-orbit 3s ease-in-out infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .animate-step-forward,
+        .animate-step-back,
+        .animate-error-shake,
+        .success-orbit {
+          animation: none !important;
+        }
+
+        * {
+          scroll-behavior: auto !important;
+        }
+      }
+    `}</style>
   );
 }
