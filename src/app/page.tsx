@@ -1039,23 +1039,47 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div data-reveal className="mbn-reveal mbn-reveal-delay-1 space-y-3">
               {t.faq.items.map((item, index) => {
                 const isOpen = openFaq === index;
+                const answerId = `faq-answer-${index}`;
+
                 return (
-                  <div key={item.q} data-reveal className={`mbn-reveal ${index ? 'mbn-reveal-delay-1' : ''} overflow-hidden rounded-3xl border transition ${isOpen ? 'border-emerald-800/20 bg-[#f7fbf8]' : 'border-slate-200 bg-white hover:border-emerald-800/15'}`}>
+                  <div
+                    key={item.q}
+                    className={`overflow-hidden rounded-3xl border transition-colors duration-300 ${
+                      isOpen
+                        ? 'border-emerald-800/20 bg-[#f7fbf8] shadow-[0_14px_35px_rgba(5,61,37,0.06)]'
+                        : 'border-slate-200 bg-white hover:border-emerald-800/15'
+                    }`}
+                  >
                     <button
                       type="button"
                       onClick={() => setOpenFaq(isOpen ? null : index)}
                       className="flex w-full items-center justify-between gap-5 px-5 py-5 text-start sm:px-7 sm:py-6"
                       aria-expanded={isOpen}
+                      aria-controls={answerId}
                     >
                       <span className="text-sm font-extrabold text-[#073b24] sm:text-base">{item.q}</span>
-                      <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition ${isOpen ? 'rotate-180 bg-[#0a6a3f] text-white' : 'bg-[#edf7f0] text-[#0a6a3f]'}`}>
+                      <span
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                          isOpen
+                            ? 'rotate-180 bg-[#0a6a3f] text-white shadow-[0_8px_20px_rgba(10,106,63,0.20)]'
+                            : 'bg-[#edf7f0] text-[#0a6a3f]'
+                        }`}
+                      >
                         <ChevronDown className="h-4 w-4" />
                       </span>
                     </button>
-                    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+
+                    <div
+                      id={answerId}
+                      role="region"
+                      aria-hidden={!isOpen}
+                      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+                        isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                      }`}
+                    >
                       <div className="overflow-hidden">
                         <p className="px-5 pb-6 text-sm leading-7 text-slate-600 sm:px-7">{item.a}</p>
                       </div>
