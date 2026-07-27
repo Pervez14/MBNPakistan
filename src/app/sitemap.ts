@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const baseUrl = 'https://mbnpakistan.com';
+const baseUrl = 'https://www.mbnpakistan.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
@@ -11,8 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/about',
     '/contact',
     '/submit-profile',
-    '/login',
-    '/register',
   ];
 
   return pages.map((page) => ({
