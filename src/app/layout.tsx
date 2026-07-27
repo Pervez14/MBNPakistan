@@ -18,16 +18,33 @@ const playfair = Playfair_Display({
   display: 'swap',
 });
 
+const siteUrl = 'https://www.mbnpakistan.com';
+const siteName = 'Marriage Bureau Network - MBN Pakistan';
+const siteDescription =
+  'MBN Pakistan connects families with professional marriage bureaus for private profile submission, secure matchmaking coordination, and responsible rishta search across Pakistan.';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mbnpakistan.com'),
-  title: 'Marriage Bureau Network Pakistan',
-  description:
-    "Pakistan's professional network for Marriage Bureau operators, Rishta Consultants, Matchmakers, individuals, and families.",
-  keywords:
-    'marriage bureau, rishta, Pakistan, matchmaking, nikah, shaadi, MBN Pakistan, marriage bureau network',
-  alternates: {
-    canonical: '/',
+  metadataBase: new URL(siteUrl),
+  applicationName: siteName,
+  title: {
+    default: siteName,
+    template: `%s | ${siteName}`,
   },
+  description: siteDescription,
+  keywords: [
+    'marriage bureau Pakistan',
+    'rishta Pakistan',
+    'matrimonial services Pakistan',
+    'professional marriage bureaus',
+    'private matrimonial profile',
+    'matchmaking Pakistan',
+    'MBN Pakistan',
+    'Marriage Bureau Network',
+  ],
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  category: 'Matrimonial Services',
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -45,21 +62,65 @@ export const metadata: Metadata = {
     apple: '/apple-icon.png',
   },
   openGraph: {
-    title: 'Marriage Bureau Network Pakistan',
-    description:
-      'Connect with verified marriage bureaus across Pakistan and submit your profile privately for professional matchmaking review.',
-    siteName: 'MBN Pakistan',
+    title: siteName,
+    description: siteDescription,
+    siteName,
     type: 'website',
-    url: 'https://mbnpakistan.com',
+    locale: 'en_PK',
+    url: siteUrl,
     images: [
       {
-        url: '/icon.png',
-        width: 512,
-        height: 512,
-        alt: 'MBN Pakistan',
+        url: '/mbn-family-hero.png',
+        width: 1200,
+        height: 630,
+        alt: 'Marriage Bureau Network - MBN Pakistan',
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteName,
+    description: siteDescription,
+    images: ['/mbn-family-hero.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+};
+
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${siteUrl}/#website`,
+  url: siteUrl,
+  name: siteName,
+  alternateName: ['MBN Pakistan', 'Marriage Bureau Network Pakistan'],
+  description: siteDescription,
+  inLanguage: ['en-PK', 'ur-PK'],
+  publisher: {
+    '@id': `${siteUrl}/#organization`,
+  },
+};
+
+const organizationStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': `${siteUrl}/#organization`,
+  name: siteName,
+  alternateName: 'MBN Pakistan',
+  url: siteUrl,
+  logo: `${siteUrl}/mbn-logo.png`,
+  image: `${siteUrl}/mbn-family-hero.png`,
+  description: siteDescription,
+  telephone: '+92-303-6684534',
 };
 
 export default function RootLayout({
@@ -70,6 +131,22 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="bg-slate-50 text-slate-900 antialiased">
+        <Script
+          id="mbn-website-structured-data"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteStructuredData),
+          }}
+        />
+        <Script
+          id="mbn-organization-structured-data"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationStructuredData),
+          }}
+        />
         <Script
           id="microsoft-clarity"
           strategy="afterInteractive"
@@ -84,9 +161,7 @@ export default function RootLayout({
           }}
         />
 
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
 
         <Toaster
           position="top-right"
