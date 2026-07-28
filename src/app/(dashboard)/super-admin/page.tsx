@@ -75,6 +75,37 @@ type BureauApplication = {
   reference_name_2: string | null;
   reference_phone_2: string | null;
 
+  applicant_father_name: string | null;
+  applicant_date_of_birth: string | null;
+  identity_type: string | null;
+  identity_expiry_date: string | null;
+  bureau_type: string | null;
+  monthly_new_profiles: string | null;
+  team_size: string | null;
+  service_model: string | null;
+  business_registration_status: string | null;
+  business_registration_number: string | null;
+  ntn_number: string | null;
+  professional_memberships: string | null;
+  countries_served: string[] | null;
+  languages_spoken: string[] | null;
+  profile_sources: string[] | null;
+  verification_methods: string[] | null;
+  client_consent_process: string | null;
+  data_privacy_practice: string | null;
+  complaint_handling_process: string | null;
+  fee_structure: string | null;
+  refund_policy_available: string | null;
+  reference_relationship_1: string | null;
+  reference_relationship_2: string | null;
+  identity_front_path: string | null;
+  identity_back_path: string | null;
+  business_proof_path: string | null;
+  business_card_path: string | null;
+  office_photo_path: string | null;
+  declarations_accepted_at: string | null;
+  application_version: string | null;
+
   status: string | null;
   admin_notes: string | null;
   created_at: string | null;
@@ -455,7 +486,7 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6">
+    <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-sm backdrop-blur md:p-7">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500">
@@ -524,6 +555,59 @@ function EmptyState({
   );
 }
 
+
+function HeaderPulse({ label, value, helper }: { label: string; value: string | number; helper: string }) {
+  return (
+    <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-100/70">{label}</p>
+      <p className="mt-2 text-2xl font-black text-white">{value}</p>
+      <p className="mt-1 text-xs text-emerald-100/65">{helper}</p>
+    </div>
+  );
+}
+
+function HealthMetric({ label, value, helper, warning = false }: { label: string; value: number; helper: string; warning?: boolean }) {
+  const safeValue = Math.max(0, Math.min(100, value));
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/75 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-slate-800">{label}</p>
+        <span className={`text-sm font-black ${warning ? 'text-amber-700' : 'text-emerald-700'}`}>{safeValue}%</span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className={`h-full rounded-full ${warning ? 'bg-amber-500' : 'bg-emerald-600'}`} style={{ width: `${safeValue}%` }} />
+      </div>
+      <p className="mt-2 text-xs text-slate-500">{helper}</p>
+    </div>
+  );
+}
+
+function QuickControl({ icon, title, count, onClick }: { icon: ReactNode; title: string; count: number; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/75 p-3.5 text-left transition hover:border-emerald-200 hover:bg-emerald-50">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-black text-slate-800">{title}</span>
+        <span className="mt-0.5 block text-xs text-slate-500">{count} item{count === 1 ? '' : 's'}</span>
+      </span>
+      <ArrowRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-1 group-hover:text-emerald-700" />
+    </button>
+  );
+}
+
+function DocumentButton({ label, available, onClick }: { label: string; available: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!available}
+      className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition ${available ? 'border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100' : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'}`}
+    >
+      {available ? <Eye className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+      {label}
+    </button>
+  );
+}
 
 function InfoLine({
   label,
@@ -926,6 +1010,36 @@ export default function SuperAdminPage() {
           reference_phone_1,
           reference_name_2,
           reference_phone_2,
+          applicant_father_name,
+          applicant_date_of_birth,
+          identity_type,
+          identity_expiry_date,
+          bureau_type,
+          monthly_new_profiles,
+          team_size,
+          service_model,
+          business_registration_status,
+          business_registration_number,
+          ntn_number,
+          professional_memberships,
+          countries_served,
+          languages_spoken,
+          profile_sources,
+          verification_methods,
+          client_consent_process,
+          data_privacy_practice,
+          complaint_handling_process,
+          fee_structure,
+          refund_policy_available,
+          reference_relationship_1,
+          reference_relationship_2,
+          identity_front_path,
+          identity_back_path,
+          business_proof_path,
+          business_card_path,
+          office_photo_path,
+          declarations_accepted_at,
+          application_version,
           status,
           admin_notes,
           created_at
@@ -1465,6 +1579,27 @@ export default function SuperAdminPage() {
     }
   };
 
+
+  const openVerificationDocument = async (path: string | null) => {
+    if (!path) return;
+
+    try {
+      setErrorMessage('');
+      const { data, error } = await supabase.storage
+        .from('bureau-verification-documents')
+        .createSignedUrl(path, 120);
+
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error('Unable to create a secure document link.');
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Verification document could not be opened.'
+      );
+    }
+  };
 
   const updateApplicationStatus = async (
     id: string,
@@ -2948,6 +3083,39 @@ export default function SuperAdminPage() {
   const recentLogs =
     logs.slice(0, 5);
 
+  const approvalRate = stats.totalApplications > 0
+    ? Math.round((stats.approvedApplications / stats.totalApplications) * 100)
+    : 0;
+  const profileActivationRate = stats.totalProfiles > 0
+    ? Math.round((stats.activeProfiles / stats.totalProfiles) * 100)
+    : 0;
+  const assignmentCoverage = stats.publicSubmissions > 0
+    ? Math.round((stats.assignedPublicSubmissions / stats.publicSubmissions) * 100)
+    : 0;
+  const duplicateReviewCount = publicSubmissions.filter(
+    (submission) => submission.possible_duplicate || submission.duplicate_review_status === 'needs_review'
+  ).length;
+  const flaggedBureauCount = bureauControls.filter((control) => control.is_flagged).length;
+  const suspendedBureauCount = bureauControls.filter((control) => control.contact_reveal_suspended).length;
+  const pendingPaymentCount = premiumOrders.filter((order) => order.payment_status === 'pending').length;
+  const dueFollowUpCount = assignedProfileWork.filter((work) => {
+    if (!work.next_follow_up_at) return false;
+    return new Date(work.next_follow_up_at).getTime() <= Date.now();
+  }).length;
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const contactViewsToday = logs.filter((log) =>
+    log.viewed_at ? new Date(log.viewed_at).getTime() >= todayStart.getTime() : false
+  ).length;
+  const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const monthlyApprovedRevenue = premiumOrders
+    .filter((order) =>
+      order.payment_status === 'approved' &&
+      Boolean(order.created_at) &&
+      new Date(order.created_at as string).getTime() >= currentMonthStart.getTime()
+    )
+    .reduce((sum, order) => sum + (order.amount_pkr || 0), 0);
+
 
   if (loading) {
     return (
@@ -3003,31 +3171,57 @@ export default function SuperAdminPage() {
 
 
   return (
-    <div className="space-y-8">
+    <div className="relative -m-4 min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.10),_transparent_28%),linear-gradient(180deg,#f7fbf9_0%,#f8fafc_48%,#f1f5f9_100%)] p-4 md:-m-6 md:p-6 xl:p-8">
+      <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-emerald-300/15 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 top-[520px] h-72 w-72 rounded-full bg-amber-200/15 blur-3xl" />
 
+      <div className="relative mx-auto max-w-[1700px] space-y-7">
       {/* Header */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-slate-900">
-            Super Admin Console
-          </h1>
+      <section className="relative overflow-hidden rounded-[34px] border border-white/15 bg-gradient-to-br from-[#062f23] via-[#07583c] to-[#0d7a4d] px-6 py-7 text-white shadow-2xl shadow-emerald-950/15 md:px-8 md:py-9">
+        <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-44 w-44 rounded-full bg-emerald-200/10 blur-3xl" />
 
-          <p className="text-slate-500 mt-1">
-            Full control center for bureau requests,
-            public submissions, profiles, messages,
-            assignments, and contact activity.
-          </p>
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-emerald-50 backdrop-blur">
+              <ShieldCheck className="h-4 w-4" /> MBN command centre
+            </div>
+            <h1 className="mt-4 font-heading text-3xl font-black tracking-tight md:text-4xl">
+              Super Admin Control Centre
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-emerald-50/80 md:text-base">
+              Review bureau verification, control network profiles, supervise public submissions, monitor contact access, approve payments and export operational reports from one secure workspace.
+            </p>
+            <p dir="rtl" className="mt-2 max-w-2xl text-sm leading-7 text-emerald-100/70">
+              بیورو کی تصدیق، پروفائلز، عوامی درخواستوں، رابطہ سرگرمی اور ادائیگیوں کا مکمل انتظام ایک محفوظ جگہ سے کریں۔
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row xl:flex-col">
+            <button
+              type="button"
+              onClick={loadAdminData}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-emerald-800 shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-50"
+            >
+              <RefreshCcw className="h-4 w-4" /> Refresh all data
+            </button>
+            <button
+              type="button"
+              onClick={exportMonthlyReport}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black text-white backdrop-blur transition hover:bg-white/15"
+            >
+              <Download className="h-4 w-4" /> Export monthly report
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={loadAdminData}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          Refresh Data
-        </button>
-      </div>
+        <div className="relative mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <HeaderPulse label="Pending approvals" value={stats.pendingApplications + stats.newPublicSubmissions} helper="Bureaus + public profiles" />
+          <HeaderPulse label="Risk flags" value={duplicateReviewCount + flaggedBureauCount + suspendedBureauCount} helper="Duplicates + bureau controls" />
+          <HeaderPulse label="Contact views today" value={contactViewsToday} helper="Audited network access" />
+          <HeaderPulse label="Approved revenue this month" value={`PKR ${monthlyApprovedRevenue.toLocaleString('en-GB')}`} helper="Premium payments" />
+        </div>
+      </section>
 
 
       {errorMessage && (
@@ -3046,75 +3240,45 @@ export default function SuperAdminPage() {
       )}
 
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-5">
-
-        <StatCard
-          title="Applications"
-          value={stats.totalApplications}
-          subtitle={`${stats.pendingApplications} pending`}
-          icon={
-            <Building2 className="w-6 h-6 text-green-700" />
-          }
-          bg="bg-green-50"
-        />
-
-
-        <StatCard
-          title="Approved Bureaus"
-          value={stats.approvedApplications}
-          subtitle={`${stats.rejectedApplications} rejected`}
-          icon={
-            <UserCheck className="w-6 h-6 text-blue-700" />
-          }
-          bg="bg-blue-50"
-        />
-
-
-        <StatCard
-          title="Public Submissions"
-          value={stats.publicSubmissions}
-          subtitle={`${stats.newPublicSubmissions} new`}
-          icon={
-            <HeartHandshake className="w-6 h-6 text-emerald-700" />
-          }
-          bg="bg-emerald-50"
-        />
-
-
-        <StatCard
-          title="Network Profiles"
-          value={stats.totalProfiles}
-          subtitle={`${stats.activeProfiles} active`}
-          icon={
-            <FileText className="w-6 h-6 text-purple-700" />
-          }
-          bg="bg-purple-50"
-        />
-
-
-        <StatCard
-          title="Messages"
-          value={stats.contactMessages}
-          subtitle={`${stats.newMessages} new`}
-          icon={
-            <Mail className="w-6 h-6 text-amber-700" />
-          }
-          bg="bg-amber-50"
-        />
-
-
-        <StatCard
-          title="Contact Views"
-          value={stats.contactViews}
-          subtitle="Total reveal logs"
-          icon={
-            <Eye className="w-6 h-6 text-red-700" />
-          }
-          bg="bg-red-50"
-        />
-
+      {/* Core statistics */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <StatCard title="Applications" value={stats.totalApplications} subtitle={`${stats.pendingApplications} pending`} icon={<Building2 className="h-6 w-6 text-emerald-700" />} bg="bg-emerald-50" />
+        <StatCard title="Approved Bureaus" value={stats.approvedApplications} subtitle={`${approvalRate}% approval rate`} icon={<UserCheck className="h-6 w-6 text-blue-700" />} bg="bg-blue-50" />
+        <StatCard title="Public Submissions" value={stats.publicSubmissions} subtitle={`${stats.newPublicSubmissions} new`} icon={<HeartHandshake className="h-6 w-6 text-teal-700" />} bg="bg-teal-50" />
+        <StatCard title="Network Profiles" value={stats.totalProfiles} subtitle={`${stats.activeProfiles} active`} icon={<FileText className="h-6 w-6 text-violet-700" />} bg="bg-violet-50" />
+        <StatCard title="Messages" value={stats.contactMessages} subtitle={`${stats.newMessages} unread`} icon={<Mail className="h-6 w-6 text-amber-700" />} bg="bg-amber-50" />
+        <StatCard title="Contact Views" value={stats.contactViews} subtitle={`${contactViewsToday} today`} icon={<Eye className="h-6 w-6 text-rose-700" />} bg="bg-rose-50" />
       </div>
+
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
+        <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-sm backdrop-blur md:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Operational health</p>
+              <h2 className="mt-2 text-xl font-black text-slate-900">Platform performance at a glance</h2>
+              <p className="mt-1 text-sm text-slate-500">Live ratios calculated from your current database records.</p>
+            </div>
+            <TrendingUp className="h-7 w-7 text-emerald-600" />
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <HealthMetric label="Bureau approval" value={approvalRate} helper="Approved applications" />
+            <HealthMetric label="Profile activation" value={profileActivationRate} helper="Active network profiles" />
+            <HealthMetric label="Assignment coverage" value={assignmentCoverage} helper="Public cases assigned" />
+            <HealthMetric label="Follow-up pressure" value={Math.min(100, dueFollowUpCount * 10)} helper={`${dueFollowUpCount} follow-ups due`} warning={dueFollowUpCount > 0} />
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-sm backdrop-blur md:p-7">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Quick controls</p>
+          <h2 className="mt-2 text-xl font-black text-slate-900">Jump to priority work</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <QuickControl icon={<Building2 className="h-5 w-5" />} title="Review bureau requests" count={stats.pendingApplications} onClick={() => { setActiveTab('applications'); setStatusFilter('pending'); setSearchTerm(''); }} />
+            <QuickControl icon={<HeartHandshake className="h-5 w-5" />} title="Review public profiles" count={stats.newPublicSubmissions} onClick={() => { setActiveTab('public-submissions'); setStatusFilter('new'); setSearchTerm(''); }} />
+            <QuickControl icon={<Flag className="h-5 w-5" />} title="Investigate bureau risks" count={flaggedBureauCount + suspendedBureauCount} onClick={() => { setActiveTab('bureau-control'); setStatusFilter(''); setSearchTerm(''); }} />
+            <QuickControl icon={<CreditCard className="h-5 w-5" />} title="Approve payments" count={pendingPaymentCount} onClick={() => { setActiveTab('premium-payments'); setStatusFilter(''); setSearchTerm(''); }} />
+          </div>
+        </div>
+      </section>
 
 
 
@@ -3234,8 +3398,8 @@ export default function SuperAdminPage() {
 
 
       {/* Tabs */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="sticky top-3 z-30 rounded-[24px] border border-slate-200/80 bg-white/90 p-3 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
+        <div className="flex gap-2 overflow-x-auto pb-1">
 
           {tabs.map((tab) => (
             <button
@@ -3246,10 +3410,10 @@ export default function SuperAdminPage() {
                 setSearchTerm('');
                 setStatusFilter('');
               }}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-black transition ${
                 activeTab === tab.key
-                  ? 'bg-green-700 text-white'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  ? 'bg-emerald-700 text-white shadow-md shadow-emerald-900/10'
+                  : 'bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
               }`}
             >
               {tab.label}
@@ -5590,6 +5754,63 @@ export default function SuperAdminPage() {
                         </div>
 
 
+                        <div className="mt-5 rounded-[24px] border border-emerald-100 bg-gradient-to-br from-emerald-50/80 to-white p-5">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 text-emerald-800">
+                                <ShieldCheck className="h-5 w-5" />
+                                <p className="font-black">Verification questionnaire & private documents</p>
+                              </div>
+                              <p className="mt-1 text-sm text-slate-500">Review identity, business credibility, consent practice and uploaded evidence before approval.</p>
+                            </div>
+                            <span className="w-fit rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-black text-emerald-700">
+                              {app.application_version || 'Legacy application'}
+                            </span>
+                          </div>
+
+                          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                            <div className="rounded-2xl border border-white bg-white/80 p-4">
+                              <p className="text-xs font-black uppercase tracking-[0.12em] text-emerald-700">Identity</p>
+                              <div className="mt-3 space-y-2 text-sm text-slate-600">
+                                <InfoLine label="Father / Guardian" value={app.applicant_father_name} />
+                                <InfoLine label="Date of Birth" value={app.applicant_date_of_birth} />
+                                <InfoLine label="Identity Type" value={app.identity_type} />
+                                <InfoLine label="Identity Expiry" value={app.identity_expiry_date} />
+                              </div>
+                            </div>
+                            <div className="rounded-2xl border border-white bg-white/80 p-4">
+                              <p className="text-xs font-black uppercase tracking-[0.12em] text-emerald-700">Business credibility</p>
+                              <div className="mt-3 space-y-2 text-sm text-slate-600">
+                                <InfoLine label="Bureau Type" value={app.bureau_type} />
+                                <InfoLine label="Service Model" value={app.service_model} />
+                                <InfoLine label="Team Size" value={app.team_size} />
+                                <InfoLine label="Monthly Profiles" value={app.monthly_new_profiles} />
+                                <InfoLine label="Registration" value={app.business_registration_status} />
+                                <InfoLine label="Registration No." value={app.business_registration_number} />
+                                <InfoLine label="NTN" value={app.ntn_number} />
+                              </div>
+                            </div>
+                            <div className="rounded-2xl border border-white bg-white/80 p-4">
+                              <p className="text-xs font-black uppercase tracking-[0.12em] text-emerald-700">Professional practice</p>
+                              <div className="mt-3 space-y-2 text-sm text-slate-600">
+                                <InfoLine label="Consent Process" value={app.client_consent_process} />
+                                <InfoLine label="Privacy Practice" value={app.data_privacy_practice} />
+                                <InfoLine label="Complaint Handling" value={app.complaint_handling_process} />
+                                <InfoLine label="Fee Structure" value={app.fee_structure} />
+                                <InfoLine label="Refund Policy" value={app.refund_policy_available} />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <DocumentButton label="Identity Front" available={Boolean(app.identity_front_path)} onClick={() => openVerificationDocument(app.identity_front_path)} />
+                            <DocumentButton label="Identity Back" available={Boolean(app.identity_back_path)} onClick={() => openVerificationDocument(app.identity_back_path)} />
+                            <DocumentButton label="Business Proof" available={Boolean(app.business_proof_path)} onClick={() => openVerificationDocument(app.business_proof_path)} />
+                            <DocumentButton label="Office Photo" available={Boolean(app.office_photo_path)} onClick={() => openVerificationDocument(app.office_photo_path)} />
+                            <DocumentButton label="Business Card" available={Boolean(app.business_card_path)} onClick={() => openVerificationDocument(app.business_card_path)} />
+                          </div>
+                        </div>
+
                         <div className="mt-4 rounded-xl bg-slate-50 p-4">
 
                           <label className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-2">
@@ -6566,6 +6787,7 @@ export default function SuperAdminPage() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }
