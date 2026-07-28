@@ -38,6 +38,15 @@ import {
   PlusCircle,
   TrendingUp,
   ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Power,
+  PauseCircle,
+  PlayCircle,
+  Layers3,
+  KeyRound,
+  Gauge,
+  CalendarDays,
 } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
@@ -287,6 +296,12 @@ type BureauControl = {
   warning_note: string | null;
   contact_reveal_suspended: boolean | null;
   daily_contact_view_limit: number | null;
+  account_suspended: boolean | null;
+  suspension_reason: string | null;
+  suspended_at: string | null;
+  profile_creation_suspended: boolean | null;
+  search_access_suspended: boolean | null;
+  profiles_locked: boolean | null;
   updated_at: string | null;
 };
 
@@ -478,40 +493,50 @@ function StatCard({
   subtitle,
   icon,
   bg,
+  onClick,
 }: {
   title: string;
   value: number;
   subtitle: string;
   icon: ReactNode;
   bg: string;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-sm backdrop-blur md:p-7">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-slate-500">
-            {title}
-          </p>
-
-          <p className="text-3xl font-bold text-slate-900 mt-3">
-            {value}
-          </p>
-
-          <p className="text-sm text-slate-500 mt-2">
-            {subtitle}
-          </p>
-        </div>
-
-        <div
-          className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center`}
-        >
-          {icon}
-        </div>
+  const content = (
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm text-slate-500">{title}</p>
+        <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
+        <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+      </div>
+      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bg}`}>
+        {icon}
       </div>
     </div>
   );
-}
 
+  if (!onClick) {
+    return (
+      <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-sm backdrop-blur md:p-7">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full rounded-[28px] border border-slate-200/80 bg-white/95 p-6 text-left shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-100 md:p-7"
+      aria-label={`Open ${title}`}
+    >
+      {content}
+      <span className="mt-4 inline-flex items-center gap-1 text-xs font-black text-emerald-700 opacity-0 transition group-hover:opacity-100 group-focus:opacity-100">
+        Open section <ArrowRight className="h-3.5 w-3.5" />
+      </span>
+    </button>
+  );
+}
 
 function SectionHeader({
   title,
@@ -584,7 +609,7 @@ function HealthMetric({ label, value, helper, warning = false }: { label: string
 
 function QuickControl({ icon, title, count, onClick }: { icon: ReactNode; title: string; count: number; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/75 p-3.5 text-left transition hover:border-emerald-200 hover:bg-emerald-50">
+    <button type="button" onClick={onClick} className="group relative z-10 flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/75 p-3.5 text-left transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-emerald-100">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-black text-slate-800">{title}</span>
@@ -747,6 +772,9 @@ export default function SuperAdminPage() {
     setBureauControls,
   ] =
     useState<BureauControl[]>([]);
+
+  const [expandedBureaus, setExpandedBureaus] = useState<Record<string, boolean>>({});
+  const [bureauSuspensionDraft, setBureauSuspensionDraft] = useState<Record<string, string>>({});
 
 
   const [
@@ -1339,6 +1367,12 @@ export default function SuperAdminPage() {
           warning_note,
           contact_reveal_suspended,
           daily_contact_view_limit,
+          account_suspended,
+          suspension_reason,
+          suspended_at,
+          profile_creation_suspended,
+          search_access_suspended,
+          profiles_locked,
           updated_at
         `)
         .order(
@@ -2745,6 +2779,12 @@ export default function SuperAdminPage() {
               ? Number(bureauLimitDraft[bureau.email])
               : existingControl?.daily_contact_view_limit || 20
           ),
+        account_suspended: updates.account_suspended ?? existingControl?.account_suspended ?? false,
+        suspension_reason: updates.suspension_reason ?? existingControl?.suspension_reason ?? null,
+        suspended_at: updates.account_suspended === true ? new Date().toISOString() : updates.account_suspended === false ? null : existingControl?.suspended_at ?? null,
+        profile_creation_suspended: updates.profile_creation_suspended ?? existingControl?.profile_creation_suspended ?? false,
+        search_access_suspended: updates.search_access_suspended ?? existingControl?.search_access_suspended ?? false,
+        profiles_locked: updates.profiles_locked ?? existingControl?.profiles_locked ?? false,
         updated_by_email: currentEmail,
         updated_at: new Date().toISOString(),
       };
@@ -2774,6 +2814,99 @@ export default function SuperAdminPage() {
     }
   };
 
+
+
+
+  const getProfilesForBureau = (email: string | null) => {
+    if (!email) return [];
+    const normalized = email.toLowerCase();
+    return profiles.filter((profile) => profile.bureau_email?.toLowerCase() === normalized);
+  };
+
+  const getBureauProfileMetrics = (email: string | null) => {
+    const items = getProfilesForBureau(email);
+    return {
+      total: items.length,
+      active: items.filter((item) => item.status === 'active').length,
+      inactive: items.filter((item) => item.status !== 'active').length,
+      visiblePhotos: items.filter((item) => item.photo_visibility === 'visible').length,
+      hiddenPhotos: items.filter((item) => item.photo_visibility === 'hidden').length,
+      blurredPhotos: items.filter((item) => item.photo_visibility === 'blurred').length,
+      lastAdded: items.map((item) => item.created_at).filter(Boolean).sort().reverse()[0] || null,
+    };
+  };
+
+  const setBureauAccountSuspension = async (bureau: BureauApplication, suspend: boolean) => {
+    if (!bureau.email) return;
+    const reason = bureauSuspensionDraft[bureau.email] || getBureauControl(bureau.email)?.suspension_reason || '';
+    if (suspend && !reason.trim()) {
+      setErrorMessage('Please enter a suspension reason before suspending this account.');
+      return;
+    }
+    try {
+      setActionLoading(`account:${bureau.email}`);
+      setErrorMessage('');
+      const { error: appError } = await supabase
+        .from('bureau_applications')
+        .update({ status: suspend ? 'suspended' : 'approved', admin_notes: suspend ? reason.trim() : bureau.admin_notes })
+        .eq('id', bureau.id);
+      if (appError) throw appError;
+      await saveBureauControl(bureau, {
+        account_suspended: suspend,
+        suspension_reason: suspend ? reason.trim() : null,
+        contact_reveal_suspended: suspend ? true : getBureauControl(bureau.email)?.contact_reveal_suspended ?? false,
+        profile_creation_suspended: suspend ? true : false,
+        search_access_suspended: suspend ? true : false,
+      });
+      setSuccessMessage(suspend ? 'Bureau account suspended and access restricted.' : 'Bureau account reactivated.');
+      await loadAdminData();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Account status could not be changed.');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const bulkUpdateBureauProfiles = async (bureau: BureauApplication, status: 'active' | 'inactive') => {
+    if (!bureau.email) return;
+    const count = getProfilesForBureau(bureau.email).filter((item) => status === 'active' ? item.status !== 'active' : item.status === 'active').length;
+    if (count === 0) {
+      setSuccessMessage(`No profiles require ${status === 'active' ? 'activation' : 'deactivation'}.`);
+      return;
+    }
+    const confirmed = window.confirm(`${status === 'active' ? 'Activate' : 'Deactivate'} ${count} profile(s) belonging to ${bureau.business_name || bureau.full_name || bureau.email}?`);
+    if (!confirmed) return;
+    try {
+      setActionLoading(`profiles:${bureau.email}`);
+      setErrorMessage('');
+      const { error } = await supabase
+        .from('marriage_profiles')
+        .update({ status })
+        .ilike('bureau_email', bureau.email);
+      if (error) throw error;
+      await saveBureauControl(bureau, { profiles_locked: status === 'inactive' });
+      setSuccessMessage(`${count} bureau profile(s) ${status === 'active' ? 'activated' : 'deactivated'}.`);
+      await loadAdminData();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Bureau profiles could not be updated.');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const updateSingleBureauProfile = async (profile: MarriageProfile, status: 'active' | 'inactive') => {
+    try {
+      setActionLoading(`profile:${profile.id}`);
+      const { error } = await supabase.from('marriage_profiles').update({ status }).eq('id', profile.id);
+      if (error) throw error;
+      setSuccessMessage(`Profile ${profile.profile_code || ''} ${status === 'active' ? 'activated' : 'deactivated'}.`);
+      await loadAdminData();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Profile status could not be updated.');
+    } finally {
+      setActionLoading('');
+    }
+  };
 
   const updatePremiumOrder = async (
     orderId: string,
@@ -3117,6 +3250,19 @@ export default function SuperAdminPage() {
     .reduce((sum, order) => sum + (order.amount_pkr || 0), 0);
 
 
+  const openAdminSection = (tab: AdminTab, status = '', search = '') => {
+    setActiveTab(tab);
+    setStatusFilter(status);
+    setSearchTerm(search);
+
+    window.setTimeout(() => {
+      document.getElementById('admin-workspace')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 80);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -3242,12 +3388,12 @@ export default function SuperAdminPage() {
 
       {/* Core statistics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <StatCard title="Applications" value={stats.totalApplications} subtitle={`${stats.pendingApplications} pending`} icon={<Building2 className="h-6 w-6 text-emerald-700" />} bg="bg-emerald-50" />
-        <StatCard title="Approved Bureaus" value={stats.approvedApplications} subtitle={`${approvalRate}% approval rate`} icon={<UserCheck className="h-6 w-6 text-blue-700" />} bg="bg-blue-50" />
-        <StatCard title="Public Submissions" value={stats.publicSubmissions} subtitle={`${stats.newPublicSubmissions} new`} icon={<HeartHandshake className="h-6 w-6 text-teal-700" />} bg="bg-teal-50" />
-        <StatCard title="Network Profiles" value={stats.totalProfiles} subtitle={`${stats.activeProfiles} active`} icon={<FileText className="h-6 w-6 text-violet-700" />} bg="bg-violet-50" />
-        <StatCard title="Messages" value={stats.contactMessages} subtitle={`${stats.newMessages} unread`} icon={<Mail className="h-6 w-6 text-amber-700" />} bg="bg-amber-50" />
-        <StatCard title="Contact Views" value={stats.contactViews} subtitle={`${contactViewsToday} today`} icon={<Eye className="h-6 w-6 text-rose-700" />} bg="bg-rose-50" />
+        <StatCard title="Applications" value={stats.totalApplications} subtitle={`${stats.pendingApplications} pending`} icon={<Building2 className="h-6 w-6 text-emerald-700" />} bg="bg-emerald-50" onClick={() => openAdminSection('applications')} />
+        <StatCard title="Approved Bureaus" value={stats.approvedApplications} subtitle={`${approvalRate}% approval rate`} icon={<UserCheck className="h-6 w-6 text-blue-700" />} bg="bg-blue-50" onClick={() => openAdminSection('applications', 'approved')} />
+        <StatCard title="Public Submissions" value={stats.publicSubmissions} subtitle={`${stats.newPublicSubmissions} new`} icon={<HeartHandshake className="h-6 w-6 text-teal-700" />} bg="bg-teal-50" onClick={() => openAdminSection('public-submissions')} />
+        <StatCard title="Network Profiles" value={stats.totalProfiles} subtitle={`${stats.activeProfiles} active`} icon={<FileText className="h-6 w-6 text-violet-700" />} bg="bg-violet-50" onClick={() => openAdminSection('profiles')} />
+        <StatCard title="Messages" value={stats.contactMessages} subtitle={`${stats.newMessages} unread`} icon={<Mail className="h-6 w-6 text-amber-700" />} bg="bg-amber-50" onClick={() => openAdminSection('messages')} />
+        <StatCard title="Contact Views" value={stats.contactViews} subtitle={`${contactViewsToday} today`} icon={<Eye className="h-6 w-6 text-rose-700" />} bg="bg-rose-50" onClick={() => openAdminSection('logs', '', 'contact')} />
       </div>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
@@ -3272,10 +3418,10 @@ export default function SuperAdminPage() {
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Quick controls</p>
           <h2 className="mt-2 text-xl font-black text-slate-900">Jump to priority work</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <QuickControl icon={<Building2 className="h-5 w-5" />} title="Review bureau requests" count={stats.pendingApplications} onClick={() => { setActiveTab('applications'); setStatusFilter('pending'); setSearchTerm(''); }} />
-            <QuickControl icon={<HeartHandshake className="h-5 w-5" />} title="Review public profiles" count={stats.newPublicSubmissions} onClick={() => { setActiveTab('public-submissions'); setStatusFilter('new'); setSearchTerm(''); }} />
-            <QuickControl icon={<Flag className="h-5 w-5" />} title="Investigate bureau risks" count={flaggedBureauCount + suspendedBureauCount} onClick={() => { setActiveTab('bureau-control'); setStatusFilter(''); setSearchTerm(''); }} />
-            <QuickControl icon={<CreditCard className="h-5 w-5" />} title="Approve payments" count={pendingPaymentCount} onClick={() => { setActiveTab('premium-payments'); setStatusFilter(''); setSearchTerm(''); }} />
+            <QuickControl icon={<Building2 className="h-5 w-5" />} title="Review bureau requests" count={stats.pendingApplications} onClick={() => openAdminSection('applications', 'pending')} />
+            <QuickControl icon={<HeartHandshake className="h-5 w-5" />} title="Review public profiles" count={stats.newPublicSubmissions} onClick={() => openAdminSection('public-submissions', 'new')} />
+            <QuickControl icon={<Flag className="h-5 w-5" />} title="Investigate bureau risks" count={flaggedBureauCount + suspendedBureauCount} onClick={() => openAdminSection('bureau-control')} />
+            <QuickControl icon={<CreditCard className="h-5 w-5" />} title="Approve payments" count={pendingPaymentCount} onClick={() => openAdminSection('premium-payments')} />
           </div>
         </div>
       </section>
@@ -3398,18 +3544,14 @@ export default function SuperAdminPage() {
 
 
       {/* Tabs */}
-      <div className="sticky top-3 z-30 rounded-[24px] border border-slate-200/80 bg-white/90 p-3 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
+      <div id="admin-workspace" className="scroll-mt-4 sticky top-3 z-30 rounded-[24px] border border-slate-200/80 bg-white/90 p-3 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
         <div className="flex gap-2 overflow-x-auto pb-1">
 
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              onClick={() => {
-                setActiveTab(tab.key);
-                setSearchTerm('');
-                setStatusFilter('');
-              }}
+              onClick={() => openAdminSection(tab.key)}
               className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-black transition ${
                 activeTab === tab.key
                   ? 'bg-emerald-700 text-white shadow-md shadow-emerald-900/10'
@@ -6440,129 +6582,155 @@ export default function SuperAdminPage() {
       {/* Bureau Control */}
       {activeTab === 'bureau-control' && (
         <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard title="Approved Bureaus" value={applications.filter((app) => app.status === 'approved').length} subtitle="Currently operational" icon={<Building2 className="h-6 w-6 text-emerald-700" />} bg="bg-emerald-50" />
+            <StatCard title="Suspended Accounts" value={applications.filter((app) => app.status === 'suspended').length} subtitle="Access blocked" icon={<Ban className="h-6 w-6 text-red-700" />} bg="bg-red-50" />
+            <StatCard title="Restricted Search" value={bureauControls.filter((item) => item.search_access_suspended).length} subtitle="Network search blocked" icon={<Search className="h-6 w-6 text-amber-700" />} bg="bg-amber-50" />
+            <StatCard title="Locked Profiles" value={bureauControls.filter((item) => item.profiles_locked).length} subtitle="Bureau catalog disabled" icon={<Lock className="h-6 w-6 text-purple-700" />} bg="bg-purple-50" />
+          </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
             <SectionHeader
-              title="Bureau Control & Safety"
-              count={applications.filter((app) => app.status === 'approved').length}
-              subtitle="Flag bureaus, add warning notes, suspend contact reveal, and set daily contact view limits"
+              title="Bureau Command Centre"
+              count={applications.filter((app) => ['approved', 'suspended'].includes(app.status || '')).length}
+              subtitle="Manage account access, registration details, profile inventory, safety limits, warnings and bureau-level permissions"
             />
 
             <div className="divide-y divide-slate-100">
               {applications
-                .filter((app) => app.status === 'approved')
+                .filter((app) => ['approved', 'suspended'].includes(app.status || ''))
                 .map((bureau) => {
-                  const control = getBureauControl(bureau.email);
-                  const signals = getBureauWarningSignals(bureau.email);
-                  const todayViews = getContactViewsToday(bureau.email);
+                  const email = bureau.email || '';
+                  const control = getBureauControl(email);
+                  const metrics = getBureauProfileMetrics(email);
+                  const signals = getBureauWarningSignals(email);
+                  const todayViews = getContactViewsToday(email);
+                  const isSuspended = bureau.status === 'suspended' || Boolean(control?.account_suspended);
+                  const isExpanded = Boolean(expandedBureaus[email]);
+                  const bureauProfiles = getProfilesForBureau(email);
 
                   return (
-                    <div key={bureau.id} className="p-6">
-                      <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
-                        <div className="min-w-0">
+                    <article key={bureau.id} className="p-5 md:p-7">
+                      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-heading text-lg font-bold text-slate-900">
-                              {bureau.business_name || bureau.full_name || bureau.email}
-                            </h3>
-
-                            {control?.is_flagged && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
-                                <Flag className="w-3.5 h-3.5" />
-                                Flagged
-                              </span>
-                            )}
-
-                            {control?.contact_reveal_suspended && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                                <Ban className="w-3.5 h-3.5" />
-                                Contact Reveal Suspended
-                              </span>
-                            )}
+                            <h3 className="font-heading text-xl font-black text-slate-900">{bureau.business_name || bureau.full_name || bureau.email}</h3>
+                            <span className={`rounded-full px-3 py-1 text-xs font-black ${isSuspended ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{isSuspended ? 'Account suspended' : 'Operational'}</span>
+                            {control?.is_flagged && <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700"><Flag className="h-3.5 w-3.5" /> Flagged</span>}
+                            {control?.contact_reveal_suspended && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700"><Eye className="h-3.5 w-3.5" /> Contact restricted</span>}
                           </div>
 
-                          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-slate-600">
-                            <p>Email: <span className="font-semibold text-slate-900">{bureau.email || 'N/A'}</span></p>
-                            <p>City: <span className="font-semibold text-slate-900">{bureau.city || 'N/A'}</span></p>
-                            <p>Views today: <span className="font-semibold text-slate-900">{todayViews}</span></p>
+                          <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+                            <p>Email: <span className="font-bold text-slate-900">{email || 'N/A'}</span></p>
+                            <p>City: <span className="font-bold text-slate-900">{bureau.city || 'N/A'}</span></p>
+                            <p>Registration No: <span className="font-bold text-slate-900">{bureau.business_registration_number || 'Not provided'}</span></p>
+                            <p>Member since: <span className="font-bold text-slate-900">{bureau.created_at ? new Date(bureau.created_at).toLocaleDateString('en-GB') : 'N/A'}</span></p>
+                          </div>
+
+                          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                            {[
+                              ['Total profiles', metrics.total], ['Active', metrics.active], ['Inactive', metrics.inactive], ['Views today', todayViews], ['Daily limit', control?.daily_contact_view_limit || 20], ['Assigned cases', assignedProfileWork.filter((work) => work.bureau_email?.toLowerCase() === email.toLowerCase()).length],
+                            ].map(([label, value]) => (
+                              <div key={String(label)} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+                                <p className="mt-1 text-xl font-black text-slate-900">{value}</p>
+                              </div>
+                            ))}
                           </div>
 
                           {signals.length > 0 && (
-                            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                              <p className="font-bold text-amber-900 text-sm">Warning Signals</p>
-                              <ul className="mt-2 space-y-1 text-sm text-amber-800 list-disc pl-5">
-                                {signals.map((signal) => (
-                                  <li key={signal}>{signal}</li>
-                                ))}
-                              </ul>
+                            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                              <p className="font-black text-amber-950">Automated risk signals</p>
+                              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900/80">{signals.map((signal) => <li key={signal}>{signal}</li>)}</ul>
                             </div>
                           )}
                         </div>
 
-                        <div className="xl:w-[460px] space-y-3">
-                          <textarea
-                            value={bureauWarningDraft[bureau.email || ''] ?? control?.warning_note ?? ''}
-                            onChange={(e) => setBureauWarningDraft((prev) => ({ ...prev, [bureau.email || '']: e.target.value }))}
-                            rows={3}
-                            placeholder="Add warning note for this bureau..."
-                            className="input-field resize-none"
-                          />
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input
-                              type="number"
-                              min="1"
-                              value={bureauLimitDraft[bureau.email || ''] ?? control?.daily_contact_view_limit ?? ''}
-                              onChange={(e) => setBureauLimitDraft((prev) => ({ ...prev, [bureau.email || '']: e.target.value }))}
-                              placeholder="Daily contact view limit"
-                              className="input-field"
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => saveBureauControl(bureau, {
-                                warning_note: bureauWarningDraft[bureau.email || ''] || null,
-                                daily_contact_view_limit: bureauLimitDraft[bureau.email || ''] ? Number(bureauLimitDraft[bureau.email || '']) : 20,
-                              })}
-                              disabled={actionLoading === bureau.email}
-                              className="px-4 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 disabled:opacity-50"
-                            >
-                              Save Note / Limit
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button
-                              type="button"
-                              onClick={() => saveBureauControl(bureau, { is_flagged: !control?.is_flagged })}
-                              disabled={actionLoading === bureau.email}
-                              className={`px-4 py-3 rounded-lg font-semibold disabled:opacity-50 ${control?.is_flagged ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}
-                            >
-                              {control?.is_flagged ? 'Remove Flag' : 'Flag Bureau'}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => saveBureauControl(bureau, { contact_reveal_suspended: !control?.contact_reveal_suspended })}
-                              disabled={actionLoading === bureau.email}
-                              className={`px-4 py-3 rounded-lg font-semibold disabled:opacity-50 ${control?.contact_reveal_suspended ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
-                            >
-                              {control?.contact_reveal_suspended ? 'Resume Contact Reveal' : 'Suspend Contact Reveal'}
-                            </button>
-                          </div>
+                        <div className="flex flex-wrap gap-2 xl:max-w-[390px] xl:justify-end">
+                          <button type="button" onClick={() => setExpandedBureaus((prev) => ({ ...prev, [email]: !prev[email] }))} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-50">
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />} {isExpanded ? 'Hide controls' : 'Manage bureau'}
+                          </button>
+                          <button type="button" onClick={() => setBureauAccountSuspension(bureau, !isSuspended)} disabled={actionLoading.includes(email)} className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-black text-white disabled:opacity-50 ${isSuspended ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-red-700 hover:bg-red-800'}`}>
+                            {isSuspended ? <PlayCircle className="h-4 w-4" /> : <Power className="h-4 w-4" />} {isSuspended ? 'Reactivate account' : 'Suspend account'}
+                          </button>
                         </div>
                       </div>
-                    </div>
+
+                      {isExpanded && (
+                        <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+                          <div className="space-y-5">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                              <h4 className="font-black text-slate-900">Access & profile controls</h4>
+                              <p className="mt-1 text-sm text-slate-500">Apply restrictions independently or suspend the entire account.</p>
+                              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                {[
+                                  { label: control?.profile_creation_suspended ? 'Resume profile creation' : 'Suspend profile creation', active: control?.profile_creation_suspended, key: 'profile_creation_suspended' as const, icon: <PlusCircle className="h-4 w-4" /> },
+                                  { label: control?.search_access_suspended ? 'Restore network search' : 'Suspend network search', active: control?.search_access_suspended, key: 'search_access_suspended' as const, icon: <Search className="h-4 w-4" /> },
+                                  { label: control?.contact_reveal_suspended ? 'Resume contact reveal' : 'Suspend contact reveal', active: control?.contact_reveal_suspended, key: 'contact_reveal_suspended' as const, icon: <Eye className="h-4 w-4" /> },
+                                  { label: control?.is_flagged ? 'Remove risk flag' : 'Flag for review', active: control?.is_flagged, key: 'is_flagged' as const, icon: <Flag className="h-4 w-4" /> },
+                                ].map((action) => (
+                                  <button key={action.key} type="button" onClick={() => saveBureauControl(bureau, { [action.key]: !action.active })} disabled={actionLoading === email} className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-black transition disabled:opacity-50 ${action.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-700 hover:border-amber-200 hover:bg-amber-50'}`}>{action.icon}{action.label}</button>
+                                ))}
+                              </div>
+                              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <button type="button" onClick={() => bulkUpdateBureauProfiles(bureau, 'inactive')} disabled={actionLoading.includes(email) || metrics.active === 0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 px-4 py-3 text-sm font-black text-amber-800 hover:bg-amber-200 disabled:opacity-50"><PauseCircle className="h-4 w-4" /> Deactivate all active profiles ({metrics.active})</button>
+                                <button type="button" onClick={() => bulkUpdateBureauProfiles(bureau, 'active')} disabled={actionLoading.includes(email) || metrics.inactive === 0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-100 px-4 py-3 text-sm font-black text-emerald-800 hover:bg-emerald-200 disabled:opacity-50"><PlayCircle className="h-4 w-4" /> Activate inactive profiles ({metrics.inactive})</button>
+                              </div>
+                            </div>
+
+                            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                              <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div><h4 className="font-black text-slate-900">Bureau profile inventory</h4><p className="text-sm text-slate-500">Control individual profiles without leaving this section.</p></div><Layers3 className="h-5 w-5 text-emerald-700" /></div>
+                              <div className="max-h-[430px] divide-y divide-slate-100 overflow-y-auto">
+                                {bureauProfiles.length ? bureauProfiles.map((profile) => (
+                                  <div key={profile.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div><p className="font-black text-slate-900">{profile.profile_code || 'Code pending'} · {profile.candidate_name || `${profile.gender || ''} profile`}</p><p className="mt-1 text-xs text-slate-500">{[profile.age ? `${profile.age} yrs` : null, profile.city, profile.profession].filter(Boolean).join(' · ')}</p></div>
+                                    <div className="flex items-center gap-2"><span className={`rounded-full px-3 py-1 text-xs font-black ${profile.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{profile.status || 'inactive'}</span><button type="button" onClick={() => updateSingleBureauProfile(profile, profile.status === 'active' ? 'inactive' : 'active')} disabled={actionLoading === `profile:${profile.id}`} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 disabled:opacity-50">{profile.status === 'active' ? 'Deactivate' : 'Activate'}</button></div>
+                                  </div>
+                                )) : <EmptyState text="This bureau has not uploaded any profiles yet." />}
+                              </div>
+                            </div>
+                          </div>
+
+                          <aside className="space-y-4">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                              <h4 className="font-black text-slate-900">Administrative note & limits</h4>
+                              <textarea value={bureauWarningDraft[email] ?? control?.warning_note ?? ''} onChange={(e) => setBureauWarningDraft((prev) => ({ ...prev, [email]: e.target.value }))} rows={4} placeholder="Internal warning or monitoring note..." className="input-field mt-4 resize-none" />
+                              <label className="mt-4 block text-xs font-black uppercase tracking-wide text-slate-500">Daily contact-view limit</label>
+                              <input type="number" min="0" value={bureauLimitDraft[email] ?? control?.daily_contact_view_limit ?? 20} onChange={(e) => setBureauLimitDraft((prev) => ({ ...prev, [email]: e.target.value }))} className="input-field mt-2" />
+                              <button type="button" onClick={() => saveBureauControl(bureau, { warning_note: bureauWarningDraft[email] || null, daily_contact_view_limit: bureauLimitDraft[email] ? Number(bureauLimitDraft[email]) : 20 })} disabled={actionLoading === email} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-3 font-black text-white hover:bg-slate-800 disabled:opacity-50">Save note and limit</button>
+                            </div>
+
+                            <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                              <h4 className="font-black text-red-950">Account suspension reason</h4>
+                              <p className="mt-1 text-sm leading-6 text-red-800/70">Required before account suspension. This remains in the administrative record.</p>
+                              <textarea value={bureauSuspensionDraft[email] ?? control?.suspension_reason ?? ''} onChange={(e) => setBureauSuspensionDraft((prev) => ({ ...prev, [email]: e.target.value }))} rows={4} placeholder="Explain why this account is being suspended..." className="mt-4 w-full rounded-xl border border-red-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-red-200" />
+                              {control?.suspended_at && <p className="mt-3 text-xs font-bold text-red-700">Suspended on {new Date(control.suspended_at).toLocaleString('en-GB')}</p>}
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                              <h4 className="font-black text-slate-900">Bureau record</h4>
+                              <div className="mt-4 space-y-3 text-sm">
+                                <SideAdminFact label="Registration number" value={bureau.business_registration_number || 'Not provided'} />
+                                <SideAdminFact label="NTN" value={bureau.ntn_number || 'Not provided'} />
+                                <SideAdminFact label="Business type" value={bureau.bureau_type || 'Not provided'} />
+                                <SideAdminFact label="Service model" value={bureau.service_model || 'Not provided'} />
+                                <SideAdminFact label="Team size" value={bureau.team_size || 'Not provided'} />
+                                <SideAdminFact label="Years in business" value={bureau.years_in_business || 'Not provided'} />
+                                <SideAdminFact label="Last profile added" value={metrics.lastAdded ? new Date(metrics.lastAdded).toLocaleDateString('en-GB') : 'No profiles'} />
+                              </div>
+                            </div>
+                          </aside>
+                        </div>
+                      )}
+                    </article>
                   );
                 })}
 
-              {applications.filter((app) => app.status === 'approved').length === 0 && (
-                <EmptyState text="No approved bureaus found." />
-              )}
+              {applications.filter((app) => ['approved', 'suspended'].includes(app.status || '')).length === 0 && <EmptyState text="No approved or suspended bureaus found." />}
             </div>
           </div>
         </div>
       )}
-
 
       {/* Premium Payments */}
       {activeTab === 'premium-payments' && (
@@ -6869,3 +7037,7 @@ function ExportButton({
   );
 }
 
+
+function SideAdminFact({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-start justify-between gap-4"><span className="text-slate-500">{label}</span><span className="text-right font-black text-slate-800">{value}</span></div>;
+}
