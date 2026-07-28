@@ -32,6 +32,14 @@ type BureauInfo = {
   status: string | null;
 };
 
+type BureauAccessControl = {
+  account_suspended: boolean | null;
+  suspension_reason: string | null;
+  profile_creation_suspended: boolean | null;
+  search_access_suspended: boolean | null;
+  contact_reveal_suspended: boolean | null;
+};
+
 
 const baseNavItems = [
   {
@@ -104,6 +112,9 @@ export default function DashboardLayout({
   const [isAdmin, setIsAdmin] =
     useState(false);
 
+  const [accessControl, setAccessControl] = useState<BureauAccessControl | null>(null);
+  const [accessBlockedMessage, setAccessBlockedMessage] = useState('');
+
 
   useEffect(() => {
     const checkUser = async () => {
@@ -136,16 +147,38 @@ export default function DashboardLayout({
 
         setBureauInfo(data || null);
 
+        const { data: adminData } = await supabase
+          .from('site_admins')
+          .select('email')
+          .eq('email', user.email)
+          .maybeSingle();
 
-        const { data: adminData } =
-          await supabase
-            .from('site_admins')
-            .select('email')
-            .eq('email', user.email)
+        const admin = Boolean(adminData);
+        setIsAdmin(admin);
+
+        if (!admin) {
+          const { data: controlData } = await supabase
+            .from('bureau_admin_controls')
+            .select('account_suspended, suspension_reason, profile_creation_suspended, search_access_suspended, contact_reveal_suspended')
+            .eq('bureau_email', user.email)
             .maybeSingle();
 
+          const control = (controlData as BureauAccessControl | null) || null;
+          setAccessControl(control);
 
-        setIsAdmin(Boolean(adminData));
+          if (data?.status === 'suspended' || control?.account_suspended) {
+            setAccessBlockedMessage(control?.suspension_reason || 'Your bureau account has been suspended by MBN administration.');
+            return;
+          }
+
+          if (pathname.startsWith('/profiles/new') && control?.profile_creation_suspended) {
+            router.replace('/dashboard');
+            setAccessBlockedMessage('Profile creation has been temporarily restricted for this bureau.');
+          } else if (pathname.startsWith('/search') && control?.search_access_suspended) {
+            router.replace('/dashboard');
+            setAccessBlockedMessage('Network profile search has been temporarily restricted for this bureau.');
+          }
+        }
 
       } catch {
         localStorage.removeItem('mbn-auth');
@@ -160,7 +193,7 @@ export default function DashboardLayout({
 
     checkUser();
 
-  }, [router]);
+  }, [router, pathname]);
 
 
   const handleLogout = async () => {
@@ -204,12 +237,15 @@ export default function DashboardLayout({
         : 'bg-amber-100 text-amber-700';
 
 
+  const permittedBaseNavItems = baseNavItems.filter((item) => {
+    if (item.href === '/profiles/new' && accessControl?.profile_creation_suspended) return false;
+    if (item.href === '/search' && accessControl?.search_access_suspended) return false;
+    return true;
+  });
+
   const navItems = isAdmin
-    ? [
-        ...baseNavItems,
-        adminNavItem,
-      ]
-    : baseNavItems;
+    ? [...baseNavItems, adminNavItem]
+    : permittedBaseNavItems;
 
 
   if (checkingAuth) {
@@ -228,6 +264,24 @@ export default function DashboardLayout({
     );
   }
 
+
+  if (!isAdmin && (bureauInfo?.status === 'suspended' || accessControl?.account_suspended)) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-xl rounded-[28px] border border-red-200 bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-700">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h1 className="mt-5 text-2xl font-black text-slate-900">Bureau account suspended</h1>
+          <p className="mt-3 text-sm leading-7 text-slate-600">{accessBlockedMessage || 'Your access has been temporarily suspended by MBN administration.'}</p>
+          <p dir="rtl" className="mt-2 text-sm leading-7 text-slate-500">آپ کے بیورو اکاؤنٹ کی رسائی عارضی طور پر معطل کر دی گئی ہے۔ مزید معلومات کے لیے انتظامیہ سے رابطہ کریں۔</p>
+          <button type="button" onClick={handleLogout} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white hover:bg-slate-800">
+            <LogOut className="h-4 w-4" /> Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const SidebarContent = (
     <div className="h-full flex flex-col">
