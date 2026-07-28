@@ -37,6 +37,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Trash2,
+  RotateCcw,
+  CircleOff,
   Share2,
   UserRound,
   UsersRound,
@@ -88,6 +91,9 @@ type MarriageProfile = {
   photo_visibility: string | null;
   bureau_email: string | null;
   status: string | null;
+  removal_reason: string | null;
+  removal_notes: string | null;
+  removed_at: string | null;
   created_at: string | null;
 };
 
@@ -109,6 +115,21 @@ type ContactDetails = {
   city: string | null;
   province: string | null;
 };
+
+const PROFILE_REMOVAL_REASONS = [
+  { value: 'match_made', label: 'Match Made / Rishta Done', urdu: 'رشتہ طے ہو گیا' },
+  { value: 'client_withdrew', label: 'Client Withdrew Profile', urdu: 'کلائنٹ نے پروفائل واپس لے لیا' },
+  { value: 'duplicate_profile', label: 'Duplicate Profile', urdu: 'پروفائل کی دوسری نقل موجود ہے' },
+  { value: 'information_outdated', label: 'Information Outdated', urdu: 'معلومات پرانی ہو گئی ہیں' },
+  { value: 'privacy_request', label: 'Privacy Request', urdu: 'رازداری کی درخواست' },
+  { value: 'incorrect_information', label: 'Incorrect Information', urdu: 'غلط معلومات درج ہیں' },
+  { value: 'temporarily_unavailable', label: 'Temporarily Unavailable', urdu: 'عارضی طور پر دستیاب نہیں' },
+  { value: 'other', label: 'Other Reason', urdu: 'کوئی اور وجہ' },
+] as const;
+
+function removalReasonLabel(value: string | null) {
+  return PROFILE_REMOVAL_REASONS.find((item) => item.value === value)?.label || 'Not specified';
+}
 
 const SHORTLIST_KEY = 'mbn-profile-shortlist-v1';
 
@@ -549,6 +570,11 @@ export default function ProfileDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState<null | 'png' | 'jpeg'>(null);
   const [shareError, setShareError] = useState('');
+  const [showRemovalModal, setShowRemovalModal] = useState(false);
+  const [removalReason, setRemovalReason] = useState('');
+  const [removalNotes, setRemovalNotes] = useState('');
+  const [removalLoading, setRemovalLoading] = useState(false);
+  const [removalError, setRemovalError] = useState('');
 
   const loadProfile = async () => {
     try {
@@ -624,6 +650,9 @@ export default function ProfileDetailPage() {
           photo_visibility,
           bureau_email,
           status,
+          removal_reason,
+          removal_notes,
+          removed_at,
           created_at
         `
         )
@@ -966,6 +995,53 @@ export default function ProfileDetailPage() {
     }
   };
 
+  const deactivateOwnedProfile = async () => {
+    if (!profile || !isOwner) return;
+    if (!removalReason) {
+      setRemovalError('Please select a removal reason.');
+      return;
+    }
+    if (removalReason === 'other' && removalNotes.trim().length < 5) {
+      setRemovalError('Please provide details for Other Reason.');
+      return;
+    }
+
+    try {
+      setRemovalLoading(true);
+      setRemovalError('');
+      const { error } = await supabase.rpc('deactivate_my_profile', {
+        p_profile_id: profile.id,
+        p_reason: removalReason,
+        p_notes: removalNotes.trim() || null,
+      });
+      if (error) throw error;
+      setShowRemovalModal(false);
+      setRemovalReason('');
+      setRemovalNotes('');
+      await loadProfile();
+    } catch (error: unknown) {
+      setRemovalError(error instanceof Error ? error.message : 'Profile could not be removed.');
+    } finally {
+      setRemovalLoading(false);
+    }
+  };
+
+  const reactivateOwnedProfile = async () => {
+    if (!profile || !isOwner) return;
+    const confirmed = window.confirm('Reactivate this profile and return it to network search?');
+    if (!confirmed) return;
+    try {
+      setRemovalLoading(true);
+      const { error } = await supabase.rpc('reactivate_my_profile', { p_profile_id: profile.id });
+      if (error) throw error;
+      await loadProfile();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Profile could not be reactivated.');
+    } finally {
+      setRemovalLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-[1450px] space-y-6 pb-12">
@@ -1059,12 +1135,35 @@ export default function ProfileDetailPage() {
             <Printer className="h-4 w-4" /> Print
           </button>
           {isOwner && (
-            <Link
-              href={`/profiles/${profile.id}/edit`}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-black text-white transition hover:bg-emerald-800"
-            >
-              <Pencil className="h-4 w-4" /> Edit profile
-            </Link>
+            <>
+              <Link
+                href={`/profiles/${profile.id}/edit`}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-black text-white transition hover:bg-emerald-800"
+              >
+                <Pencil className="h-4 w-4" /> Edit profile
+              </Link>
+              {profile.status === 'active' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRemovalError('');
+                    setShowRemovalModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-black text-red-700 transition hover:bg-red-100"
+                >
+                  <Trash2 className="h-4 w-4" /> Remove profile
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={reactivateOwnedProfile}
+                  disabled={removalLoading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-black text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
+                >
+                  {removalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Reactivate
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1162,6 +1261,20 @@ export default function ProfileDetailPage() {
           </div>
         </div>
       </section>
+
+      {isOwner && profile.status !== 'active' && (
+        <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5">
+          <div className="flex items-start gap-3">
+            <CircleOff className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700" />
+            <div>
+              <p className="font-black text-amber-950">This profile is currently inactive</p>
+              <p className="mt-1 text-sm text-amber-900/80">Reason: {removalReasonLabel(profile.removal_reason)}</p>
+              {profile.removal_notes && <p className="mt-2 text-sm leading-6 text-amber-900/70">{profile.removal_notes}</p>}
+              <p className="mt-2 text-xs text-amber-700">Removed on {formatDate(profile.removed_at)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_370px]">
         <main className="min-w-0 space-y-6">
@@ -1409,6 +1522,32 @@ export default function ProfileDetailPage() {
           </Link>
         </aside>
       </div>
+
+      {showRemovalModal && isOwner && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 print:hidden">
+          <button type="button" aria-label="Close removal dialog" onClick={() => !removalLoading && setShowRemovalModal(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+          <div className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[30px] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-br from-[#073b2a] to-[#168a58] p-6 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10"><Trash2 className="h-6 w-6" /></div><div><h2 className="text-xl font-black">Remove profile from active network</h2><p dir="rtl" className="mt-1 text-sm text-emerald-100/75">پروفائل غیر فعال کرنے کی وجہ منتخب کریں</p></div></div>
+                <button type="button" onClick={() => !removalLoading && setShowRemovalModal(false)} className="rounded-xl bg-white/10 p-2 hover:bg-white/20"><X className="h-5 w-5" /></button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {PROFILE_REMOVAL_REASONS.map((reason) => (
+                  <button key={reason.value} type="button" onClick={() => { setRemovalReason(reason.value); setRemovalError(''); }} className={`rounded-2xl border p-4 text-left transition ${removalReason === reason.value ? 'border-emerald-500 bg-emerald-50 ring-4 ring-emerald-100' : 'border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40'}`}>
+                    <p className="font-black text-slate-900">{reason.label}</p><p dir="rtl" className="mt-1 text-xs font-semibold text-emerald-700">{reason.urdu}</p>
+                  </button>
+                ))}
+              </div>
+              <label className="mt-5 block"><span className="text-sm font-black text-slate-800">Additional details <span className="font-semibold text-slate-400">(required for Other)</span></span><textarea value={removalNotes} onChange={(event) => setRemovalNotes(event.target.value)} rows={4} placeholder="Add a clear administrative note…" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none focus:border-emerald-300 focus:bg-white focus:ring-4 focus:ring-emerald-100" /></label>
+              {removalError && <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle className="mt-0.5 h-4 w-4" />{removalError}</div>}
+              <div className="mt-6 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setShowRemovalModal(false)} disabled={removalLoading} className="rounded-2xl border border-slate-200 px-5 py-3.5 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50">Cancel</button><button type="button" onClick={deactivateOwnedProfile} disabled={removalLoading} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-700 px-5 py-3.5 text-sm font-black text-white hover:bg-red-800 disabled:opacity-60">{removalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}{removalLoading ? 'Removing…' : 'Confirm Profile Removal'}</button></div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden">
