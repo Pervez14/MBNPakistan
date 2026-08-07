@@ -77,6 +77,60 @@ const registrationStatuses = [
 ];
 const officeOptions = ['Yes — dedicated office', 'Home-based workspace', 'No physical office'];
 const provinces = ['Punjab', 'Sindh', 'KPK', 'Balochistan', 'Islamabad', 'AJK', 'Gilgit-Baltistan', 'Overseas'];
+const citiesByProvince: Record<string, string[]> = {
+  Punjab: [
+    'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Gujranwala', 'Sialkot',
+    'Bahawalpur', 'Sargodha', 'Sheikhupura', 'Rahim Yar Khan', 'Jhang', 'Gujrat',
+    'Sahiwal', 'Okara', 'Kasur', 'Dera Ghazi Khan', 'Jhelum', 'Chakwal',
+    'Mianwali', 'Vehari', 'Khanewal', 'Lodhran', 'Muzaffargarh', 'Layyah',
+    'Rajanpur', 'Bahawalnagar', 'Pakpattan', 'Toba Tek Singh', 'Chiniot',
+    'Hafizabad', 'Mandi Bahauddin', 'Narowal', 'Attock', 'Bhakkar', 'Khushab',
+    'Nankana Sahib', 'Mian Channu', 'Kabirwala', 'Jahanian', 'Burewala', 'Mailsi',
+    'Arifwala', 'Hasilpur', 'Ahmadpur East', 'Kot Addu', 'Jatoi', 'Alipur',
+    'Shujabad', 'Jalalpur Pirwala', 'Taunsa', 'Chichawatni', 'Kamalia', 'Gojra',
+    'Wazirabad', 'Kamoke', 'Muridke', 'Kharian', 'Sambrial', 'Daska', 'Pasrur',
+    'Shakargarh', 'Taxila', 'Wah Cantt', 'Murree', 'Bhalwal', 'Jauharabad',
+    'Fort Abbas', 'Haroonabad', 'Chishtian', 'Kahror Pacca', 'Dunyapur'
+  ],
+  Sindh: [
+    'Karachi', 'Hyderabad', 'Sukkur', 'Larkana', 'Nawabshah (Shaheed Benazirabad)',
+    'Mirpur Khas', 'Jacobabad', 'Shikarpur', 'Khairpur', 'Dadu', 'Thatta', 'Badin',
+    'Jamshoro', 'Matiari', 'Tando Allahyar', 'Tando Muhammad Khan', 'Sanghar',
+    'Umerkot', 'Tharparkar (Mithi)', 'Naushahro Feroze', 'Ghotki', 'Kashmore',
+    'Qambar Shahdadkot', 'Sujawal', 'Kotri', 'Rohri', 'Moro', 'Mehar', 'Sehwan',
+    'Mirpur Mathelo', 'Kandhkot', 'Daharki'
+  ],
+  KPK: [
+    'Peshawar', 'Mardan', 'Abbottabad', 'Mingora (Swat)', 'Kohat', 'Bannu',
+    'Dera Ismail Khan', 'Swabi', 'Charsadda', 'Nowshera', 'Mansehra', 'Haripur',
+    'Batkhela (Malakand)', 'Timergara (Lower Dir)', 'Dir (Upper Dir)', 'Chitral',
+    'Tank', 'Hangu', 'Karak', 'Lakki Marwat', 'Parachinar (Kurram)', 'Khar (Bajaur)',
+    'Ghalanai (Mohmand)', 'Landi Kotal (Khyber)', 'Wana (South Waziristan)',
+    'Miranshah (North Waziristan)', 'Daggar (Buner)', 'Alpuri (Shangla)',
+    'Dasu (Upper Kohistan)', 'Battagram', 'Topi'
+  ],
+  Balochistan: [
+    'Quetta', 'Gwadar', 'Turbat', 'Khuzdar', 'Chaman', 'Sibi', 'Zhob', 'Loralai',
+    'Dera Murad Jamali', 'Pishin', 'Kalat', 'Mastung', 'Nushki', 'Kharan', 'Dalbandin',
+    'Uthal', 'Hub', 'Bela', 'Dera Allah Yar', 'Barkhan', 'Kohlu', 'Dera Bugti',
+    'Musakhel', 'Qila Saifullah', 'Qila Abdullah', 'Ziarat', 'Harnai', 'Awaran',
+    'Panjgur', 'Surab', 'Washuk'
+  ],
+  Islamabad: ['Islamabad'],
+  AJK: [
+    'Muzaffarabad', 'Mirpur', 'Kotli', 'Rawalakot', 'Bagh', 'Bhimber', 'Pallandri',
+    'Hattian Bala', 'Haveli (Kahuta)', 'Neelum (Athmuqam)', 'Dadyal'
+  ],
+  'Gilgit-Baltistan': [
+    'Gilgit', 'Skardu', 'Hunza (Aliabad)', 'Chilas', 'Ghizer (Gahkuch)', 'Astore',
+    'Khaplu', 'Shigar', 'Nagar', 'Ghanche', 'Diamer'
+  ],
+  Overseas: [
+    'United Kingdom', 'United Arab Emirates', 'Saudi Arabia', 'United States',
+    'Canada', 'Australia', 'Qatar', 'Oman', 'Germany', 'France', 'Italy',
+    'Other Overseas'
+  ],
+};
 const countries = [
   'Pakistan',
   'United Kingdom',
@@ -1782,26 +1836,40 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <QuestionLabel english="City" urdu="شہر" required />
-              <input
-                value={formData.city}
-                onChange={(event) => updateField('city', event.target.value)}
-                placeholder="Multan"
-                className={inputClass(Boolean(fieldErrors.city))}
-              />
-              <FieldError message={fieldErrors.city} />
-            </div>
-            <div>
               <QuestionLabel english="Province / region" urdu="صوبہ / خطہ" required />
               <select
                 value={formData.province}
-                onChange={(event) => updateField('province', event.target.value)}
+                onChange={(event) => {
+                  updateField('province', event.target.value);
+                  updateField('city', '');
+                }}
                 className={inputClass(Boolean(fieldErrors.province))}
               >
                 <option value="">Select province / region — صوبہ / خطہ منتخب کریں</option>
                 {provinces.map((option) => <option key={option} value={option}>{bilingualOption(option)}</option>)}
               </select>
               <FieldError message={fieldErrors.province} />
+            </div>
+            <div>
+              <QuestionLabel english="City" urdu="شہر" required />
+              <input
+                list="bureau-city-options"
+                value={formData.city}
+                onChange={(event) => updateField('city', event.target.value)}
+                placeholder={formData.province ? 'Select or type your city — شہر منتخب یا درج کریں' : 'Select province first — پہلے صوبہ منتخب کریں'}
+                disabled={!formData.province}
+                className={inputClass(Boolean(fieldErrors.city))}
+              />
+              <datalist id="bureau-city-options">
+                {(citiesByProvince[formData.province] || []).map((city) => (
+                  <option key={city} value={city} />
+                ))}
+              </datalist>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Choose from the suggestions or type your city if it is not listed.
+                <span dir="rtl" className="ml-2 inline-block">اگر آپ کا شہر فہرست میں نہ ہو تو اسے خود درج کر سکتے ہیں۔</span>
+              </p>
+              <FieldError message={fieldErrors.city} />
             </div>
             <div>
               <QuestionLabel english="Country" urdu="ملک" required />
